@@ -1,0 +1,1001 @@
+Membre de l'archive est inclu en raison du fichier (symbole)
+
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o)
+                              ./lib/libTime/tc.o (__udivsi3)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_dvmd_tls.o)
+                              /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o) (__div0)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+                              ./lib/libTime/libTimer.o (free)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+                              /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o) (_malloc_r)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+                              ./lib/libFat/ff.o (memcmp)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+                              ./lib/libFat/ff.o (memcpy)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+                              ./lib/libFat/ff.o (memset)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+                              /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o) (__malloc_lock)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+                              ./lib/libTime/libTimer.o (realloc)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+                              /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o) (_realloc_r)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+                              ./app/appTest/appTestserial.o (strlen)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+                              /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o) (_free_r)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+                              /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o) (_impure_ptr)
+/usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+                              /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o) (memmove)
+
+Allocation des symboles communs
+Symbole commun      taille            fichier
+
+timeval             0x4               ./dv/dvTimer/dvTimer.o
+pvfRXCallback       0x4               ./dv/dvUart/dvUart.o
+tucBufferLecture    0x200             ./app/appTest/appTestserial.o
+
+Configuration mémoire
+
+Nom              Origine            Longueur           Attributs
+CODE             0x00100000         0x00040000         xr
+DATA             0x00200000         0x00010000         rw
+*default*        0x00000000         0xffffffff
+
+Script de l'éditeurs de liens and table de projection mémoire
+
+LOAD ./main.o
+LOAD ./sys/sysManager.o
+LOAD ./sys/syscalls.o
+LOAD ./lib/libUart/libUart.o
+LOAD ./lib/libTime/libTimer.o
+LOAD ./lib/libTime/tc.o
+LOAD ./lib/libManager.o
+LOAD ./lib/libIpStack/uip/psock.o
+LOAD ./lib/libIpStack/uip/timer.o
+LOAD ./lib/libIpStack/uip/uip-fw.o
+LOAD ./lib/libIpStack/uip/uip-neighbor.o
+LOAD ./lib/libIpStack/uip/uip-split.o
+LOAD ./lib/libIpStack/uip/uip.o
+LOAD ./lib/libIpStack/uip/uip_arp.o
+LOAD ./lib/libIpStack/uip/uiplib.o
+LOAD ./lib/libIpStack/uip/lib/memb.o
+LOAD ./lib/libFat/diskio.o
+LOAD ./lib/libFat/ff.o
+LOAD ./lib/libFat/tff.o
+LOAD ./dv/dvUart/dvUart.o
+LOAD ./dv/dvTimer/dvTimer.o
+LOAD ./dv/dvSpi/dvSpi.o
+LOAD ./dv/dvPWM/dvPWM.o
+LOAD ./dv/dvManager.o
+LOAD ./dv/dvExtInt/dvExtInt.o
+LOAD ./cfg/cfgIpStack/clock-arch.o
+LOAD ./app/appTest/appTestserial.o
+LOAD ./app/appManager.o
+START GROUP
+LOAD /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a
+LOAD /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a
+END GROUP
+
+.text           0x00100000     0x7db8
+ *(.vectrom)
+ *(.init)
+ *(.text .text.*)
+ .text          0x00100000       0x1c ./main.o
+                0x00100000                main
+ .text          0x0010001c       0x20 ./sys/sysManager.o
+                0x0010001c                vFsysManager_Init
+ .text          0x0010003c      0x104 ./sys/syscalls.o
+                0x00100044                _lseek_r
+                0x0010004c                _fstat_r
+                0x0010005c                _sbrk_r
+                0x001000d0                _read_r
+                0x0010003c                _close_r
+                0x0010008c                _write_r
+ .text          0x00100140      0x180 ./lib/libUart/libUart.o
+                0x00100230                cFlibUart_GetRXByte
+                0x00100148                vFlibUart_SetRXByte
+                0x00100194                cFlibUart_SendBuff
+                0x001001f8                vFlibUart_Init
+                0x00100140                cflibUart_SendReady
+ .text          0x001002c0      0x184 ./lib/libTime/libTimer.o
+                0x00100318                vFlibTimer_DeletPeriodicTimer
+                0x00100368                ptFlibTimer_NewPeriodicTimer
+                0x00100344                vFlibTimer_Iinit
+                0x0010040c                vFlibTimer_GetCount
+                0x001002c0                vFlibTimer_Tick
+ .text          0x00100444      0x10c ./lib/libTime/tc.o
+                0x00100478                TC_FindMckDivisor
+                0x00100444                TC_Configure
+                0x0010046c                TC_Stop
+                0x00100460                TC_Start
+ .text          0x00100550       0x10 ./lib/libManager.o
+                0x00100550                vFlibManager_Init
+ .text          0x00100560        0x0 ./lib/libIpStack/uip/psock.o
+ .text          0x00100560        0x0 ./lib/libIpStack/uip/timer.o
+ .text          0x00100560        0x0 ./lib/libIpStack/uip/uip-fw.o
+ .text          0x00100560        0x0 ./lib/libIpStack/uip/uip-neighbor.o
+ .text          0x00100560        0x0 ./lib/libIpStack/uip/uip-split.o
+ .text          0x00100560        0x0 ./lib/libIpStack/uip/uip.o
+ .text          0x00100560        0x0 ./lib/libIpStack/uip/uip_arp.o
+ .text          0x00100560        0x0 ./lib/libIpStack/uip/uiplib.o
+ .text          0x00100560        0x0 ./lib/libIpStack/uip/lib/memb.o
+ .text          0x00100560      0x1b0 ./lib/libFat/diskio.o
+                0x001006c8                disk_initialize
+                0x00100680                disk_status
+                0x00100560                disk_ioctl
+                0x001005b8                disk_write
+                0x0010061c                disk_read
+ .text          0x00100710     0x2f44 ./lib/libFat/ff.o
+                0x00102c44                f_rename
+                0x0010203c                f_truncate
+                0x00103124                f_unlink
+                0x00102354                f_close
+                0x00101528                f_read
+                0x001017ec                f_readdir
+                0x00102df4                f_chmod
+                0x00102248                f_sync
+                0x001008a0                f_mkfs
+                0x00100858                f_mount
+                0x001032e8                f_opendir
+                0x0010199c                f_lseek
+                0x00103284                f_stat
+                0x00102d5c                f_utime
+                0x00101be0                f_write
+                0x00103394                f_open
+                0x00102e78                f_mkdir
+                0x00102800                f_getfree
+ .text          0x00103654     0x206c ./lib/libFat/tff.o
+ .text          0x001056c0      0xb64 ./dv/dvUart/dvUart.o
+                0x00105be4                SerialIsr_Wrapper
+                0x00105e6c                vFdvUart0_init
+                0x00105c2c                vFdvUart_WaitTXFree
+                0x00105c04                vFdvUart_SetRXCallback
+                0x00105d4c                uart0_prints
+                0x00105f24                vFdvUartSendPS2Byte
+                0x00105db8                iFdvUart_kbhit
+                0x00105ce0                uart0_puts
+                0x00105e44                ucFdvUart_GetByte
+                0x00105ca4                uart0_putchar
+                0x001056c0                vFdvUart_init
+                0x00105adc                usart_c_irq_handler
+                0x00105e08                uart0_getc
+                0x00105c58                uart0_putc
+ .text          0x00106224       0xac ./dv/dvTimer/dvTimer.o
+                0x00106224                vFdvTimer_init
+                0x00106288                dvTimerwait
+ .text          0x001062d0      0x354 ./dv/dvSpi/dvSpi.o
+                0x0010644c                wait_ready
+                0x001064a8                vFdvSpi_Init
+                0x001063dc                xmit_spi
+                0x001062d0                AT91_spiSetSpeed
+                0x00106360                AT91_spi
+                0x00106424                rcvr_spi_m
+                0x00106404                rcvr_spi
+ .text          0x00106624       0xf8 ./dv/dvPWM/dvPWM.o
+                0x00106624                vFdvPWM_init
+ .text          0x0010671c       0x1c ./dv/dvManager.o
+                0x0010671c                vFdvManager_Init
+ .text          0x00106738       0x4c ./dv/dvExtInt/dvExtInt.o
+                0x00106738                vFdvExtInt_init
+ .text          0x00106784        0x0 ./cfg/cfgIpStack/clock-arch.o
+ .text          0x00106784       0x24 ./app/appTest/appTestserial.o
+                0x00106788                vFappTest
+                0x00106784                vFappTest_init
+                0x0010678c                vFPrintString
+ .text          0x001067a8       0x18 ./app/appManager.o
+                0x001067a8                vFappManager_Main
+                0x001067b4                vFappManager_Init
+ .text          0x001067c0      0x110 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o)
+                0x001067c0                __udivsi3
+                0x001067c0                __aeabi_uidiv
+                0x001068b8                __aeabi_uidivmod
+ .text          0x001068d0        0x4 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_dvmd_tls.o)
+                0x001068d0                __aeabi_ldiv0
+                0x001068d0                __div0
+                0x001068d0                __aeabi_idiv0
+ .text          0x001068d4       0x28 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+                0x001068e8                malloc
+                0x001068d4                free
+ .text          0x001068fc      0x770 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+                0x001068fc                _malloc_r
+ .text          0x0010706c       0x94 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+                0x0010706c                memcmp
+ .text          0x00107100       0xa0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+                0x00107100                memcpy
+ .text          0x001071a0       0x98 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+                0x001071a0                memset
+ .text          0x00107238        0x8 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+                0x0010723c                __malloc_unlock
+                0x00107238                __malloc_lock
+ .text          0x00107240       0x1c /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+                0x00107240                realloc
+ .text          0x0010725c      0x638 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+                0x0010725c                _realloc_r
+ .text          0x00107894       0x90 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+                0x00107894                strlen
+ .text          0x00107924      0x39c /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+                0x00107a20                _free_r
+                0x00107924                _malloc_trim_r
+ .text          0x00107cc0        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+ .text          0x00107cc0       0xf8 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+                0x00107cc0                memmove
+ *(.gnu.linkonce.t.*)
+ *(.glue_7t .glue_7)
+ .glue_7        0x00107db8        0x0 ./main.o
+ .glue_7t       0x00107db8        0x0 ./main.o
+ .glue_7        0x00107db8        0x0 ./sys/sysManager.o
+ .glue_7t       0x00107db8        0x0 ./sys/sysManager.o
+ .glue_7        0x00107db8        0x0 ./sys/syscalls.o
+ .glue_7t       0x00107db8        0x0 ./sys/syscalls.o
+ .glue_7        0x00107db8        0x0 ./lib/libUart/libUart.o
+ .glue_7t       0x00107db8        0x0 ./lib/libUart/libUart.o
+ .glue_7        0x00107db8        0x0 ./lib/libTime/libTimer.o
+ .glue_7t       0x00107db8        0x0 ./lib/libTime/libTimer.o
+ .glue_7        0x00107db8        0x0 ./lib/libTime/tc.o
+ .glue_7t       0x00107db8        0x0 ./lib/libTime/tc.o
+ .glue_7        0x00107db8        0x0 ./lib/libManager.o
+ .glue_7t       0x00107db8        0x0 ./lib/libManager.o
+ .glue_7        0x00107db8        0x0 ./lib/libIpStack/uip/psock.o
+ .glue_7t       0x00107db8        0x0 ./lib/libIpStack/uip/psock.o
+ .glue_7        0x00107db8        0x0 ./lib/libIpStack/uip/timer.o
+ .glue_7t       0x00107db8        0x0 ./lib/libIpStack/uip/timer.o
+ .glue_7        0x00107db8        0x0 ./lib/libIpStack/uip/uip-fw.o
+ .glue_7t       0x00107db8        0x0 ./lib/libIpStack/uip/uip-fw.o
+ .glue_7        0x00107db8        0x0 ./lib/libIpStack/uip/uip-neighbor.o
+ .glue_7t       0x00107db8        0x0 ./lib/libIpStack/uip/uip-neighbor.o
+ .glue_7        0x00107db8        0x0 ./lib/libIpStack/uip/uip-split.o
+ .glue_7t       0x00107db8        0x0 ./lib/libIpStack/uip/uip-split.o
+ .glue_7        0x00107db8        0x0 ./lib/libIpStack/uip/uip.o
+ .glue_7t       0x00107db8        0x0 ./lib/libIpStack/uip/uip.o
+ .glue_7        0x00107db8        0x0 ./lib/libIpStack/uip/uip_arp.o
+ .glue_7t       0x00107db8        0x0 ./lib/libIpStack/uip/uip_arp.o
+ .glue_7        0x00107db8        0x0 ./lib/libIpStack/uip/uiplib.o
+ .glue_7t       0x00107db8        0x0 ./lib/libIpStack/uip/uiplib.o
+ .glue_7        0x00107db8        0x0 ./lib/libIpStack/uip/lib/memb.o
+ .glue_7t       0x00107db8        0x0 ./lib/libIpStack/uip/lib/memb.o
+ .glue_7        0x00107db8        0x0 ./lib/libFat/diskio.o
+ .glue_7t       0x00107db8        0x0 ./lib/libFat/diskio.o
+ .glue_7        0x00107db8        0x0 ./lib/libFat/ff.o
+ .glue_7t       0x00107db8        0x0 ./lib/libFat/ff.o
+ .glue_7        0x00107db8        0x0 ./lib/libFat/tff.o
+ .glue_7t       0x00107db8        0x0 ./lib/libFat/tff.o
+ .glue_7        0x00107db8        0x0 ./dv/dvUart/dvUart.o
+ .glue_7t       0x00107db8        0x0 ./dv/dvUart/dvUart.o
+ .glue_7        0x00107db8        0x0 ./dv/dvTimer/dvTimer.o
+ .glue_7t       0x00107db8        0x0 ./dv/dvTimer/dvTimer.o
+ .glue_7        0x00107db8        0x0 ./dv/dvSpi/dvSpi.o
+ .glue_7t       0x00107db8        0x0 ./dv/dvSpi/dvSpi.o
+ .glue_7        0x00107db8        0x0 ./dv/dvPWM/dvPWM.o
+ .glue_7t       0x00107db8        0x0 ./dv/dvPWM/dvPWM.o
+ .glue_7        0x00107db8        0x0 ./dv/dvManager.o
+ .glue_7t       0x00107db8        0x0 ./dv/dvManager.o
+ .glue_7        0x00107db8        0x0 ./dv/dvExtInt/dvExtInt.o
+ .glue_7t       0x00107db8        0x0 ./dv/dvExtInt/dvExtInt.o
+ .glue_7        0x00107db8        0x0 ./cfg/cfgIpStack/clock-arch.o
+ .glue_7t       0x00107db8        0x0 ./cfg/cfgIpStack/clock-arch.o
+ .glue_7        0x00107db8        0x0 ./app/appTest/appTestserial.o
+ .glue_7t       0x00107db8        0x0 ./app/appTest/appTestserial.o
+ .glue_7        0x00107db8        0x0 ./app/appManager.o
+ .glue_7t       0x00107db8        0x0 ./app/appManager.o
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_dvmd_tls.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_dvmd_tls.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+ .glue_7        0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+ .glue_7t       0x00107db8        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+ *(.fini)
+ *(.gcc_except_table)
+                0x00107db8                . = ALIGN (0x4)
+
+.ctors          0x00107db8        0x0
+                0x00107db8                PROVIDE (__ctors_start__, .)
+ *(SORT(.ctors.*))
+ *(.ctors)
+                0x00107db8                PROVIDE (__ctors_end__, .)
+
+.dtors          0x00107db8        0x0
+                0x00107db8                PROVIDE (__dtors_start__, .)
+ *(SORT(.dtors.*))
+ *(.dtors)
+                0x00107db8                PROVIDE (__dtors_end__, .)
+
+.rodata         0x00107db8       0x50
+ *(.rodata .rodata.*)
+ .rodata        0x00107db8       0x14 ./lib/libTime/tc.o
+ .rodata.str1.4
+                0x00107dcc       0x32 ./lib/libFat/ff.o
+                                 0x34 (taille avant relaxe)
+ .rodata.str1.4
+                0x00000000        0x4 ./lib/libFat/tff.o
+ *fill*         0x00107dfe        0x2 00
+ .rodata        0x00107e00        0x4 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+                0x00107e00                _global_impure_ptr
+ .rodata.str1.4
+                0x00107e04        0x4 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+ *(.gnu.linkonce.r.*)
+                0x00107e08                . = ALIGN (0x4)
+                0x00107e08                _etext = .
+                0x00107e08                PROVIDE (etext, .)
+
+.data           0x00200000      0x938 address de chargement 0x00107e08
+                0x00200000                _data = .
+ *(.vectram)
+ *(.data)
+ .data          0x00200000        0x0 ./main.o
+ .data          0x00200000        0x4 ./sys/sysManager.o
+                0x00200000                pPIO
+ .data          0x00200004        0x0 ./sys/syscalls.o
+ .data          0x00200004        0x0 ./lib/libUart/libUart.o
+ .data          0x00200004        0x0 ./lib/libTime/libTimer.o
+ .data          0x00200004        0x0 ./lib/libTime/tc.o
+ .data          0x00200004        0x0 ./lib/libManager.o
+ .data          0x00200004        0x0 ./lib/libIpStack/uip/psock.o
+ .data          0x00200004        0x0 ./lib/libIpStack/uip/timer.o
+ .data          0x00200004        0x0 ./lib/libIpStack/uip/uip-fw.o
+ .data          0x00200004        0x0 ./lib/libIpStack/uip/uip-neighbor.o
+ .data          0x00200004        0x0 ./lib/libIpStack/uip/uip-split.o
+ .data          0x00200004        0x0 ./lib/libIpStack/uip/uip.o
+ .data          0x00200004        0x0 ./lib/libIpStack/uip/uip_arp.o
+ .data          0x00200004        0x0 ./lib/libIpStack/uip/uiplib.o
+ .data          0x00200004        0x0 ./lib/libIpStack/uip/lib/memb.o
+ .data          0x00200004        0x0 ./lib/libFat/diskio.o
+ .data          0x00200004        0x0 ./lib/libFat/ff.o
+ .data          0x00200004        0x0 ./lib/libFat/tff.o
+ .data          0x00200004        0x4 ./dv/dvUart/dvUart.o
+                0x00200004                pUSART
+ .data          0x00200008        0x0 ./dv/dvTimer/dvTimer.o
+ .data          0x00200008        0x8 ./dv/dvSpi/dvSpi.o
+ .data          0x00200010        0x0 ./dv/dvPWM/dvPWM.o
+ .data          0x00200010        0x0 ./dv/dvManager.o
+ .data          0x00200010        0x0 ./dv/dvExtInt/dvExtInt.o
+ .data          0x00200010        0x0 ./cfg/cfgIpStack/clock-arch.o
+ .data          0x00200010        0x0 ./app/appTest/appTestserial.o
+ .data          0x00200010        0x0 ./app/appManager.o
+ .data          0x00200010        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o)
+ .data          0x00200010        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_dvmd_tls.o)
+ .data          0x00200010        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ .data          0x00200010      0x410 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+                0x0020041c                __malloc_sbrk_base
+                0x00200010                __malloc_av_
+                0x00200418                __malloc_trim_threshold
+ .data          0x00200420        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .data          0x00200420        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .data          0x00200420        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .data          0x00200420        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+ .data          0x00200420        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .data          0x00200420        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .data          0x00200420        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .data          0x00200420        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .data          0x00200420      0x404 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+                0x00200420                _impure_ptr
+ .data          0x00200824        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+                0x00200824                . = ALIGN (0x4)
+ *(.fastrun)
+ .fastrun       0x00200824       0x84 ./dv/dvTimer/dvTimer.o
+                0x00200824                system_int
+ .fastrun       0x002008a8       0x90 ./dv/dvExtInt/dvExtInt.o
+                0x002008a8                irq0_int
+                0x00200938                . = ALIGN (0x4)
+                0x00200938                _edata = .
+                0x00200938                PROVIDE (edata, .)
+
+.bss            0x00200938      0x2ec
+                0x00200938                __bss_start = .
+                0x00200938                __bss_start__ = .
+ *(.bss)
+ .bss           0x00200938        0x0 ./main.o
+ .bss           0x00200938        0x0 ./sys/sysManager.o
+ .bss           0x00200938        0x4 ./sys/syscalls.o
+ .bss           0x0020093c       0x8c ./lib/libUart/libUart.o
+ .bss           0x002009c8        0x8 ./lib/libTime/libTimer.o
+ .bss           0x002009d0        0x0 ./lib/libTime/tc.o
+ .bss           0x002009d0        0x0 ./lib/libManager.o
+ .bss           0x002009d0        0x0 ./lib/libIpStack/uip/psock.o
+ .bss           0x002009d0        0x0 ./lib/libIpStack/uip/timer.o
+ .bss           0x002009d0        0x0 ./lib/libIpStack/uip/uip-fw.o
+ .bss           0x002009d0        0x0 ./lib/libIpStack/uip/uip-neighbor.o
+ .bss           0x002009d0        0x0 ./lib/libIpStack/uip/uip-split.o
+ .bss           0x002009d0        0x0 ./lib/libIpStack/uip/uip.o
+ .bss           0x002009d0        0x0 ./lib/libIpStack/uip/uip_arp.o
+ .bss           0x002009d0        0x0 ./lib/libIpStack/uip/uiplib.o
+ .bss           0x002009d0        0x0 ./lib/libIpStack/uip/lib/memb.o
+ .bss           0x002009d0        0x0 ./lib/libFat/diskio.o
+ .bss           0x002009d0        0xc ./lib/libFat/ff.o
+ .bss           0x002009dc        0x8 ./lib/libFat/tff.o
+ .bss           0x002009e4        0x0 ./dv/dvUart/dvUart.o
+ .bss           0x002009e4        0x0 ./dv/dvTimer/dvTimer.o
+ .bss           0x002009e4        0x1 ./dv/dvSpi/dvSpi.o
+ .bss           0x002009e5        0x0 ./dv/dvPWM/dvPWM.o
+ .bss           0x002009e5        0x0 ./dv/dvManager.o
+ .bss           0x002009e5        0x0 ./dv/dvExtInt/dvExtInt.o
+ .bss           0x002009e5        0x0 ./cfg/cfgIpStack/clock-arch.o
+ .bss           0x002009e5        0x0 ./app/appTest/appTestserial.o
+ .bss           0x002009e5        0x0 ./app/appManager.o
+ .bss           0x002009e5        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o)
+ .bss           0x002009e5        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_dvmd_tls.o)
+ .bss           0x002009e5        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ *fill*         0x002009e5        0x3 00
+ .bss           0x002009e8       0x34 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+                0x002009e8                __malloc_top_pad
+                0x002009ec                __malloc_max_sbrked_mem
+                0x002009f4                __malloc_current_mallinfo
+                0x002009f0                __malloc_max_total_mem
+ .bss           0x00200a1c        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .bss           0x00200a1c        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .bss           0x00200a1c        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .bss           0x00200a1c        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+ .bss           0x00200a1c        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .bss           0x00200a1c        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .bss           0x00200a1c        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .bss           0x00200a1c        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .bss           0x00200a1c        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+ .bss           0x00200a1c        0x0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+ *(COMMON)
+ COMMON         0x00200a1c        0x4 ./dv/dvUart/dvUart.o
+                0x00200a1c                pvfRXCallback
+ COMMON         0x00200a20        0x4 ./dv/dvTimer/dvTimer.o
+                0x00200a20                timeval
+ COMMON         0x00200a24      0x200 ./app/appTest/appTestserial.o
+                0x00200a24                tucBufferLecture
+                0x00200c24                . = ALIGN (0x4)
+                0x00200c24                __bss_end__ = .
+                0x00200c24                __bss_end__ = .
+                0x00200c24                _end = .
+                0x00200c24                PROVIDE (end, .)
+
+.stab
+ *(.stab)
+
+.stabstr
+ *(.stabstr)
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.comment        0x00000000      0x2d0
+ *(.comment)
+ .comment       0x00000000       0x12 ./main.o
+ .comment       0x00000012       0x12 ./sys/sysManager.o
+ .comment       0x00000024       0x12 ./sys/syscalls.o
+ .comment       0x00000036       0x12 ./lib/libUart/libUart.o
+ .comment       0x00000048       0x12 ./lib/libTime/libTimer.o
+ .comment       0x0000005a       0x12 ./lib/libTime/tc.o
+ .comment       0x0000006c       0x12 ./lib/libManager.o
+ .comment       0x0000007e       0x12 ./lib/libIpStack/uip/psock.o
+ .comment       0x00000090       0x12 ./lib/libIpStack/uip/timer.o
+ .comment       0x000000a2       0x12 ./lib/libIpStack/uip/uip-fw.o
+ .comment       0x000000b4       0x12 ./lib/libIpStack/uip/uip-neighbor.o
+ .comment       0x000000c6       0x12 ./lib/libIpStack/uip/uip-split.o
+ .comment       0x000000d8       0x12 ./lib/libIpStack/uip/uip.o
+ .comment       0x000000ea       0x12 ./lib/libIpStack/uip/uip_arp.o
+ .comment       0x000000fc       0x12 ./lib/libIpStack/uip/uiplib.o
+ .comment       0x0000010e       0x12 ./lib/libIpStack/uip/lib/memb.o
+ .comment       0x00000120       0x12 ./lib/libFat/diskio.o
+ .comment       0x00000132       0x12 ./lib/libFat/ff.o
+ .comment       0x00000144       0x12 ./lib/libFat/tff.o
+ .comment       0x00000156       0x12 ./dv/dvUart/dvUart.o
+ .comment       0x00000168       0x12 ./dv/dvTimer/dvTimer.o
+ .comment       0x0000017a       0x12 ./dv/dvSpi/dvSpi.o
+ .comment       0x0000018c       0x12 ./dv/dvPWM/dvPWM.o
+ .comment       0x0000019e       0x12 ./dv/dvManager.o
+ .comment       0x000001b0       0x12 ./dv/dvExtInt/dvExtInt.o
+ .comment       0x000001c2       0x12 ./cfg/cfgIpStack/clock-arch.o
+ .comment       0x000001d4       0x12 ./app/appTest/appTestserial.o
+ .comment       0x000001e6       0x12 ./app/appManager.o
+ .comment       0x000001f8       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ .comment       0x0000020a       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+ .comment       0x0000021c       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .comment       0x0000022e       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .comment       0x00000240       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .comment       0x00000252       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+ .comment       0x00000264       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .comment       0x00000276       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .comment       0x00000288       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .comment       0x0000029a       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .comment       0x000002ac       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+ .comment       0x000002be       0x12 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+
+.debug
+ *(.debug)
+
+.line
+ *(.line)
+
+.debug_srcinfo
+ *(.debug_srcinfo)
+
+.debug_sfnames
+ *(.debug_sfnames)
+
+.debug_aranges  0x00000000      0x3f0
+ *(.debug_aranges)
+ .debug_aranges
+                0x00000000       0x20 ./main.o
+ .debug_aranges
+                0x00000020       0x20 ./sys/sysManager.o
+ .debug_aranges
+                0x00000040       0x20 ./sys/syscalls.o
+ .debug_aranges
+                0x00000060       0x20 ./lib/libUart/libUart.o
+ .debug_aranges
+                0x00000080       0x20 ./lib/libTime/libTimer.o
+ .debug_aranges
+                0x000000a0       0x20 ./lib/libTime/tc.o
+ .debug_aranges
+                0x000000c0       0x20 ./lib/libManager.o
+ .debug_aranges
+                0x000000e0       0x20 ./lib/libFat/diskio.o
+ .debug_aranges
+                0x00000100       0x20 ./lib/libFat/ff.o
+ .debug_aranges
+                0x00000120       0x20 ./lib/libFat/tff.o
+ .debug_aranges
+                0x00000140       0x20 ./dv/dvUart/dvUart.o
+ .debug_aranges
+                0x00000160       0x28 ./dv/dvTimer/dvTimer.o
+ .debug_aranges
+                0x00000188       0x20 ./dv/dvSpi/dvSpi.o
+ .debug_aranges
+                0x000001a8       0x20 ./dv/dvPWM/dvPWM.o
+ .debug_aranges
+                0x000001c8       0x20 ./dv/dvManager.o
+ .debug_aranges
+                0x000001e8       0x28 ./dv/dvExtInt/dvExtInt.o
+ .debug_aranges
+                0x00000210       0x20 ./app/appTest/appTestserial.o
+ .debug_aranges
+                0x00000230       0x20 ./app/appManager.o
+ .debug_aranges
+                0x00000250       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o)
+ .debug_aranges
+                0x00000270       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_dvmd_tls.o)
+ .debug_aranges
+                0x00000290       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ .debug_aranges
+                0x000002b0       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+ .debug_aranges
+                0x000002d0       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .debug_aranges
+                0x000002f0       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .debug_aranges
+                0x00000310       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .debug_aranges
+                0x00000330       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+ .debug_aranges
+                0x00000350       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .debug_aranges
+                0x00000370       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .debug_aranges
+                0x00000390       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .debug_aranges
+                0x000003b0       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .debug_aranges
+                0x000003d0       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+
+.debug_pubnames
+                0x00000000      0xa04
+ *(.debug_pubnames)
+ .debug_pubnames
+                0x00000000       0x1b ./main.o
+ .debug_pubnames
+                0x0000001b       0x31 ./sys/sysManager.o
+ .debug_pubnames
+                0x0000004c       0x5e ./sys/syscalls.o
+ .debug_pubnames
+                0x000000aa       0x84 ./lib/libUart/libUart.o
+ .debug_pubnames
+                0x0000012e       0x96 ./lib/libTime/libTimer.o
+ .debug_pubnames
+                0x000001c4       0x52 ./lib/libTime/tc.o
+ .debug_pubnames
+                0x00000216       0x28 ./lib/libManager.o
+ .debug_pubnames
+                0x0000023e       0x62 ./lib/libFat/diskio.o
+ .debug_pubnames
+                0x000002a0       0xf0 ./lib/libFat/ff.o
+ .debug_pubnames
+                0x00000390       0xe5 ./lib/libFat/tff.o
+ .debug_pubnames
+                0x00000475      0x146 ./dv/dvUart/dvUart.o
+ .debug_pubnames
+                0x000005bb       0x50 ./dv/dvTimer/dvTimer.o
+ .debug_pubnames
+                0x0000060b       0x7d ./dv/dvSpi/dvSpi.o
+ .debug_pubnames
+                0x00000688       0x23 ./dv/dvPWM/dvPWM.o
+ .debug_pubnames
+                0x000006ab       0x27 ./dv/dvManager.o
+ .debug_pubnames
+                0x000006d2       0x33 ./dv/dvExtInt/dvExtInt.o
+ .debug_pubnames
+                0x00000705       0x5a ./app/appTest/appTestserial.o
+ .debug_pubnames
+                0x0000075f       0x3e ./app/appManager.o
+ .debug_pubnames
+                0x0000079d       0x26 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ .debug_pubnames
+                0x000007c3       0xce /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+ .debug_pubnames
+                0x00000891       0x1d /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .debug_pubnames
+                0x000008ae       0x1d /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .debug_pubnames
+                0x000008cb       0x1d /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .debug_pubnames
+                0x000008e8       0x38 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+ .debug_pubnames
+                0x00000920       0x1e /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .debug_pubnames
+                0x0000093e       0x21 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .debug_pubnames
+                0x0000095f       0x1d /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .debug_pubnames
+                0x0000097c       0x31 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .debug_pubnames
+                0x000009ad       0x39 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+ .debug_pubnames
+                0x000009e6       0x1e /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+
+.debug_info     0x00000000     0xc36c
+ *(.debug_info .gnu.linkonce.wi.*)
+ .debug_info    0x00000000       0x97 ./main.o
+ .debug_info    0x00000097      0x2d0 ./sys/sysManager.o
+ .debug_info    0x00000367      0xcbf ./sys/syscalls.o
+ .debug_info    0x00001026      0x734 ./lib/libUart/libUart.o
+ .debug_info    0x0000175a      0x2da ./lib/libTime/libTimer.o
+ .debug_info    0x00001a34      0x22f ./lib/libTime/tc.o
+ .debug_info    0x00001c63       0x4d ./lib/libManager.o
+ .debug_info    0x00001cb0        0x0 ./lib/libIpStack/uip/psock.o
+ .debug_info    0x00001cb0        0x0 ./lib/libIpStack/uip/timer.o
+ .debug_info    0x00001cb0        0x0 ./lib/libIpStack/uip/uip-fw.o
+ .debug_info    0x00001cb0        0x0 ./lib/libIpStack/uip/uip-neighbor.o
+ .debug_info    0x00001cb0        0x0 ./lib/libIpStack/uip/uip-split.o
+ .debug_info    0x00001cb0        0x0 ./lib/libIpStack/uip/uip.o
+ .debug_info    0x00001cb0        0x0 ./lib/libIpStack/uip/uip_arp.o
+ .debug_info    0x00001cb0        0x0 ./lib/libIpStack/uip/uiplib.o
+ .debug_info    0x00001cb0        0x0 ./lib/libIpStack/uip/lib/memb.o
+ .debug_info    0x00001cb0      0x2b4 ./lib/libFat/diskio.o
+ .debug_info    0x00001f64     0x15ab ./lib/libFat/ff.o
+ .debug_info    0x0000350f     0x13b2 ./lib/libFat/tff.o
+ .debug_info    0x000048c1     0x11a0 ./dv/dvUart/dvUart.o
+ .debug_info    0x00005a61      0x3d1 ./dv/dvTimer/dvTimer.o
+ .debug_info    0x00005e32      0xacd ./dv/dvSpi/dvSpi.o
+ .debug_info    0x000068ff      0x331 ./dv/dvPWM/dvPWM.o
+ .debug_info    0x00006c30       0x88 ./dv/dvManager.o
+ .debug_info    0x00006cb8      0x5ed ./dv/dvExtInt/dvExtInt.o
+ .debug_info    0x000072a5        0x0 ./cfg/cfgIpStack/clock-arch.o
+ .debug_info    0x000072a5       0xfb ./app/appTest/appTestserial.o
+ .debug_info    0x000073a0       0x54 ./app/appManager.o
+ .debug_info    0x000073f4       0x92 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o)
+ .debug_info    0x00007486       0x92 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_dvmd_tls.o)
+ .debug_info    0x00007518      0x953 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ .debug_info    0x00007e6b      0xcba /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+ .debug_info    0x00008b25      0x110 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .debug_info    0x00008c35      0x10a /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .debug_info    0x00008d3f      0x10e /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .debug_info    0x00008e4d      0x93c /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+ .debug_info    0x00009789      0x93a /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .debug_info    0x0000a0c3      0xbc7 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .debug_info    0x0000ac8a       0xd4 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .debug_info    0x0000ad5e      0xbb1 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .debug_info    0x0000b90f      0x922 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+ .debug_info    0x0000c231      0x13b /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+
+.debug_abbrev   0x00000000     0x2384
+ *(.debug_abbrev)
+ .debug_abbrev  0x00000000       0x43 ./main.o
+ .debug_abbrev  0x00000043       0x94 ./sys/sysManager.o
+ .debug_abbrev  0x000000d7      0x1fe ./sys/syscalls.o
+ .debug_abbrev  0x000002d5      0x1fe ./lib/libUart/libUart.o
+ .debug_abbrev  0x000004d3      0x168 ./lib/libTime/libTimer.o
+ .debug_abbrev  0x0000063b       0xff ./lib/libTime/tc.o
+ .debug_abbrev  0x0000073a       0x41 ./lib/libManager.o
+ .debug_abbrev  0x0000077b        0x1 ./lib/libIpStack/uip/psock.o
+ .debug_abbrev  0x0000077c        0x1 ./lib/libIpStack/uip/timer.o
+ .debug_abbrev  0x0000077d        0x1 ./lib/libIpStack/uip/uip-fw.o
+ .debug_abbrev  0x0000077e        0x1 ./lib/libIpStack/uip/uip-neighbor.o
+ .debug_abbrev  0x0000077f        0x1 ./lib/libIpStack/uip/uip-split.o
+ .debug_abbrev  0x00000780        0x1 ./lib/libIpStack/uip/uip.o
+ .debug_abbrev  0x00000781        0x1 ./lib/libIpStack/uip/uip_arp.o
+ .debug_abbrev  0x00000782        0x1 ./lib/libIpStack/uip/uiplib.o
+ .debug_abbrev  0x00000783        0x1 ./lib/libIpStack/uip/lib/memb.o
+ .debug_abbrev  0x00000784       0xde ./lib/libFat/diskio.o
+ .debug_abbrev  0x00000862      0x297 ./lib/libFat/ff.o
+ .debug_abbrev  0x00000af9      0x2a4 ./lib/libFat/tff.o
+ .debug_abbrev  0x00000d9d      0x22e ./dv/dvUart/dvUart.o
+ .debug_abbrev  0x00000fcb       0xfd ./dv/dvTimer/dvTimer.o
+ .debug_abbrev  0x000010c8      0x159 ./dv/dvSpi/dvSpi.o
+ .debug_abbrev  0x00001221       0xb8 ./dv/dvPWM/dvPWM.o
+ .debug_abbrev  0x000012d9       0x2b ./dv/dvManager.o
+ .debug_abbrev  0x00001304       0xff ./dv/dvExtInt/dvExtInt.o
+ .debug_abbrev  0x00001403        0x1 ./cfg/cfgIpStack/clock-arch.o
+ .debug_abbrev  0x00001404       0x9a ./app/appTest/appTestserial.o
+ .debug_abbrev  0x0000149e       0x2b ./app/appManager.o
+ .debug_abbrev  0x000014c9       0x14 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o)
+ .debug_abbrev  0x000014dd       0x14 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_dvmd_tls.o)
+ .debug_abbrev  0x000014f1      0x187 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ .debug_abbrev  0x00001678      0x225 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+ .debug_abbrev  0x0000189d       0x7c /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .debug_abbrev  0x00001919       0xa6 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .debug_abbrev  0x000019bf       0xa9 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .debug_abbrev  0x00001a68      0x16a /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+ .debug_abbrev  0x00001bd2      0x17f /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .debug_abbrev  0x00001d51      0x1c3 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .debug_abbrev  0x00001f14       0x8b /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .debug_abbrev  0x00001f9f      0x1e8 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .debug_abbrev  0x00002187      0x157 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+ .debug_abbrev  0x000022de       0xa6 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+
+.debug_line     0x00000000     0x3162
+ *(.debug_line)
+ .debug_line    0x00000000      0x29f ./main.o
+ .debug_line    0x0000029f       0x85 ./sys/sysManager.o
+ .debug_line    0x00000324      0x288 ./sys/syscalls.o
+ .debug_line    0x000005ac      0x176 ./lib/libUart/libUart.o
+ .debug_line    0x00000722      0x2b6 ./lib/libTime/libTimer.o
+ .debug_line    0x000009d8       0xb8 ./lib/libTime/tc.o
+ .debug_line    0x00000a90       0x7d ./lib/libManager.o
+ .debug_line    0x00000b0d       0x3e ./lib/libIpStack/uip/psock.o
+ .debug_line    0x00000b4b       0x3e ./lib/libIpStack/uip/timer.o
+ .debug_line    0x00000b89       0x3f ./lib/libIpStack/uip/uip-fw.o
+ .debug_line    0x00000bc8       0x45 ./lib/libIpStack/uip/uip-neighbor.o
+ .debug_line    0x00000c0d       0x42 ./lib/libIpStack/uip/uip-split.o
+ .debug_line    0x00000c4f       0x3c ./lib/libIpStack/uip/uip.o
+ .debug_line    0x00000c8b       0x40 ./lib/libIpStack/uip/uip_arp.o
+ .debug_line    0x00000ccb       0x3f ./lib/libIpStack/uip/uiplib.o
+ .debug_line    0x00000d0a       0x41 ./lib/libIpStack/uip/lib/memb.o
+ .debug_line    0x00000d4b       0xc4 ./lib/libFat/diskio.o
+ .debug_line    0x00000e0f      0x60e ./lib/libFat/ff.o
+ .debug_line    0x0000141d      0x4fb ./lib/libFat/tff.o
+ .debug_line    0x00001918      0x1d5 ./dv/dvUart/dvUart.o
+ .debug_line    0x00001aed      0x11f ./dv/dvTimer/dvTimer.o
+ .debug_line    0x00001c0c       0xe2 ./dv/dvSpi/dvSpi.o
+ .debug_line    0x00001cee       0xb1 ./dv/dvPWM/dvPWM.o
+ .debug_line    0x00001d9f       0xa3 ./dv/dvManager.o
+ .debug_line    0x00001e42       0xe4 ./dv/dvExtInt/dvExtInt.o
+ .debug_line    0x00001f26       0x3f ./cfg/cfgIpStack/clock-arch.o
+ .debug_line    0x00001f65      0x372 ./app/appTest/appTestserial.o
+ .debug_line    0x000022d7       0x88 ./app/appManager.o
+ .debug_line    0x0000235f       0x81 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o)
+ .debug_line    0x000023e0       0x55 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_dvmd_tls.o)
+ .debug_line    0x00002435      0x105 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ .debug_line    0x0000253a      0x234 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+ .debug_line    0x0000276e       0xb4 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .debug_line    0x00002822       0xb8 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .debug_line    0x000028da       0xc0 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .debug_line    0x0000299a       0xfd /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+ .debug_line    0x00002a97      0x100 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .debug_line    0x00002b97      0x1cc /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .debug_line    0x00002d63       0x9c /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .debug_line    0x00002dff      0x1b3 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .debug_line    0x00002fb2       0xeb /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+ .debug_line    0x0000309d       0xc5 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+
+.debug_frame    0x00000000     0x1410
+ *(.debug_frame)
+ .debug_frame   0x00000000       0x28 ./main.o
+ .debug_frame   0x00000028       0x20 ./sys/sysManager.o
+ .debug_frame   0x00000048       0x94 ./sys/syscalls.o
+ .debug_frame   0x000000dc       0x74 ./lib/libUart/libUart.o
+ .debug_frame   0x00000150       0x7c ./lib/libTime/libTimer.o
+ .debug_frame   0x000001cc       0x64 ./lib/libTime/tc.o
+ .debug_frame   0x00000230       0x28 ./lib/libManager.o
+ .debug_frame   0x00000258       0x88 ./lib/libFat/diskio.o
+ .debug_frame   0x000002e0      0x3f0 ./lib/libFat/ff.o
+ .debug_frame   0x000006d0      0x3c4 ./lib/libFat/tff.o
+ .debug_frame   0x00000a94      0x400 ./dv/dvUart/dvUart.o
+ .debug_frame   0x00000e94       0x60 ./dv/dvTimer/dvTimer.o
+ .debug_frame   0x00000ef4      0x190 ./dv/dvSpi/dvSpi.o
+ .debug_frame   0x00001084       0x70 ./dv/dvPWM/dvPWM.o
+ .debug_frame   0x000010f4       0x30 ./dv/dvManager.o
+ .debug_frame   0x00001124       0x40 ./dv/dvExtInt/dvExtInt.o
+ .debug_frame   0x00001164       0x48 ./app/appTest/appTestserial.o
+ .debug_frame   0x000011ac       0x40 ./app/appManager.o
+ .debug_frame   0x000011ec       0x28 /usr/local/arm/lib/gcc/arm-elf/4.1.1/libgcc.a(_udivsi3.o)
+ .debug_frame   0x00001214       0x30 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ .debug_frame   0x00001244       0x38 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+ .debug_frame   0x0000127c       0x28 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .debug_frame   0x000012a4       0x28 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .debug_frame   0x000012cc       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .debug_frame   0x000012ec       0x30 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+ .debug_frame   0x0000131c       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .debug_frame   0x0000133c       0x38 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .debug_frame   0x00001374       0x20 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .debug_frame   0x00001394       0x54 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .debug_frame   0x000013e8       0x28 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+
+.debug_str      0x00000000     0x180b
+ *(.debug_str)
+ .debug_str     0x00000000       0x90 ./main.o
+                                 0xce (taille avant relaxe)
+ .debug_str     0x00000090      0x16e ./sys/sysManager.o
+                                0x1cd (taille avant relaxe)
+ .debug_str     0x000001fe      0x48d ./sys/syscalls.o
+                                0x5a8 (taille avant relaxe)
+ .debug_str     0x0000068b      0x2e7 ./lib/libUart/libUart.o
+                                0x38b (taille avant relaxe)
+ .debug_str     0x00000972      0x17a ./lib/libTime/libTimer.o
+                                0x23c (taille avant relaxe)
+ .debug_str     0x00000aec       0xa4 ./lib/libTime/tc.o
+                                0x125 (taille avant relaxe)
+ .debug_str     0x00000b90       0x26 ./lib/libManager.o
+                                 0x69 (taille avant relaxe)
+ .debug_str     0x00000bb6       0xa9 ./lib/libFat/diskio.o
+                                0x15c (taille avant relaxe)
+ .debug_str     0x00000c5f      0x493 ./lib/libFat/ff.o
+                                0x5d4 (taille avant relaxe)
+ .debug_str     0x000010f2       0x1a ./lib/libFat/tff.o
+                                0x54d (taille avant relaxe)
+ .debug_str     0x0000110c       0x38 ./dv/dvUart/dvUart.o
+ .debug_str     0x00001144       0x12 ./dv/dvTimer/dvTimer.o
+ .debug_str     0x00001156       0x44 ./dv/dvSpi/dvSpi.o
+ .debug_str     0x0000119a       0x14 ./dv/dvExtInt/dvExtInt.o
+ .debug_str     0x000011ae       0x61 ./app/appTest/appTestserial.o
+                                0x120 (taille avant relaxe)
+ .debug_str     0x0000120f       0x38 ./app/appManager.o
+                                 0x6e (taille avant relaxe)
+ .debug_str     0x00001247       0x7a /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+                                0x4be (taille avant relaxe)
+ .debug_str     0x000012c1      0x1f7 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+                                0x69f (taille avant relaxe)
+ .debug_str     0x000014b8       0x7c /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+                                0x10c (taille avant relaxe)
+ .debug_str     0x00001534       0x58 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+                                 0xd6 (taille avant relaxe)
+ .debug_str     0x0000158c       0x3e /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+                                0x120 (taille avant relaxe)
+ .debug_str     0x000015ca       0x5c /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mlock.o)
+                                0x4c5 (taille avant relaxe)
+ .debug_str     0x00001626       0x33 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+                                0x4b6 (taille avant relaxe)
+ .debug_str     0x00001659       0x61 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+                                0x571 (taille avant relaxe)
+ .debug_str     0x000016ba       0x37 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+                                0x11f (taille avant relaxe)
+ .debug_str     0x000016f1       0x3c /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+                                0x5f1 (taille avant relaxe)
+ .debug_str     0x0000172d       0x92 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(impure.o)
+                                0x4bc (taille avant relaxe)
+ .debug_str     0x000017bf       0x4c /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+                                0x13f (taille avant relaxe)
+
+.debug_loc      0x00000000     0x5acf
+ *(.debug_loc)
+ .debug_loc     0x00000000       0x1f ./main.o
+ .debug_loc     0x0000001f      0x24a ./sys/syscalls.o
+ .debug_loc     0x00000269       0xcc ./lib/libUart/libUart.o
+ .debug_loc     0x00000335       0xa1 ./lib/libTime/libTimer.o
+ .debug_loc     0x000003d6       0xd6 ./lib/libTime/tc.o
+ .debug_loc     0x000004ac       0x1f ./lib/libManager.o
+ .debug_loc     0x000004cb      0x3eb ./lib/libFat/diskio.o
+ .debug_loc     0x000008b6     0x1ae8 ./lib/libFat/ff.o
+ .debug_loc     0x0000239e     0x157d ./lib/libFat/tff.o
+ .debug_loc     0x0000391b      0x516 ./dv/dvUart/dvUart.o
+ .debug_loc     0x00003e31       0x54 ./dv/dvTimer/dvTimer.o
+ .debug_loc     0x00003e85      0x1f8 ./dv/dvSpi/dvSpi.o
+ .debug_loc     0x0000407d       0x7e ./dv/dvPWM/dvPWM.o
+ .debug_loc     0x000040fb       0x2a ./dv/dvManager.o
+ .debug_loc     0x00004125       0x2a ./dv/dvExtInt/dvExtInt.o
+ .debug_loc     0x0000414f       0x3d ./app/appTest/appTestserial.o
+ .debug_loc     0x0000418c       0x3e ./app/appManager.o
+ .debug_loc     0x000041ca       0x3c /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(malloc.o)
+ .debug_loc     0x00004206      0x795 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+ .debug_loc     0x0000499b      0x13e /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcmp.o)
+ .debug_loc     0x00004ad9       0xdb /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memcpy.o)
+ .debug_loc     0x00004bb4       0xa9 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memset.o)
+ .debug_loc     0x00004c5d       0x3c /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(realloc.o)
+ .debug_loc     0x00004c99      0x922 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
+ .debug_loc     0x000055bb       0x47 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(strlen.o)
+ .debug_loc     0x00005602      0x38f /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(freer.o)
+ .debug_loc     0x00005991      0x13e /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(memmove.o)
+
+.debug_macinfo  0x00000000    0x8fad9
+ *(.debug_macinfo)
+ .debug_macinfo
+                0x00000000     0x3223 ./main.o
+ .debug_macinfo
+                0x00003223     0xd100 ./sys/sysManager.o
+ .debug_macinfo
+                0x00010323     0x30ba ./sys/syscalls.o
+ .debug_macinfo
+                0x000133dd     0xd455 ./lib/libUart/libUart.o
+ .debug_macinfo
+                0x00020832     0xeeb5 ./lib/libTime/libTimer.o
+ .debug_macinfo
+                0x0002f6e7     0xd338 ./lib/libTime/tc.o
+ .debug_macinfo
+                0x0003ca1f      0x7cf ./lib/libManager.o
+ .debug_macinfo
+                0x0003d1ee      0x7aa ./lib/libIpStack/uip/psock.o
+ .debug_macinfo
+                0x0003d998      0x7aa ./lib/libIpStack/uip/timer.o
+ .debug_macinfo
+                0x0003e142      0x7aa ./lib/libIpStack/uip/uip-fw.o
+ .debug_macinfo
+                0x0003e8ec      0x7aa ./lib/libIpStack/uip/uip-neighbor.o
+ .debug_macinfo
+                0x0003f096      0x7aa ./lib/libIpStack/uip/uip-split.o
+ .debug_macinfo
+                0x0003f840      0x7bf ./lib/libIpStack/uip/uip.o
+ .debug_macinfo
+                0x0003ffff      0x7aa ./lib/libIpStack/uip/uip_arp.o
+ .debug_macinfo
+                0x000407a9      0x7aa ./lib/libIpStack/uip/uiplib.o
+ .debug_macinfo
+                0x00040f53      0x7aa ./lib/libIpStack/uip/lib/memb.o
+ .debug_macinfo
+                0x000416fd      0xa10 ./lib/libFat/diskio.o
+ .debug_macinfo
+                0x0004210d     0x2b96 ./lib/libFat/ff.o
+ .debug_macinfo
+                0x00044ca3     0x29cf ./lib/libFat/tff.o
+ .debug_macinfo
+                0x00047672     0xd9f0 ./dv/dvUart/dvUart.o
+ .debug_macinfo
+                0x00055062     0xd452 ./dv/dvTimer/dvTimer.o
+ .debug_macinfo
+                0x000624b4     0xd6c9 ./dv/dvSpi/dvSpi.o
+ .debug_macinfo
+                0x0006fb7d     0xd6b0 ./dv/dvPWM/dvPWM.o
+ .debug_macinfo
+                0x0007d22d      0x7f3 ./dv/dvManager.o
+ .debug_macinfo
+                0x0007da20     0xd41d ./dv/dvExtInt/dvExtInt.o
+ .debug_macinfo
+                0x0008ae3d      0x7aa ./cfg/cfgIpStack/clock-arch.o
+ .debug_macinfo
+                0x0008b5e7     0x3d21 ./app/appTest/appTestserial.o
+ .debug_macinfo
+                0x0008f308      0x7d1 ./app/appManager.o
+
+.debug_weaknames
+ *(.debug_weaknames)
+
+.debug_funcnames
+ *(.debug_funcnames)
+
+.debug_typenames
+ *(.debug_typenames)
+
+.debug_varnames
+ *(.debug_varnames)
+OUTPUT(BaseArm7AT91 elf32-littlearm)
+
+.debug_ranges   0x00000000      0x1e8
+ .debug_ranges  0x00000000       0x40 ./lib/libFat/ff.o
+ .debug_ranges  0x00000040       0x40 ./lib/libFat/tff.o
+ .debug_ranges  0x00000080       0x50 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(mallocr.o)
+ .debug_ranges  0x000000d0      0x118 /usr/local/arm/lib/gcc/arm-elf/4.1.1/../../../../arm-elf/lib/libc.a(reallocr.o)
