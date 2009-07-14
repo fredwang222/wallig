@@ -16,6 +16,7 @@
 */
 
 #include "sys/AT91SAM7S64.h"                    /* AT91SAMT7S64 definitions */
+#include "sys/lib_AT91SAM7S64.h"                    /* AT91SAMT7S64 definitions */
 #include "sys/Board.h"
 #include "dv/dvISR/interrupt_utils.h"
 #include "lib/libTime/libTimer.h"
@@ -37,34 +38,54 @@ void disk_timerproc (void);
 // mt void system_int (void) __irq __atr {        /* System Interrupt Handler */
 //void  __attribute__ ((interrupt("IRQ"))) system_int (void) __atr {        /* System Interrupt Handler */
 //void  INTFUNC ATTR system_int (void) {        /* System Interrupt Handler */
+//void  NACKEDFUNC system_int (void) {        /* System Interrupt Handler */
+void system_int (void)
+{
 
-void  NACKEDFUNC ATTR system_int (void) {        /* System Interrupt Handler */
-  volatile AT91S_PITC * pPIT = AT91C_BASE_PITC;
+	volatile unsigned int uiPVR;
 
-  ISR_ENTRY();
-
-	if (pPIT->PITC_PISR & AT91C_PITC_PITS) 
+  if (AT91F_PITGetStatus(AT91C_BASE_PITC)&AT91C_PITC_PITS)
 	{  /* Check PIT Interrupt */
 		vFlibTimer_Tick();
 		timeval++;                              /* Increment Time Tick */
+		uiPVR=AT91F_PITGetPIVR(AT91C_BASE_PITC);
 #ifdef kUSE_FAT
 		if(!(timeval%10))
 			disk_timerproc();
 #endif
-		*AT91C_AIC_EOICR = pPIT->PITC_PIVR;     /* Ack & End of Interrupt */
+		AT91F_AIC_AcknowledgeIt(AT91C_BASE_AIC);     /* Ack & End of Interrupt */
 	} 
 	else 
-		*AT91C_AIC_EOICR = 0;                   /* End of Interrupt */
+		AT91F_AIC_AcknowledgeIt(AT91C_BASE_AIC);     /* Ack & End of Interrupt */
   
-  ISR_EXIT();
+}
+
+void NACKEDFUNC PITIsr_Wrapper( void )
+{
+	/* Save the context of the interrupted task. */
+	ISR_ENTRY();
+
+	/* Call the handler to do the work.  This must be a separate
+	function to ensure the stack frame is set up correctly. */
+	system_int();
+
+	/* Restore the context of whichever task will execute next. */
+	ISR_EXIT();
 }
 
 
 void vFdvTimer_init(void) {                    /* Setup PIT with Interrupt */
-  volatile AT91S_AIC * pAIC = AT91C_BASE_AIC;
+  //volatile AT91S_AIC * pAIC = AT91C_BASE_AIC;
 
-  //*AT91C_PIOA_CODR = LED3; 
+  //Periodic Timer
+	timeval=0;
+  AT91F_PITInit(AT91C_BASE_PITC,1000,MCKMHz);
+  AT91F_AIC_ConfigureIt ( AT91C_BASE_AIC, AT91C_ID_SYS, 6 ,AT91C_AIC_SRCTYPE_INT_POSITIVE_EDGE, (void (*) ())PITIsr_Wrapper);
+  AT91F_AIC_EnableIt (AT91C_BASE_AIC, AT91C_ID_SYS);
+  AT91F_PITEnableInt(AT91C_BASE_PITC);
 
+
+#if 0
   *AT91C_PITC_PIMR = AT91C_PITC_PITIEN |    /* PIT Interrupt Enable */ 
                      AT91C_PITC_PITEN  |    /* PIT Enable */
                      PIV;                   /* Periodic Interval Value */ 
@@ -75,7 +96,7 @@ void vFdvTimer_init(void) {                    /* Setup PIT with Interrupt */
   
   pAIC->AIC_SVR[AT91C_ID_SYS] = (unsigned long) system_int;
   pAIC->AIC_IECR = (1 << AT91C_ID_SYS);
-  
+#endif
   //*AT91C_PIOA_CODR = LED2; 
   
 }

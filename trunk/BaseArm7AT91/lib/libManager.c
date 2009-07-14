@@ -4,5 +4,5 @@
 void vFlibManager_Init( void )
 {
 	vFlibTimer_Iinit();
-	vFlibUart_Init();
+	//vFlibUart_Init();
 }

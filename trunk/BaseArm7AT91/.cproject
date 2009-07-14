@@ -142,19 +142,33 @@
 </tool>
 </toolChain>
 </folderInfo>
-<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1106186959.1448958023" name="startup_SAM7S.s" rcbsApplicability="disable" resourcePath="sys/startup_SAM7S.S" toolsToInvoke="cdt.managedbuild.tool.gnu.assembler.exe.debug.1330461096.811101014">
-<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.1330461096.811101014" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug.1330461096">
-<inputType id="cdt.managedbuild.tool.gnu.assembler.input.137631682" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.1106186959.2140553639" name="/" resourcePath="OS">
+<toolChain id="cdt.managedbuild.toolchain.gnu.exe.debug.1364060666" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug" unusedChildren="">
+<targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.debug" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.debug"/>
+<tool id="cdt.managedbuild.tool.gnu.archiver.base.1721912835" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base.494756616"/>
+<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.239520398" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.442556021">
+<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.1655651699" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.47370751" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 </tool>
-<tool announcement="Invoking: Resource Custom Build Step" command="" customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.1247210007" name="Resource Custom Build Step">
-<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.204755669" name="Resource Custom Build Step Input Type">
-<additionalInput kind="additionalinputdependency" paths=""/>
-</inputType>
-<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.60286846" name="Resource Custom Build Step Output Type" outputNames=""/>
+<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1090734104" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.520104362">
+<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.976528013" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" valueType="enumerated"/>
+<option id="gnu.c.compiler.exe.debug.option.debugging.level.2129469645" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+<option id="gnu.c.compiler.option.include.paths.813568431" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+<listOptionValue builtIn="false" value="&quot;.&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/BaseArm7AT91/OS/inc}&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/BaseArm7AT91}&quot;"/>
+</option>
+<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1371403809" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 </tool>
-</fileInfo>
+<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1274256620" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1607523829"/>
+<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.688214233" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1586795837"/>
+<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.1777765652" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug.574050222">
+<inputType id="cdt.managedbuild.tool.gnu.assembler.input.991485216" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+</tool>
+</toolChain>
+</folderInfo>
 <sourceEntries>
-<entry excluding="lib/libFat/StorageDevices|app/appTest/appTestFat.c|lib/libServo|lib/libMouse" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="OS|OS/ports/SAM7|OS/ports/x86w32|OS/ports/x86dos|OS/ports/ppc440|OS/ports/mycpu|OS/ports/avr|OS/ports/arm|OS/ports/6502|lib/libFat/StorageDevices|app/appTest/appTestFat.c|lib/libServo|lib/libMouse" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -452,7 +466,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="lib/libFat/StorageDevices|app/appTest/appTestFat.c|lib/libServo|lib/libMouse" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="OS|OS/ports/SAM7|OS/ports/x86w32|OS/ports/x86dos|OS/ports/ppc440|OS/ports/mycpu|OS/ports/avr|OS/ports/arm|OS/ports/6502|lib/libFat/StorageDevices|app/appTest/appTestFat.c|lib/libServo|lib/libMouse" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -829,19 +843,8 @@
 </tool>
 </toolChain>
 </folderInfo>
-<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1106186959.257771031.sys/startup_SAM7S.s" name="startup_SAM7S.s" rcbsApplicability="disable" resourcePath="sys/startup_SAM7S.S" toolsToInvoke="cdt.managedbuild.tool.gnu.assembler.exe.debug.1316874787">
-<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.1316874787" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug.744234054">
-<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1497177979" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
-</tool>
-<tool announcement="Invoking: Resource Custom Build Step" command="" customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.1247210007.1460325883" name="Resource Custom Build Step">
-<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.204755669.2073369295" name="Resource Custom Build Step Input Type">
-<additionalInput kind="additionalinputdependency" paths=""/>
-</inputType>
-<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.60286846.1263332923" name="Resource Custom Build Step Output Type" outputNames=""/>
-</tool>
-</fileInfo>
 <sourceEntries>
-<entry excluding="lib/libFat/StorageDevices|app/appTest/appTestFat.c|lib/libServo|lib/libMouse" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="OS|OS/ports/SAM7|OS/ports/x86w32|OS/ports/x86dos|OS/ports/ppc440|OS/ports/mycpu|OS/ports/avr|OS/ports/arm|OS/ports/6502|lib/libFat/StorageDevices|app/appTest/appTestFat.c|lib/libServo|lib/libMouse" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -1218,19 +1221,8 @@
 </tool>
 </toolChain>
 </folderInfo>
-<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1106186959.762998990.sys/startup_SAM7S.s" name="startup_SAM7S.s" rcbsApplicability="disable" resourcePath="sys/startup_SAM7S.S" toolsToInvoke="cdt.managedbuild.tool.gnu.assembler.exe.debug.271269449">
-<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.271269449" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug.2059283962">
-<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1030817670" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
-</tool>
-<tool announcement="Invoking: Resource Custom Build Step" command="" customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.1247210007.495703967" name="Resource Custom Build Step">
-<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.204755669.298428877" name="Resource Custom Build Step Input Type">
-<additionalInput kind="additionalinputdependency" paths=""/>
-</inputType>
-<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.60286846.1680015644" name="Resource Custom Build Step Output Type" outputNames=""/>
-</tool>
-</fileInfo>
 <sourceEntries>
-<entry excluding="lib/libFat/StorageDevices|app/appTest/appTestFat.c|lib/libServo|lib/libMouse" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="OS|OS/ports/SAM7|OS/ports/x86w32|OS/ports/x86dos|OS/ports/ppc440|OS/ports/mycpu|OS/ports/avr|OS/ports/arm|OS/ports/6502|lib/libFat/StorageDevices|app/appTest/appTestFat.c|lib/libServo|lib/libMouse" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>

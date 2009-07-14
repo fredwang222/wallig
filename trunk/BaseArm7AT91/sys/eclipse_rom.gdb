@@ -1,5 +1,5 @@
 target remote localhost:3333
-monitor reset
+monitor reset 
 monitor sleep 500
 monitor poll
 monitor soft_reset_halt
@@ -36,7 +36,7 @@ monitor sleep 100
 monitor sleep 500
 monitor flash write_image erase Debug/BaseArm7AT91 0 elf
 #load
-break main
+tbreak main
 display/i $pc
 stepi
 #continue

@@ -132,5 +132,6 @@ extern void AT91F_RSTSetMode( AT91PS_RSTC pRSTC, unsigned int mode);
 #define EXT_OC          18432000   // Exetrnal ocilator MAINCK
 #define MCK             48054857   // MCK (PLLRC div by 2)
 #define MCKKHz          (MCK/1000) //
+#define MCKMHz          (MCKKHz/1000) //
 
 #endif /* Board_h */
