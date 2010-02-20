@@ -16,14 +16,10 @@
 *    \endif
 *   \author Gwendal Le Gall
 *
-*	\date 02/02/2010
+*	\date 20/02/2010
 *
 *	\section Description Description
-*	This a software timer driver, there is 3 way of using it:
-*	- as a counter
-*	- for time out management
-*	- With a call back event
-*	It's need a main hardware or system periodic timer to work
+*	This a simple Uart driver
 *	\section Configuration Configuration
 *	Place here how to configure the driver
 *	- This is an example of configuration
@@ -32,26 +28,6 @@
 *	This is an example of the use of a time out timer
 *	\note the return values are not tested to simplify
         \code
-        DRV_Uart_Cfg sParam;
-        DRV_Uart_Handle hTimer1=NULL;
-
-        DRV_Uart_Init();
-        //config parameters
-        sParam.tType=TimeOut;
-        sParam.uiValue = 10;
-        //open the timer
-        DRV_Uart_Open("timer1",&hTimer1,&sParam)==No_Error)
-        //start the timer
-        DRV_Uart_Start(hTimer1);
-        //do something
-         ...
-        //test the timer value
-        if( DRV_Uart_GetValue(hTimer1) == 0 )
-          printf("Timeout!\n");
-        //close the timer
-        DRV_Uart_Close(hTimer1);
-
-        DRV_Uart_Terminate();
         \endcode
 *	\section arch architecture specific
 *
@@ -164,23 +140,23 @@ DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDev
  */
 DRV_Uart_Error DRV_Uart_Close( DRV_Uart_Handle hDeviceHandle );
 
-/*! \fn DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle , char *pcBuffer , int iLength);
+/*! \fn DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned char *pucBuffer , int iLength);
  *  \brief Sen a buffer to the UART.
  *  \param hDeviceHandle Handle of the instance to close.
- *  \param pcBuffer: pointer to the buffer to send
+ *  \param pucBuffer: pointer to the buffer to send
  *  \param iLength: length of the buffer
  *  \return Driver error.
  */
-DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle , char *pcBuffer , int iLength);
+DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned  char *pucBuffer , int iLength);
 
-/*! \fn DRV_Uart_Error DRV_Uart_Receive( DRV_Uart_Handle hDeviceHandle , char *pcBuffer , int *piLength);
+/*! \fn DRV_Uart_Error DRV_Uart_Receive( DRV_Uart_Handle hDeviceHandle ,unsigned char *pucBuffer , int *piLength);
  *  \brief Receive a  buffer to the UART.
  *  \param hDeviceHandle Handle of the instance to close.
- *  \param pcBuffer: pointer to the buffer
+ *  \param pucBuffer: pointer to the buffer
  *  \param piLength: length of the buffer
  *  \return Driver error.
  */
-DRV_Uart_Error DRV_Uart_Receive( DRV_Uart_Handle hDeviceHandle , char *pcBuffer , int *piLength);
+DRV_Uart_Error DRV_Uart_Receive( DRV_Uart_Handle hDeviceHandle ,unsigned char *pucBuffer , int *piLength);
 
 /*! \fn DRV_Uart_Error DRV_Uart_RXEnable( DRV_Uart_Handle hDeviceHandle , char cFlag );
  *  \brief Enable reception

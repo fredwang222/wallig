@@ -3,14 +3,15 @@
 *
 *	\author Gwendal Le Gall
 *
-*	\date 02/02/2010
+*	\date 20/02/2010
 *	\brief Private declarations for the driver
 *
 */
+#include "DRV_Uart_SLIP.h"
 #include "DRV_Uart_CFG.h"
 typedef enum
 {
-        Closed,
+    Closed,
 	started,
 	stopped
 } tState;
@@ -20,11 +21,14 @@ typedef enum
  */
 typedef struct
 {
-	char *pcDeviceName;            ///< Device Name
-	DRV_Uart_Cfg cfg;         ///< Driver configuration
-	void *pArchData;
-	char tcRXBuff[kDRV_Uart_RXBuffSize];
-	char tcTXBuff[kDRV_Uart_TXBuffSize];
+	char *pcDeviceName;            			///< Device Name
+	DRV_Uart_Cfg cfg;        				///< Driver configuration
+	void *pArchData;						///< Architecture data
+	tSLIP_Data tSLIP;						///< SLIP protocol data
+	unsigned char tucRXBuff[kDRV_Uart_RXBuffSize];	///< Rx buffer
+	int iRxBuffIndex;								///< Rx buffer index
+	unsigned char tucTXBuff[kDRV_Uart_TXBuffSize];	///< Tx buffer
+	int iTxBuffIndex;								///< Tx buffer index
 	tState eRxState;
 	tState eTxState;
 } DRV_Uart_Devicedata;
@@ -50,11 +54,16 @@ DRV_Uart_Error DRV_Uart_ArchInit(void );
  *  \note This is architecture dependent
  */
 DRV_Uart_Error DRV_Uart_ArchTerminate(void );
-
+/*!
+ *  \brief open a device
+ *  \note This is architecture dependent
+ */
 
 DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart );
-DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart );
 /*!
- *  \brief Called by the Main Timer
+ *  \brief Close a device
+ *  \note This is architecture dependent
  */
-void DRV_Softimer_TimerCallBack( void );
+DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart );
+
+int DRV_Uart_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucFiFoBuffer , int iLength );

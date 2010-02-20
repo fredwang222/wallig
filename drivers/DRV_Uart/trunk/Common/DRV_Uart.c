@@ -3,7 +3,7 @@
 
 	\author Gwendal Le Gall
 
-	\date 02/02/2010
+	\date 20/02/2010
 */
 #include <stdio.h>
 #include <string.h>
@@ -57,18 +57,18 @@ DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDev
         {
         	if( !strcmp(pcDeviceName, sDRV_Uart_MainData.tpcName[iUartIndex] ))
         	{
-        		if(DRV_UART_ArchOpen(pUart) != No_Error)
-        			tError = Bad_Param;
+        		tError = DRV_UART_ArchOpen(pUart);
+        		if( tError != No_Error)
+        			return tError;
         		pUart = &sDRV_Uart_MainData.tsUarts[iUartIndex];
         		pUart->cfg=*ptParam;
-        		memset(pUart->tcRXBuff,0,kDRV_Uart_RXBuffSize);
-        		memset(pUart->tcTXBuff,0,kDRV_Uart_TXBuffSize);
+        		memset(pUart->tucRXBuff,0,kDRV_Uart_RXBuffSize);
+        		memset(pUart->tucTXBuff,0,kDRV_Uart_TXBuffSize);
         		break;
         	}
         }
         if( pUart==NULL)
         	tError = Device_Not_Found;
-
 	return tError;
 }
 
@@ -85,7 +85,7 @@ DRV_Uart_Error DRV_Uart_Close( DRV_Uart_Handle hDeviceHandle )
 
 
 
-DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle , char *pcBuffer , int iLength)
+DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned char *pucBuffer , int iLength)
 {
   DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 
@@ -95,7 +95,7 @@ DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle , char *pcBuffer , i
   return No_Error;
 }
 
-DRV_Uart_Error DRV_Uart_Receive( DRV_Uart_Handle hDeviceHandle , char *pcBuffer , int *piLength)
+DRV_Uart_Error DRV_Uart_Receive( DRV_Uart_Handle hDeviceHandle , unsigned char *pucBuffer , int *piLength)
 {
   DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 
@@ -128,5 +128,35 @@ DRV_Uart_Error DRV_Uart_TXEnable( DRV_Uart_Handle hDeviceHandle , char cFlag )
 /**************************************************************
                  private Functions
 ***************************************************************/
+int DRV_Uart_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucFiFoBuffer , int iLength )
+{
+	int iBufferIndex;
+	//Append data to the rx buffer
+	for( iBufferIndex=0;iBufferIndex<iLength ; iBufferIndex++ )
+	{
+		if( pUart->cfg.eSLIPModeEnable )
+		{
+			pUart->iRxBuffIndex=DRV_Uart_Slip_Rx( &pUart->tSLIP , *(pucFiFoBuffer++) , pUart->tucRXBuff ,kDRV_Uart_RXBuffSize);
+			if(  pUart->iRxBuffIndex )
+				break;
+		}
+		else
+		{
+			if( pUart->iRxBuffIndex < kDRV_Uart_RXBuffSize )
+				pUart->tucRXBuff[pUart->iRxBuffIndex++] =*(pucFiFoBuffer++);
+			else
+				break;
+		}
 
+	}
+
+	iLength-=iBufferIndex;
+	if(iLength)
+	{
+		//There is still some unread data in the buffer, update the FIFIO
+		for( iBufferIndex=0;iBufferIndex<iLength ; iBufferIndex++ )
+			pucFiFoBuffer[iBufferIndex]=pucFiFoBuffer[iBufferIndex+iLength];
+	}
+	return iLength;
+}
 

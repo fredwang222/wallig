@@ -3,11 +3,12 @@
 
 	\author Gwendal Le Gall
 
-	\date 02/02/2010
+	\date 20/02/2010
 
-	\section UartLinux Linux implementation of the main timer
+	\section UartLinux Linux implementation of the Uart driver
 
-	This implementation is a simple thread which use usleep()
+	It use termios for configuration\n
+	The reception is done with a thread
 
 */
  #include <sys/types.h>
@@ -131,7 +132,7 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 	if(tError == No_Error)
 	{
 		//Create the RX thread
-		if( pthread_create( &pData->RXThread, NULL, DRV_Uart_RX_Thread, pData ) < 0 )
+		if( pthread_create( &pData->RXThread, NULL, DRV_Uart_RX_Thread, pUart ) < 0 )
 			tError=  Init_Error;
 		//Init mutex for the safe sections
 		pthread_mutex_init (&pData->RXmutex, NULL);
@@ -143,17 +144,24 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 	}
 	return tError;
 }
+/*!
+ * \brief Rx thread function call the driver call back
+ */
 void *DRV_Uart_RX_Thread( void * arg )
 {
-	char tcBuffIn[255];
-	int iRxChars;
-	DRV_UART_ARCH_Data *pData = (DRV_UART_ARCH_Data *) arg;
+	unsigned char tucBuffIn[255];
+	unsigned char *pucBuff=tucBuffIn;
+	unsigned int uiRxChars , uiReadChars=0;
+	DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata*) arg;
+	DRV_UART_ARCH_Data *pData =(DRV_UART_ARCH_Data *) pUart->pArchData ;
     //Allow the application to kill the thread
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
     while(1)
     {
-    	iRxChars = read( pData->fd , tcBuffIn , sizeof(tcBuffIn) );
+    	uiRxChars = read( pData->fd , pucBuff , sizeof(tucBuffIn)-(uiRxChars-uiReadChars) );
+    	uiReadChars = DRV_Uart_Private_Callback( pUart , tucBuffIn , uiRxChars );
+    	pucBuff = &tucBuffIn[uiRxChars-uiReadChars];
     }
 
 }
@@ -161,6 +169,7 @@ void *DRV_Uart_RX_Thread( void * arg )
 DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart )
 {
 	void *ret;
+
 	DRV_UART_ARCH_Data *pData =(DRV_UART_ARCH_Data *) pUart->pArchData ;
 
 	//kill the RX thread
