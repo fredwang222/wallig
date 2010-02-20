@@ -11,11 +11,17 @@
 #include "DRV_Uart_CFG.h"
 typedef enum
 {
-    Closed,
-	started,
-	stopped
-} tState;
+    RXClosed,
+	RXEmpty,
+	RXFull,
+} tRxState;
 
+typedef enum
+{
+    TXClosed,
+	TXIdle,
+	TXBusy,
+} tTxState;
 /*!
  *  \brief Uart device data
  */
@@ -29,8 +35,8 @@ typedef struct
 	int iRxBuffIndex;								///< Rx buffer index
 	unsigned char tucTXBuff[kDRV_Uart_TXBuffSize];	///< Tx buffer
 	int iTxBuffIndex;								///< Tx buffer index
-	tState eRxState;
-	tState eTxState;
+	tRxState eRxState;
+	tTxState eTxState;
 } DRV_Uart_Devicedata;
 
 /*!
@@ -65,5 +71,13 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart );
  *  \note This is architecture dependent
  */
 DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart );
+/*!
+ *  \brief RX function call by the device
+ *  \param pUart device data
+ *  \param pucBuffer input buffer
+ *  \param iLength Number of char in the buffer
+ *  \return the number of char read int the buffer
+ */
+int DRV_Uart_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucBuffer , int iLength );
 
-int DRV_Uart_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucFiFoBuffer , int iLength );
+DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pucBuffer , int iLength);

@@ -53,10 +53,13 @@ typedef enum
 	No_Error,    //!< OK
 	Failed,      //!< generic error
 	Device_Not_Found,
+	AlreadyOpened,
 	Init_Error,
 	Bad_Param,
 	No_Data,     //!< No Data in Buffer
 	Input_Null,  //!< A input parameter pointer is NULL
+	RXError,
+	TXError,
 	Unknown      //!< unexpected error
 } DRV_Uart_Error;
 
@@ -66,9 +69,9 @@ typedef enum
  */
 typedef enum
 {
-        BR4800,
-        BR9600,
-        BR115200,
+        BR4800,         //!< 4800 bauds
+        BR9600,         //!< 9600 bauds
+        BR115200,       //!< 115000 bauds
         BRUnknown      //!< unexpected error
 } DRV_Uart_BaudRate;
 
@@ -174,3 +177,14 @@ DRV_Uart_Error DRV_Uart_RXEnable( DRV_Uart_Handle hDeviceHandle , char cFlag );
  */
 DRV_Uart_Error DRV_Uart_TXEnable( DRV_Uart_Handle hDeviceHandle , char cFlag );
 
+/*!
+ * \brief Is TX is busy?
+ * \return 1 if busy else 0
+ */
+int DRV_Uart_TXBusy( DRV_Uart_Handle hDeviceHandle );
+
+/*!
+ * \brief Is there any data received?
+ * \return 1 if data else 0
+ */
+int DRV_Uart_RXDataReceived( DRV_Uart_Handle hDeviceHandle );

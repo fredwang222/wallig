@@ -159,9 +159,15 @@ void *DRV_Uart_RX_Thread( void * arg )
 
     while(1)
     {
-    	uiRxChars = read( pData->fd , pucBuff , sizeof(tucBuffIn)-(uiRxChars-uiReadChars) );
+    	uiRxChars = read( pData->fd , pucBuff , sizeof(tucBuffIn)-(uiReadChars) );
     	uiReadChars = DRV_Uart_Private_Callback( pUart , tucBuffIn , uiRxChars );
-    	pucBuff = &tucBuffIn[uiRxChars-uiReadChars];
+    	if(uiReadChars)
+		{
+			//There is still some unread data in the buffer, update the FIFIO
+			for( uiRxChars=0;uiRxChars<uiReadChars ; uiRxChars++ )
+				tucBuffIn[uiRxChars]=tucBuffIn[uiRxChars+uiReadChars];
+		}
+    	pucBuff = &tucBuffIn[uiReadChars];
     }
 
 }
@@ -186,4 +192,17 @@ DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart )
     free(pData);
     pUart->pArchData=NULL;
     return No_Error;
+}
+
+DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pucBuffer , int iLength)
+{
+	DRV_UART_ARCH_Data *pData =(DRV_UART_ARCH_Data *) pUart->pArchData ;
+	int iSendLen;
+
+	iSendLen = write(pData->fd , pucBuffer , iLength);
+	pUart->eTxState = TXIdle;
+	if(iSendLen!=iLength)
+		return RXError;
+	else
+		return No_Error;
 }
