@@ -186,6 +186,8 @@ DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart )
     }
      //wait the end of the called thread
     (void)pthread_join (pData->RXThread, &ret);
+    //Restore old settings
+    tcsetattr( pData->fd,TCSANOW,&pData->oldtio);
     //close the device
     close(pData->fd);
     //free the private data
@@ -205,4 +207,22 @@ DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pu
 		return RXError;
 	else
 		return No_Error;
+}
+
+DRV_Uart_ArchRXFlush( DRV_Uart_Devicedata *pUart)
+{
+	DRV_UART_ARCH_Data *pData =(DRV_UART_ARCH_Data *) pUart->pArchData ;
+
+	tcflush( pData->fd, TCIFLUSH);
+
+	return No_Error;
+}
+
+DRV_Uart_ArchTXFlush( DRV_Uart_Devicedata *pUart)
+{
+	DRV_UART_ARCH_Data *pData =(DRV_UART_ARCH_Data *) pUart->pArchData ;
+
+	tcflush( pData->fd, TCOFLUSH);
+
+	return No_Error;
 }

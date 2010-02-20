@@ -179,12 +179,28 @@ DRV_Uart_Error DRV_Uart_TXEnable( DRV_Uart_Handle hDeviceHandle , char cFlag );
 
 /*!
  * \brief Is TX is busy?
+ * \param hDeviceHandle Device Handle
  * \return 1 if busy else 0
  */
 int DRV_Uart_TXBusy( DRV_Uart_Handle hDeviceHandle );
 
 /*!
  * \brief Is there any data received?
+ * \param hDeviceHandle Device Handle
  * \return 1 if data else 0
  */
 int DRV_Uart_RXDataReceived( DRV_Uart_Handle hDeviceHandle );
+
+/*!
+ * \brief Flus tx buffers?
+ * \param hDeviceHandle Device Handle
+  */
+
+DRV_Uart_Error DRV_Uart_TXFlush( DRV_Uart_Handle hDeviceHandle );
+
+/*!
+ * \brief Flus rx buffers?
+ * \param hDeviceHandle Device Handle
+  */
+
+DRV_Uart_Error DRV_Uart_RXFlush( DRV_Uart_Handle hDeviceHandle );
