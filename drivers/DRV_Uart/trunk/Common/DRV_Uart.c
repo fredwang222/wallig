@@ -42,19 +42,19 @@ DRV_Uart_Error DRV_Uart_Init( void )
     	tsUartsDeviceList[iUartIndex].eTxState = TXClosed;
     }
 	DRV_Uart_ArchInit();
- 	return No_Error;
+ 	return UART_No_Error;
 }
 
 DRV_Uart_Error DRV_Uart_Terminate( void )
 {
 
 	DRV_Uart_ArchTerminate();
-	return No_Error;
+	return UART_No_Error;
 }
 
 DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle , DRV_Uart_Cfg *ptSettings)
 {
-		DRV_Uart_Error tError = No_Error;
+		DRV_Uart_Error tError = UART_No_Error;
         DRV_Uart_Devicedata *pUart=NULL;
         int iUartIndex;
 
@@ -64,11 +64,11 @@ DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDev
         	{    //The device name match
         		//check if the device is not already open
 				if( tsUartsDeviceList[iUartIndex].eRxState != RXClosed )
-					return AlreadyOpened;
+					return UART_AlreadyOpened;
 				pUart = &tsUartsDeviceList[iUartIndex];
 				pUart->cfg=*ptSettings;
         		tError = DRV_UART_ArchOpen(pUart);
-        		if( tError != No_Error)
+        		if( tError != UART_No_Error)
         			return tError;
         		pUart->eRxState = RXEmpty;
         		pUart->eTxState = TXIdle;
@@ -81,7 +81,7 @@ DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDev
         	}
         }
         if( pUart==NULL)
-        	tError = Device_Not_Found;
+        	tError = UART_Device_Not_Found;
 	return tError;
 }
 
@@ -90,13 +90,13 @@ DRV_Uart_Error DRV_Uart_Close( DRV_Uart_Handle hDeviceHandle )
         DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 
         if( pUart == NULL )
-           return Input_Null;
+           return UART_Input_Null;
         DRV_UART_ArchClose(pUart);
         pUart->eRxState = RXClosed;
         pUart->eTxState = TXClosed;
         pUart->iRxBuffIndex=0;
 
-	return No_Error;
+	return UART_No_Error;
 }
 
 DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned char *pucBuffer , int iLength)
@@ -104,12 +104,12 @@ DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned char *pucB
   DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 
   if( pUart == NULL || pucBuffer == NULL)
-     return Input_Null;
+     return UART_Input_Null;
   DRV_Uart_Arch_RxSafeEnter(pUart);
   if( pUart->eTxState != TXIdle)
   {
 	  DRV_Uart_Arch_RxSafeLeave(pUart);
-	  return TXError;
+	  return UART_TXError;
   }
   //update status
   pUart->eTxState = TXBusy;
@@ -159,7 +159,7 @@ DRV_Uart_Error DRV_Uart_Receive( DRV_Uart_Handle hDeviceHandle , unsigned char *
   DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 
   if( pUart == NULL || pucBuffer == NULL )
-     return Input_Null;
+     return UART_Input_Null;
 
 
 	DRV_Uart_Arch_RxSafeEnter(pUart);
@@ -173,7 +173,7 @@ DRV_Uart_Error DRV_Uart_Receive( DRV_Uart_Handle hDeviceHandle , unsigned char *
 		pUart->eRxState = RXEmpty;
 	DRV_Uart_Arch_RxSafeLeave(pUart);
 
-    return No_Error;
+    return UART_No_Error;
 }
 
 DRV_Uart_Error DRV_Uart_RXEnable( DRV_Uart_Handle hDeviceHandle , char cFlag )
@@ -181,9 +181,9 @@ DRV_Uart_Error DRV_Uart_RXEnable( DRV_Uart_Handle hDeviceHandle , char cFlag )
   DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 
     if( pUart == NULL )
-       return Input_Null;
+       return UART_Input_Null;
 
-      return No_Error;
+      return UART_No_Error;
 }
 
 DRV_Uart_Error DRV_Uart_TXEnable( DRV_Uart_Handle hDeviceHandle , char cFlag )
@@ -191,22 +191,22 @@ DRV_Uart_Error DRV_Uart_TXEnable( DRV_Uart_Handle hDeviceHandle , char cFlag )
   DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 
     if( pUart == NULL )
-       return Input_Null;
+       return UART_Input_Null;
 
-      return No_Error;
+      return UART_No_Error;
 }
 DRV_Uart_Error DRV_Uart_RXFlush( DRV_Uart_Handle hDeviceHandle )
 {
 	DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 
 	if( pUart == NULL )
-	   return Input_Null;
+	   return UART_Input_Null;
 
 	DRV_Uart_Arch_RxSafeEnter(pUart);
 	pUart->iRxBuffIndex=0;
 	pUart->eRxState = RXEmpty;
 	DRV_Uart_Arch_RxSafeLeave(pUart);
-	return No_Error;
+	return UART_No_Error;
 }
 
 DRV_Uart_Error DRV_Uart_TXFlush( DRV_Uart_Handle hDeviceHandle )
@@ -214,13 +214,13 @@ DRV_Uart_Error DRV_Uart_TXFlush( DRV_Uart_Handle hDeviceHandle )
 	DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 
 	if( pUart == NULL )
-	   return Input_Null;
+	   return UART_Input_Null;
 
 	DRV_Uart_Arch_RxSafeEnter(pUart);
 	DRV_Uart_ArchTXFlush(pUart);
 	pUart->eTxState = TXIdle;
 	DRV_Uart_Arch_RxSafeLeave(pUart);
-	return No_Error;
+	return UART_No_Error;
 }
 /**************************************************************
                  private Functions

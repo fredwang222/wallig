@@ -89,17 +89,17 @@ typedef void * DRV_Uart_Handle;
  */
 typedef enum
 {
-	No_Error,    //!< OK
-	Failed,      //!< generic error
-	Device_Not_Found,
-	AlreadyOpened,
-	Init_Error,
-	Bad_Param,
-	No_Data,     //!< No Data in Buffer
-	Input_Null,  //!< A input parameter pointer is NULL
-	RXError,
-	TXError,
-	Unknown      //!< unexpected error
+	UART_No_Error,    //!< OK
+	UART_Failed,      //!< generic error
+	UART_Device_Not_Found,
+	UART_AlreadyOpened,
+	UART_Init_Error,
+	UART_Bad_Param,
+	UART_No_Data,     //!< No Data in Buffer
+	UART_Input_Null,  //!< A input parameter pointer is NULL
+	UART_RXError,
+	UART_TXError,
+	UART_Unknown      //!< unexpected error
 } DRV_Uart_Error;
 
 /** @defgroup DRV_Uart_Settings Uart basics settings

@@ -81,24 +81,24 @@ void DRV_Uart_Arch_TxSafeLeave( DRV_Uart_Devicedata *pUart )
 DRV_Uart_Error DRV_Uart_ArchInit(void )
 {
 
-  return No_Error;
+  return UART_No_Error;
 }
 
 DRV_Uart_Error DRV_Uart_ArchTerminate(void )
 {
 
 
-    return No_Error;
+    return UART_No_Error;
 }
 
 DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 {
-	DRV_Uart_Error tError = No_Error;
+	DRV_Uart_Error tError = UART_No_Error;
 	DRV_UART_ARCH_Data *pData;
 
 	pData = (DRV_UART_ARCH_Data *) malloc( sizeof(DRV_UART_ARCH_Data));
 	if(pData==NULL)
-		return Init_Error;
+		return UART_Init_Error;
 
 	/*
 	Open device for reading and writing and not as controlling tty
@@ -108,7 +108,7 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 	if (pData->fd <0)
 	{
 		free(pData);
-		return Init_Error;
+		return UART_Init_Error;
 	}
 	pUart->pArchData = (void*)pData;
 	tcgetattr(pData->fd,&pData->oldtio); /* save current serial port settings */
@@ -128,7 +128,7 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 		  pData->newtio.c_cflag |= B115200;
 		  break;
 	  default:
-		  tError=  Bad_Param;
+		  tError=  UART_Bad_Param;
 	}
 	//Parity
 	switch( pUart->cfg.eParity )
@@ -142,7 +142,7 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 		  pData->newtio.c_cflag |= PARENB | PARODD;
 		  break;
 	  default:
-		  tError=  Bad_Param;
+		  tError=  UART_Bad_Param;
 	}
 	 pData->newtio.c_oflag = 0;
 	 pData->newtio.c_lflag = 0;
@@ -150,18 +150,18 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 	 pData->newtio.c_cc[VTIME]=0;
 	tcflush( pData->fd, TCIFLUSH);
 	if( tcsetattr( pData->fd,TCSANOW,&pData->newtio) )
-		tError=  Init_Error;
+		tError=  UART_Init_Error;
 	//Termios configuration done
-	if(tError == No_Error)
+	if(tError == UART_No_Error)
 	{
 		//Create the RX thread
 		if( pthread_create( &pData->RXThread, NULL, DRV_Uart_RX_Thread, pUart ) < 0 )
-			tError=  Init_Error;
+			tError=  UART_Init_Error;
 		//Init mutex for the safe sections
 		pthread_mutex_init (&pData->RXmutex, NULL);
 		pthread_mutex_init (&pData->TXmutex, NULL);
 	}
-	if(tError != No_Error)
+	if(tError != UART_No_Error)
 	{ //cleanup allocated an open data in case of error
 	  close(pData->fd);
 	  free(pData);
@@ -205,7 +205,7 @@ DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart )
     if (pthread_cancel ( pData->RXThread) != 0)
     {
       fprintf (stderr, "pthread_cancel error for thread 1\n");
-      return Failed;
+      return UART_Failed;
     }
      //wait the end of the called thread
     (void)pthread_join (pData->RXThread, &ret);
@@ -216,7 +216,7 @@ DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart )
     //free the private data
     free(pData);
     pUart->pArchData=NULL;
-    return No_Error;
+    return UART_No_Error;
 }
 
 DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pucBuffer , int iLength)
@@ -227,9 +227,9 @@ DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pu
 	iSendLen = write(pData->fd , pucBuffer , iLength);
 	pUart->eTxState = TXIdle;
 	if(iSendLen!=iLength)
-		return RXError;
+		return UART_RXError;
 	else
-		return No_Error;
+		return UART_No_Error;
 }
 
 DRV_Uart_Error  DRV_Uart_ArchRXFlush( DRV_Uart_Devicedata *pUart)
@@ -238,7 +238,7 @@ DRV_Uart_Error  DRV_Uart_ArchRXFlush( DRV_Uart_Devicedata *pUart)
 
 	tcflush( pData->fd, TCIFLUSH);
 
-	return No_Error;
+	return UART_No_Error;
 }
 
 DRV_Uart_Error DRV_Uart_ArchTXFlush( DRV_Uart_Devicedata *pUart)
@@ -247,5 +247,5 @@ DRV_Uart_Error DRV_Uart_ArchTXFlush( DRV_Uart_Devicedata *pUart)
 
 	tcflush( pData->fd, TCOFLUSH);
 
-	return No_Error;
+	return UART_No_Error;
 }
