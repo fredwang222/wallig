@@ -76,11 +76,11 @@ DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart );
  *  \param pUart device data
  *  \param pucBuffer input buffer
  *  \param iLength Number of char in the buffer
- *  \return the number of char read int the buffer
+ *  \return the number of char read in the buffer
  */
 int DRV_Uart_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucBuffer , int iLength );
 
 DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pucBuffer , int iLength);
 
-DRV_Uart_ArchTXFlush( DRV_Uart_Devicedata *pUart);
-DRV_Uart_ArchRXFlush( DRV_Uart_Devicedata *pUart);
+DRV_Uart_Error DRV_Uart_ArchTXFlush( DRV_Uart_Devicedata *pUart);
+DRV_Uart_Error DRV_Uart_ArchRXFlush( DRV_Uart_Devicedata *pUart);

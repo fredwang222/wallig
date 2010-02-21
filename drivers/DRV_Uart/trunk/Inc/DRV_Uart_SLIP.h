@@ -27,6 +27,6 @@ typedef struct
  */
 int DRV_Uart_Slip_Rx( tSLIP_Data *ptData , unsigned char ucInput , unsigned char *pucOutPutBuff, int iOutputMaxLen);
 /*!
- *  \brief sends a packet of length "len", starting at * location "p".
+ *  \brief sends a packet of length "iLength", starting at * location "pucInputBuff".
  */
 void DRV_Uart_Slip_Tx(unsigned char *pucInputBuff, int iLength ,unsigned char *pucOutputBuff);

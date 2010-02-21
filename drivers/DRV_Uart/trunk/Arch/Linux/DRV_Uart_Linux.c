@@ -30,9 +30,9 @@
 
 typedef struct
 {
-	int fd,c, res;
-    struct termios oldtio,newtio;
-    struct sigaction saio;           /* definition of signal action */
+	int fd,c;
+    struct termios oldtio,newtio; //!< Termios settings
+    struct sigaction saio;        //!< definition of signal action
     pthread_t RXThread;
     pthread_mutex_t RXmutex;
 } DRV_UART_ARCH_Data;
@@ -40,7 +40,7 @@ typedef struct
 /**************************************************************
                  private Functions
 ***************************************************************/
-void *DRV_Uart_RX_Thread( void * arg );
+static void *DRV_Uart_RX_Thread( void * arg );
 
 void DRV_Uart_SafeEnter( DRV_Uart_Devicedata *pUart )
 {
@@ -145,9 +145,9 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 	return tError;
 }
 /*!
- * \brief Rx thread function call the driver call back
+ * \brief Rx thread function which call the private driver call back
  */
-void *DRV_Uart_RX_Thread( void * arg )
+static void *DRV_Uart_RX_Thread( void * arg )
 {
 	unsigned char tucBuffIn[255];
 	unsigned char *pucBuff=tucBuffIn;
@@ -169,6 +169,7 @@ void *DRV_Uart_RX_Thread( void * arg )
 		}
     	pucBuff = &tucBuffIn[uiReadChars];
     }
+    pthread_exit (0);
 
 }
 
@@ -209,7 +210,7 @@ DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pu
 		return No_Error;
 }
 
-DRV_Uart_ArchRXFlush( DRV_Uart_Devicedata *pUart)
+DRV_Uart_Error  DRV_Uart_ArchRXFlush( DRV_Uart_Devicedata *pUart)
 {
 	DRV_UART_ARCH_Data *pData =(DRV_UART_ARCH_Data *) pUart->pArchData ;
 
@@ -218,7 +219,7 @@ DRV_Uart_ArchRXFlush( DRV_Uart_Devicedata *pUart)
 	return No_Error;
 }
 
-DRV_Uart_ArchTXFlush( DRV_Uart_Devicedata *pUart)
+DRV_Uart_Error DRV_Uart_ArchTXFlush( DRV_Uart_Devicedata *pUart)
 {
 	DRV_UART_ARCH_Data *pData =(DRV_UART_ARCH_Data *) pUart->pArchData ;
 

@@ -35,15 +35,22 @@ static struct
 ***************************************************************/
 DRV_Uart_Error DRV_Uart_Init( void )
 {
+    int iUartIndex;
 
-	DRV_Uart_Init();
+    memcpy(sDRV_Uart_MainData.tpcName,tpcUartDeviceName,sizeof(tpcUartDeviceName));
+    for(iUartIndex=0;iUartIndex<kDRV_UART_MaxDevices;iUartIndex++)
+    {
+    	sDRV_Uart_MainData.tsUarts[iUartIndex].eRxState = RXClosed;
+    	sDRV_Uart_MainData.tsUarts[iUartIndex].eTxState = TXClosed;
+    }
+	DRV_Uart_ArchInit();
  	return No_Error;
 }
 
 DRV_Uart_Error DRV_Uart_Terminate( void )
 {
 
-	DRV_Uart_Terminate();
+	DRV_Uart_ArchTerminate();
 	return No_Error;
 }
 
@@ -56,18 +63,22 @@ DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDev
         for(iUartIndex=0;iUartIndex<kDRV_UART_MaxDevices;iUartIndex++)
         {
         	if( !strcmp(pcDeviceName, sDRV_Uart_MainData.tpcName[iUartIndex] ))
-        	{
+        	{    //The device name match
+        		//check if the device is not already open
+				if( sDRV_Uart_MainData.tsUarts[iUartIndex].eRxState != RXClosed )
+								return AlreadyOpened;
         		tError = DRV_UART_ArchOpen(pUart);
         		if( tError != No_Error)
         			return tError;
-        		if( sDRV_Uart_MainData.tsUarts[iUartIndex].eRxState != RXClosed )
-					return AlreadyOpened;
         		pUart = &sDRV_Uart_MainData.tsUarts[iUartIndex];
         		pUart->cfg=*ptParam;
         		pUart->eRxState = RXEmpty;
         		pUart->eTxState = TXIdle;
+        		pUart->iRxBuffIndex=0;
         		memset(pUart->tucRXBuff,0,kDRV_Uart_RXBuffSize);
         		memset(pUart->tucTXBuff,0,kDRV_Uart_TXBuffSize);
+        		//Set the user handle
+        		*phDeviceHandle = (DRV_Uart_Handle)pUart;
         		break;
         	}
         }
@@ -83,6 +94,9 @@ DRV_Uart_Error DRV_Uart_Close( DRV_Uart_Handle hDeviceHandle )
         if( pUart == NULL )
            return Input_Null;
         DRV_UART_ArchClose(pUart);
+        pUart->eRxState = RXClosed;
+        pUart->eTxState = TXClosed;
+        pUart->iRxBuffIndex=0;
 
 	return No_Error;
 }
