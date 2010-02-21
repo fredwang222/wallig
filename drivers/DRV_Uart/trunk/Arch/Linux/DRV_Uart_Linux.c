@@ -27,7 +27,9 @@
 /**************************************************************
                                         Local variables
 ***************************************************************/
-
+/** @ingroup DRV_Uart_Private_Arch_grp
+ *
+ */
 typedef struct
 {
 	int fd,c;
@@ -35,24 +37,44 @@ typedef struct
     struct sigaction saio;        //!< definition of signal action
     pthread_t RXThread;
     pthread_mutex_t RXmutex;
+    pthread_mutex_t TXmutex;
 } DRV_UART_ARCH_Data;
 
 /**************************************************************
                  private Functions
 ***************************************************************/
+/*!
+  * @ingroup DRV_Uart_Private_Arch_grp
+ * \fn static void *DRV_Uart_RX_Thread( void * arg )
+ * \brief Rx thread function which call the private driver call back
+  */
 static void *DRV_Uart_RX_Thread( void * arg );
 
-void DRV_Uart_SafeEnter( DRV_Uart_Devicedata *pUart )
+void DRV_Uart_Arch_RxSafeEnter( DRV_Uart_Devicedata *pUart )
 {
 	DRV_UART_ARCH_Data *pData = (DRV_UART_ARCH_Data*)pUart->pArchData;
 
   pthread_mutex_lock( &pData->RXmutex );
 }
-void DRV_Uart_SafeLeave( DRV_Uart_Devicedata *pUart )
+void DRV_Uart_Arch_RxSafeLeave( DRV_Uart_Devicedata *pUart )
 {
 	DRV_UART_ARCH_Data *pData = (DRV_UART_ARCH_Data*)pUart->pArchData;
 
   pthread_mutex_unlock( &pData->RXmutex );
+
+}
+
+void DRV_Uart_Arch_TxSafeEnter( DRV_Uart_Devicedata *pUart )
+{
+	DRV_UART_ARCH_Data *pData = (DRV_UART_ARCH_Data*)pUart->pArchData;
+
+  pthread_mutex_lock( &pData->TXmutex );
+}
+void DRV_Uart_Arch_TxSafeLeave( DRV_Uart_Devicedata *pUart )
+{
+	DRV_UART_ARCH_Data *pData = (DRV_UART_ARCH_Data*)pUart->pArchData;
+
+  pthread_mutex_unlock( &pData->TXmutex );
 
 }
 
@@ -71,7 +93,7 @@ DRV_Uart_Error DRV_Uart_ArchTerminate(void )
 
 DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 {
-	DRV_Uart_Error tError;
+	DRV_Uart_Error tError = No_Error;
 	DRV_UART_ARCH_Data *pData;
 
 	pData = (DRV_UART_ARCH_Data *) malloc( sizeof(DRV_UART_ARCH_Data));
@@ -124,10 +146,11 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 	}
 	 pData->newtio.c_oflag = 0;
 	 pData->newtio.c_lflag = 0;
-	 pData->newtio.c_cc[VMIN]= pUart->cfg.iRXNbChar;
+	 pData->newtio.c_cc[VMIN]= 1; //pUart->cfg.iRXNbChar;
 	 pData->newtio.c_cc[VTIME]=0;
 	tcflush( pData->fd, TCIFLUSH);
-	tcsetattr( pData->fd,TCSANOW,&pData->newtio);
+	if( tcsetattr( pData->fd,TCSANOW,&pData->newtio) )
+		tError=  Init_Error;
 	//Termios configuration done
 	if(tError == No_Error)
 	{
@@ -136,6 +159,7 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 			tError=  Init_Error;
 		//Init mutex for the safe sections
 		pthread_mutex_init (&pData->RXmutex, NULL);
+		pthread_mutex_init (&pData->TXmutex, NULL);
 	}
 	if(tError != No_Error)
 	{ //cleanup allocated an open data in case of error
@@ -144,9 +168,7 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 	}
 	return tError;
 }
-/*!
- * \brief Rx thread function which call the private driver call back
- */
+
 static void *DRV_Uart_RX_Thread( void * arg )
 {
 	unsigned char tucBuffIn[255];

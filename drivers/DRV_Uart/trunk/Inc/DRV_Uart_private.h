@@ -7,8 +7,22 @@
 *	\brief Private declarations for the driver
 *
 */
+/** @defgroup DRV_Uart_Private_grp Private interface for DRV_Uart driver
+ *  This the privates types and functions. There is 2 parts:
+ *  - \ref DRV_Uart_Private_Common_grp the common data for all architectures
+ *  - \ref DRV_Uart_Private_Arch_grp the Architecture dependent calls
+ *  @{
+ */
+
 #include "DRV_Uart_SLIP.h"
 #include "DRV_Uart_CFG.h"
+
+/** @defgroup DRV_Uart_Private_Common_grp private common
+ *
+ *  @ingroup DRV_Uart_Private_grp
+ *  @{
+ */
+
 typedef enum
 {
     RXClosed,
@@ -40,14 +54,33 @@ typedef struct
 } DRV_Uart_Devicedata;
 
 /*!
- *  \brief Safe section enter
+ *  \brief RX function call by the device
+ *  \param pUart device data
+ *  \param pucBuffer input buffer
+ *  \param iLength Number of char in the buffer
+ *  \return the number of char read in the buffer
  */
-void DRV_Uart_SafeEnter( DRV_Uart_Devicedata *pUart );
+int DRV_Uart_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucBuffer , int iLength );
 
-/*!
- *  \brief Safe section leave
+/** @} */
+
+/** @defgroup DRV_Uart_Private_Arch_grp private Architecture
+ *  This is the first group
+ *  @ingroup DRV_Uart_Private_grp
+ *  @{
  */
-void DRV_Uart_SafeLeave( DRV_Uart_Devicedata *pUart );
+
+/*! \brief Safe section enter */
+void DRV_Uart_Arch_RxSafeEnter( DRV_Uart_Devicedata *pUart );
+
+/*!\brief Safe section leave  */
+void DRV_Uart_Arch_RxSafeLeave( DRV_Uart_Devicedata *pUart );
+
+/*! \brief Safe section enter */
+void DRV_Uart_Arch_TxSafeEnter( DRV_Uart_Devicedata *pUart );
+
+/*!\brief Safe section leave  */
+void DRV_Uart_Arch_TxSafeLeave( DRV_Uart_Devicedata *pUart );
 
 /*!
  *  \brief Uart driver init
@@ -72,15 +105,13 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart );
  */
 DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart );
 /*!
- *  \brief RX function call by the device
- *  \param pUart device data
- *  \param pucBuffer input buffer
- *  \param iLength Number of char in the buffer
- *  \return the number of char read in the buffer
+ *  \brief Send a buffer to the device
  */
-int DRV_Uart_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucBuffer , int iLength );
-
 DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pucBuffer , int iLength);
 
+/*! flush the TXBuffer (both driver and device) */
 DRV_Uart_Error DRV_Uart_ArchTXFlush( DRV_Uart_Devicedata *pUart);
+/*! flush the RXBuffer (both driver and device) */
 DRV_Uart_Error DRV_Uart_ArchRXFlush( DRV_Uart_Devicedata *pUart);
+/** @} */
+/** @} */ // end of DRV_Uart_Private_grp

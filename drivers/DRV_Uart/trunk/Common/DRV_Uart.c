@@ -12,19 +12,17 @@
 /**************************************************************
 					Define
 ***************************************************************/
-#define kDRV_SofTimer_MaxDevices 5
+//! number of devices configured
+#define kNumberOfDevices (sizeof(tpcUartDeviceName)/sizeof(char**))
 /**************************************************************
 					Local variables
 ***************************************************************/
-char *tpcUartDeviceName[]={kDRV_Uart_DevcenameInit};
+static const char *tpcUartDeviceName[]={kDRV_Uart_DeviceNameList};
 /*!
- * 	Timers Data
+ * \brief Uart Driver Data
+ *  @ingroup DRV_Uart_Public_grp
  */
-static struct
-{
-  char *tpcName[kDRV_UART_MaxDevices];
-  DRV_Uart_Devicedata tsUarts[kDRV_UART_MaxDevices];
-} sDRV_Uart_MainData;
+DRV_Uart_Devicedata tsUartsDeviceList[kNumberOfDevices];	//!< Array of devices data
 
 /**************************************************************
                  local Functions declaration
@@ -37,11 +35,11 @@ DRV_Uart_Error DRV_Uart_Init( void )
 {
     int iUartIndex;
 
-    memcpy(sDRV_Uart_MainData.tpcName,tpcUartDeviceName,sizeof(tpcUartDeviceName));
-    for(iUartIndex=0;iUartIndex<kDRV_UART_MaxDevices;iUartIndex++)
+    for(iUartIndex=0;iUartIndex<kNumberOfDevices;iUartIndex++)
     {
-    	sDRV_Uart_MainData.tsUarts[iUartIndex].eRxState = RXClosed;
-    	sDRV_Uart_MainData.tsUarts[iUartIndex].eTxState = TXClosed;
+    	tsUartsDeviceList[iUartIndex].pcDeviceName = (char*)tpcUartDeviceName[iUartIndex];
+    	tsUartsDeviceList[iUartIndex].eRxState = RXClosed;
+    	tsUartsDeviceList[iUartIndex].eTxState = TXClosed;
     }
 	DRV_Uart_ArchInit();
  	return No_Error;
@@ -54,24 +52,24 @@ DRV_Uart_Error DRV_Uart_Terminate( void )
 	return No_Error;
 }
 
-DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle , DRV_Uart_Cfg *ptParam)
+DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle , DRV_Uart_Cfg *ptSettings)
 {
 		DRV_Uart_Error tError = No_Error;
         DRV_Uart_Devicedata *pUart=NULL;
         int iUartIndex;
 
-        for(iUartIndex=0;iUartIndex<kDRV_UART_MaxDevices;iUartIndex++)
+        for(iUartIndex=0;iUartIndex<kNumberOfDevices;iUartIndex++)
         {
-        	if( !strcmp(pcDeviceName, sDRV_Uart_MainData.tpcName[iUartIndex] ))
+        	if( !strcmp(pcDeviceName, tsUartsDeviceList[iUartIndex].pcDeviceName ))
         	{    //The device name match
         		//check if the device is not already open
-				if( sDRV_Uart_MainData.tsUarts[iUartIndex].eRxState != RXClosed )
-								return AlreadyOpened;
+				if( tsUartsDeviceList[iUartIndex].eRxState != RXClosed )
+					return AlreadyOpened;
+				pUart = &tsUartsDeviceList[iUartIndex];
+				pUart->cfg=*ptSettings;
         		tError = DRV_UART_ArchOpen(pUart);
         		if( tError != No_Error)
         			return tError;
-        		pUart = &sDRV_Uart_MainData.tsUarts[iUartIndex];
-        		pUart->cfg=*ptParam;
         		pUart->eRxState = RXEmpty;
         		pUart->eTxState = TXIdle;
         		pUart->iRxBuffIndex=0;
@@ -107,10 +105,10 @@ DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned char *pucB
 
   if( pUart == NULL || pucBuffer == NULL)
      return Input_Null;
-  DRV_Uart_SafeEnter(pUart);
+  DRV_Uart_Arch_RxSafeEnter(pUart);
   if( pUart->eTxState != TXIdle)
   {
-	  DRV_Uart_SafeLeave(pUart);
+	  DRV_Uart_Arch_RxSafeLeave(pUart);
 	  return TXError;
   }
   //update status
@@ -122,7 +120,7 @@ DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned char *pucB
   }
   else
 	  memcpy( pUart->tucRXBuff , pucBuffer , iLength );
-  DRV_Uart_SafeLeave(pUart);
+  DRV_Uart_Arch_RxSafeLeave(pUart);
   return DRV_Uart_ArchSend( pUart , pUart->tucRXBuff  , iLength);
  }
 
@@ -131,9 +129,9 @@ int DRV_Uart_TXBusy( DRV_Uart_Handle hDeviceHandle )
 	DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 	tTxState eState;
 
-	DRV_Uart_SafeEnter(pUart);
+	DRV_Uart_Arch_RxSafeEnter(pUart);
 	eState = pUart->eTxState;
-	DRV_Uart_SafeLeave(pUart);
+	DRV_Uart_Arch_RxSafeLeave(pUart);
 
 	if(eState  == TXIdle )
 		return 0;
@@ -146,9 +144,9 @@ int DRV_Uart_RXDataReceived( DRV_Uart_Handle hDeviceHandle )
         DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
         tRxState eState;
 
-        DRV_Uart_SafeEnter(pUart);
+        DRV_Uart_Arch_RxSafeEnter(pUart);
         eState = pUart->eRxState;
-        DRV_Uart_SafeLeave(pUart);
+        DRV_Uart_Arch_RxSafeLeave(pUart);
 
         if( eState == RXFull )
         	return 1;
@@ -164,16 +162,16 @@ DRV_Uart_Error DRV_Uart_Receive( DRV_Uart_Handle hDeviceHandle , unsigned char *
      return Input_Null;
 
 
-	DRV_Uart_SafeEnter(pUart);
+	DRV_Uart_Arch_RxSafeEnter(pUart);
 	if( *piLength > pUart->iRxBuffIndex)
 	  *piLength = pUart->iRxBuffIndex;
 	//Copy data to user buffer
 	memcpy(pucBuffer,pUart->tucRXBuff,*piLength);
 	pUart->iRxBuffIndex-=*piLength;
 	//update status
-	if(pUart->iRxBuffIndex)
+	if( !pUart->iRxBuffIndex)
 		pUart->eRxState = RXEmpty;
-	DRV_Uart_SafeLeave(pUart);
+	DRV_Uart_Arch_RxSafeLeave(pUart);
 
     return No_Error;
 }
@@ -204,10 +202,10 @@ DRV_Uart_Error DRV_Uart_RXFlush( DRV_Uart_Handle hDeviceHandle )
 	if( pUart == NULL )
 	   return Input_Null;
 
-	DRV_Uart_SafeEnter(pUart);
+	DRV_Uart_Arch_RxSafeEnter(pUart);
 	pUart->iRxBuffIndex=0;
 	pUart->eRxState = RXEmpty;
-	DRV_Uart_SafeLeave(pUart);
+	DRV_Uart_Arch_RxSafeLeave(pUart);
 	return No_Error;
 }
 
@@ -218,10 +216,10 @@ DRV_Uart_Error DRV_Uart_TXFlush( DRV_Uart_Handle hDeviceHandle )
 	if( pUart == NULL )
 	   return Input_Null;
 
-	DRV_Uart_SafeEnter(pUart);
+	DRV_Uart_Arch_RxSafeEnter(pUart);
 	DRV_Uart_ArchTXFlush(pUart);
 	pUart->eTxState = TXIdle;
-	DRV_Uart_SafeLeave(pUart);
+	DRV_Uart_Arch_RxSafeLeave(pUart);
 	return No_Error;
 }
 /**************************************************************
@@ -230,7 +228,7 @@ DRV_Uart_Error DRV_Uart_TXFlush( DRV_Uart_Handle hDeviceHandle )
 int DRV_Uart_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucBuffer , int iLength )
 {
 	int iBufferIndex;
-	DRV_Uart_SafeEnter(pUart);
+	DRV_Uart_Arch_RxSafeEnter(pUart);
 	//Append data to the rx buffer
 	for( iBufferIndex=0;iBufferIndex<iLength ; iBufferIndex++ )
 	{
@@ -239,23 +237,48 @@ int DRV_Uart_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucB
 			pUart->iRxBuffIndex=DRV_Uart_Slip_Rx( &pUart->tSLIP , *(pucBuffer++) , pUart->tucRXBuff ,kDRV_Uart_RXBuffSize);
 			if(  pUart->iRxBuffIndex )
 			{   //A SLIP packet was received
+				pUart->eRxState = RXFull;
 				break;
 			}
 		}
 		else
 		{
 			if( pUart->iRxBuffIndex < kDRV_Uart_RXBuffSize )
-				pUart->tucRXBuff[pUart->iRxBuffIndex++] =*(pucBuffer++);
+			{
+
+				pUart->tucRXBuff[pUart->iRxBuffIndex] =*(pucBuffer++);
+				//checking end of packet
+				if( pUart->cfg.cEndOfBuff )
+				{
+					if(pUart->tucRXBuff[pUart->iRxBuffIndex++] == pUart->cfg.cEndOfBuff )
+					{
+						pUart->eRxState = RXFull;
+						break;
+					}
+				}
+				else if( pUart->cfg.iRXNbChar )
+				{
+					if( pUart->cfg.iRXNbChar > pUart->iRxBuffIndex++ )
+					{
+						pUart->eRxState = RXFull;
+						break;
+					}
+				}
+				else
+				{
+					pUart->iRxBuffIndex++;
+					pUart->eRxState = RXFull;
+					break;
+				}
+
+			}
 			else
 				break;
 		}
 
 	}
-	//update status
-	if( pUart->iRxBuffIndex )
-		pUart->eRxState = RXFull;
 
-	DRV_Uart_SafeLeave(pUart);
+	DRV_Uart_Arch_RxSafeLeave(pUart);
 	// return the number of read chars in the input buffer
 	return iLength - iBufferIndex;
 }
