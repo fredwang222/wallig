@@ -40,7 +40,7 @@
         sParam.tType=TimeOut;
         sParam.uiValue = 10;
         //open the timer
-        DRV_SoftTimer_Open("timer1",&hTimer1,&sParam)==No_Error)
+        DRV_SoftTimer_Open("timer1",&hTimer1,&sParam)==SOFTTIMER_No_Error)
         //start the timer
         DRV_SoftTimer_Start(hTimer1);
         //do something
@@ -74,10 +74,10 @@ typedef void * DRV_SoftTimer_Handle;
  */
 typedef enum
 {
-	No_Error,    //!< OK
-	Failed,      //!< generic error
-	Input_Null,  //!< A input parameter pointer is NULL
-	Unknown      //!< unexpected error
+	SOFTTIMER_No_Error,    //!< OK
+	SOFTTIMER_Failed,      //!< generic error
+	SOFTTIMER_Input_Null,  //!< A input parameter pointer is NULL
+	SOFTTIMER_Unknown      //!< unexpected error
 } DRV_SoftTimer_Error;
 
 /*!

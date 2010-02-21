@@ -24,7 +24,7 @@ int main()
 
     sParam.tType=TimeOut;
     sParam.uiValue = 10;
-    if( DRV_SoftTimer_Open("timer1",&hTimer1,&sParam)==No_Error)
+    if( DRV_SoftTimer_Open("timer1",&hTimer1,&sParam)==SOFTTIMER_No_Error)
     {
       DRV_SoftTimer_Start(hTimer1);
       for (icount=0;icount< 20;icount++)

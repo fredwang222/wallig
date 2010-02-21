@@ -41,9 +41,9 @@ void DRV_SoftTimer_SafeLeave( void )
 DRV_SoftTimer_Error DRV_SofTimer_MainInit(void )
 {
   if( pthread_create( &MainTimerThread, NULL, MaintTimer, NULL ) < 0 )
-    return Failed;
+    return SOFTTIMER_Failed;
 
-  return No_Error;
+  return SOFTTIMER_No_Error;
 }
 
 DRV_SoftTimer_Error DRV_SofTimer_MainTerminate(void )
@@ -54,13 +54,13 @@ DRV_SoftTimer_Error DRV_SofTimer_MainTerminate(void )
     if (pthread_cancel (MainTimerThread) != 0)
     {
       fprintf (stderr, "pthread_cancel error for thread 1\n");
-      return Failed;
+      return SOFTTIMER_Failed;
     }
 
      //wait the end of the called thread
     (void)pthread_join (MainTimerThread, &ret);
 
-    return No_Error;
+    return SOFTTIMER_No_Error;
 }
 
 void *MaintTimer( void * arg )

@@ -48,7 +48,7 @@ DRV_SoftTimer_Error DRV_SoftTimer_Init( void )
         //Architecture dependent init of the main timer
         DRV_SofTimer_MainInit();
 
-	return No_Error;
+	return SOFTTIMER_No_Error;
 }
 
 DRV_SoftTimer_Error DRV_SoftTimer_Terminate( void )
@@ -69,7 +69,7 @@ DRV_SoftTimer_Error DRV_SoftTimer_Terminate( void )
 
 
 
-	return No_Error;
+	return SOFTTIMER_No_Error;
 }
 
 DRV_SoftTimer_Error DRV_SoftTimer_Open( const char * pcDeviceName , DRV_SoftTimer_Handle *phDeviceHandle , DRV_SoftTimer_Cfg *ptParam)
@@ -77,7 +77,7 @@ DRV_SoftTimer_Error DRV_SoftTimer_Open( const char * pcDeviceName , DRV_SoftTime
         DRV_Softimer_Devicedata *pTimer;
 
         if( sDRV_SoftTimer_MainData.ucTimerCount >= kDRV_SofTimer_MaxDevices )
-          return Failed;
+          return SOFTTIMER_Failed;
 
         //Get the new timer pointer
         pTimer= &sDRV_SoftTimer_MainData.tsSoftTimers[sDRV_SoftTimer_MainData.ucTimerCount];
@@ -91,7 +91,7 @@ DRV_SoftTimer_Error DRV_SoftTimer_Open( const char * pcDeviceName , DRV_SoftTime
         DRV_SoftTimer_SafeLeave();
 
         *phDeviceHandle = (DRV_SoftTimer_Handle) pTimer;
-	return No_Error;
+	return SOFTTIMER_No_Error;
 }
 
 DRV_SoftTimer_Error DRV_SoftTimer_Close( DRV_SoftTimer_Handle hDeviceHandle )
@@ -99,13 +99,13 @@ DRV_SoftTimer_Error DRV_SoftTimer_Close( DRV_SoftTimer_Handle hDeviceHandle )
         DRV_Softimer_Devicedata *pTimer = (DRV_Softimer_Devicedata *) hDeviceHandle;
 
         if( pTimer == NULL )
-           return Input_Null;
+           return SOFTTIMER_Input_Null;
 
         DRV_SoftTimer_SafeEnter();
         pTimer->eState = Closed;
         DRV_SoftTimer_SafeLeave();
 
-	return No_Error;
+	return SOFTTIMER_No_Error;
 }
 
 DRV_SoftTimer_Error DRV_SoftTimer_Start( DRV_SoftTimer_Handle hDeviceHandle )
@@ -113,7 +113,7 @@ DRV_SoftTimer_Error DRV_SoftTimer_Start( DRV_SoftTimer_Handle hDeviceHandle )
         DRV_Softimer_Devicedata *pTimer = (DRV_Softimer_Devicedata *) hDeviceHandle;
 
         if( pTimer == NULL )
-          return Input_Null;
+          return SOFTTIMER_Input_Null;
 
         if( pTimer->eState != Closed )
         {
@@ -121,7 +121,7 @@ DRV_SoftTimer_Error DRV_SoftTimer_Start( DRV_SoftTimer_Handle hDeviceHandle )
             pTimer->eState =  started;
             DRV_SoftTimer_SafeLeave();
         }
-        return No_Error;
+        return SOFTTIMER_No_Error;
 
 }
 
@@ -130,7 +130,7 @@ DRV_SoftTimer_Error DRV_SoftTimer_Stop( DRV_SoftTimer_Handle hDeviceHandle )
         DRV_Softimer_Devicedata *pTimer = (DRV_Softimer_Devicedata *) hDeviceHandle;
 
         if( pTimer == NULL )
-          return Input_Null;
+          return SOFTTIMER_Input_Null;
 
         if( pTimer->eState != Closed )
         {
@@ -138,7 +138,7 @@ DRV_SoftTimer_Error DRV_SoftTimer_Stop( DRV_SoftTimer_Handle hDeviceHandle )
             pTimer->eState =  stopped;
             DRV_SoftTimer_SafeLeave();
         }
-        return No_Error;
+        return SOFTTIMER_No_Error;
 }
 
 unsigned int DRV_SoftTimer_GetValue( DRV_SoftTimer_Handle hDeviceHandle )
