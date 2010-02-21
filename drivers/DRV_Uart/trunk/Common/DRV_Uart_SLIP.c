@@ -70,12 +70,14 @@ int DRV_Uart_Slip_Rx( tSLIP_Data *ptData , unsigned char ucInput , unsigned char
 /**
  * \todo there is no checking of the max output buff length
  */
-void DRV_Uart_Slip_Tx(unsigned char *pucInputBuff, int iLength ,unsigned char *pucOutputBuff)
+int DRV_Uart_Slip_Tx(unsigned char *pucInputBuff, int iLength ,unsigned char *pucOutputBuff)
 {
+	int iOuputLength=0;
+
 	/* send an initial END character to flush out any data that may
 	* have accumulated in the receiver due to line noise
 	*/
-	*(pucOutputBuff++) = END;
+	pucOutputBuff[iOuputLength++] = END;
 
 	/* for each byte in the packet, send the appropriate character
 	* sequence
@@ -89,8 +91,8 @@ void DRV_Uart_Slip_Tx(unsigned char *pucInputBuff, int iLength ,unsigned char *p
 			* receiver think we sent an END
 			*/
 			case END:
-				*(pucOutputBuff++) = (ESC);
-				*(pucOutputBuff++) = (ESC_END);
+				pucOutputBuff[iOuputLength++] = (ESC);
+				pucOutputBuff[iOuputLength++] = (ESC_END);
 			   break;
 
 			/* if it's the same code as an ESC character,
@@ -98,18 +100,20 @@ void DRV_Uart_Slip_Tx(unsigned char *pucInputBuff, int iLength ,unsigned char *p
 			* to make the receiver think we sent an ESC
 			*/
 			case ESC:
-			   *(pucOutputBuff++) = (ESC);
-			   *(pucOutputBuff++) = (ESC_ESC);
+			   pucOutputBuff[iOuputLength++] = (ESC);
+			   pucOutputBuff[iOuputLength++] = (ESC_ESC);
 			   break;
 
 			/* otherwise, we just send the character
 			*/
 			default:
-				*(pucOutputBuff++) = (*pucInputBuff);
+				pucOutputBuff[iOuputLength++] = (*pucInputBuff);
 		  }
 		pucInputBuff++;
 	}
     /* tell the receiver that we're done sending the packet	*/
-	*(pucOutputBuff++) = (END);
+	pucOutputBuff[iOuputLength++] = (END);
+
+	return iOuputLength;
 }
 

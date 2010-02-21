@@ -116,12 +116,12 @@ DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned char *pucB
   //copy user buffer to driver buffer
   if( pUart->cfg.eSLIPModeEnable )
   {
-	  DRV_Uart_Slip_Tx(pucBuffer, iLength , pUart->tucRXBuff);
+	  iLength = DRV_Uart_Slip_Tx(pucBuffer, iLength , pUart->tucTXBuff);
   }
   else
-	  memcpy( pUart->tucRXBuff , pucBuffer , iLength );
+	  memcpy( pUart->tucTXBuff , pucBuffer , iLength );
   DRV_Uart_Arch_RxSafeLeave(pUart);
-  return DRV_Uart_ArchSend( pUart , pUart->tucRXBuff  , iLength);
+  return DRV_Uart_ArchSend( pUart , pUart->tucTXBuff  , iLength);
  }
 
 int DRV_Uart_TXBusy( DRV_Uart_Handle hDeviceHandle )
