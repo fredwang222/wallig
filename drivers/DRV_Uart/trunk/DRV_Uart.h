@@ -7,7 +7,10 @@
 *	\brief Public declaration for the driver
 *
 */
-
+/*!
+ * \page svn_log SVN log
+ *  \include svn_log.txt
+ */
 /*!
  * \if standalone_DRV_Uart
 *	\mainpage Uart Driver
@@ -19,22 +22,58 @@
 *	\date 20/02/2010
 *
 *	\section Description Description
-*	This a simple Uart driver
+*	This a simple Uart driver with SLIP protocole support
 *	\section Configuration Configuration
-*	Place here how to configure the driver
-*	- This is an example of configuration
+*	The driver configuration is done at the opening of the device with DRV_Uart_Open(); \n
+*	The settings are set thru this structure: DRV_Uart_Cfg \n
+*	The input  packet  detection can be configured by:
+*	- A number of char ( DRV_Uart_Cfg::iRXNbChar)
+*	- A specific end char ( ( DRV_Uart_Cfg::cEndOfBuff) )
+*	- A time out ( not yet implemented )
+*	- Using the SLIP protocol ( DRV_Uart_Cfg::eSLIPModeEnable );
 *
 *	\section use use
-*	This is an example of the use of a time out timer
-*	\note the return values are not tested to simplify
-        \code
-        \endcode
+*	The public declaration: \ref DRV_Uart_Public_grp
+*	\note the return values are not tested to simplify\n
+	\code
+	DRV_Uart_Init( );
+	tUart0Settings.RXCallBack=NULL;
+	tUart0Settings.eBaudRate = BR115200;
+	tUart0Settings.cEndOfBuff='\r';
+	tUart0Settings.eParity = PARNone;
+	tUart0Settings.eSLIPModeEnable=0;
+	tUart0Settings.eStopBit = SB_1;
+	tUart0Settings.iRXNbChar = 0;
+	DRV_Uart_Open("/dev/ttyUSB0",&hUart,&tUart0Settings);
+	DRV_Uart_Send(hUart,(unsigned char *) "Hello World\n",sizeof("HelloWorld\n"));
+	while( 1 )
+	{
+		usleep(1000*100);
+		if(DRV_Uart_RXDataReceived(hUart))
+		{
+			iNbCharIn=sizeof(tucRXBuffer);
+			DRV_Uart_Receive(hUart , tucRXBuffer , &iNbCharIn);
+			tucRXBuffer[iNbCharIn]=0;
+			printf("RX %d chars: %s\n",iNbCharIn,tucRXBuffer);
+		}
+
+	}
+	DRV_Uart_Close(hUart);
+	DRV_Uart_Terminate();
+	\endcode
 *	\section arch architecture specific
 *
 *	\subsection ARM7AT91NoOs ARM7AT91 NoOs
 *
 *	\ref UartLinux
+*
+*	\section history History
+*	\ref svn_log
 */
+/** @defgroup DRV_Uart_Public_grp Public interface for DRV_Uart driver
+ *  This is the first group
+ *  @{
+ */
 
 /**************************************************************
 						Typedef
@@ -62,6 +101,11 @@ typedef enum
 	TXError,
 	Unknown      //!< unexpected error
 } DRV_Uart_Error;
+
+/** @defgroup DRV_Uart_Settings Uart basics settings
+ *  @ingroup DRV_Uart_Public_grp
+ *  @{
+ */
 
 /*!
  *  \brief Baudrate
@@ -114,6 +158,7 @@ typedef struct
       void (*RXCallBack)(char *pcBuffer , int iLength);
 } DRV_Uart_Cfg;
 
+/** @} */ //
 /**************************************************************
 					Functions
 ***************************************************************/
@@ -128,14 +173,14 @@ DRV_Uart_Error DRV_Uart_Init( void );
  *  \return Driver error.
  */
 DRV_Uart_Error DRV_Uart_Terminate( void );
-/*! \fn DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle, DRV_Uart_Cfg *ptParam)
+/*! \fn DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle, DRV_Uart_Cfg *ptSettings)
  *  \brief Open an instance of the driver.
  *  \param pcDeviceName Name of the Device to open.
  *  \param phDeviceHandle Handle of the new instance.
- *  \param ptParam device configuration
+ *  \param ptSettings device settings
  *  \return Driver error.
  */
-DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle , DRV_Uart_Cfg *ptParam);
+DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle , DRV_Uart_Cfg *ptSettings);
 /*! \fn DRV_Uart_Error DRV_Uart_Close( DRV_Uart_Handle hDeviceHandle );
  *  \brief Close an instance of the driver.
  *  \param hDeviceHandle Handle of the instance to close.
@@ -204,3 +249,4 @@ DRV_Uart_Error DRV_Uart_TXFlush( DRV_Uart_Handle hDeviceHandle );
   */
 
 DRV_Uart_Error DRV_Uart_RXFlush( DRV_Uart_Handle hDeviceHandle );
+/** @} */ // end of DRV_Uart_Public_grp

@@ -307,7 +307,7 @@ EXTRACT_PRIVATE = YES
 # If the EXTRACT_STATIC tag is set to YES all static members of a file
 # will be included in the documentation.
 
-EXTRACT_STATIC = NO
+EXTRACT_STATIC = YES
 
 # If the EXTRACT_LOCAL_CLASSES tag is set to YES classes (and structs)
 # defined locally in source files will be included in the documentation.
@@ -452,7 +452,7 @@ GENERATE_DEPRECATEDLIST = YES
 # The ENABLED_SECTIONS tag can be used to enable conditional
 # documentation sections, marked by \if sectionname ... \endif.
 
-ENABLED_SECTIONS = standalone_DRV_Uart 
+ENABLED_SECTIONS = standalone_DRV_Uart
 
 # The MAX_INITIALIZER_LINES tag determines the maximum number of lines
 # the initial value of a variable or define consists of for it to appear in
@@ -625,7 +625,7 @@ EXCLUDE_SYMBOLS =
 # directories that contain example code fragments that are included (see
 # the \include command).
 
-EXAMPLE_PATH = 
+EXAMPLE_PATH = Doc
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp
@@ -948,7 +948,7 @@ ENUM_VALUES_PER_LINE = 4
 # JavaScript, DHTML, CSS and frames is required (i.e. any modern browser).
 # Windows users are probably better off using the HTML help feature.
 
-GENERATE_TREEVIEW = NO
+GENERATE_TREEVIEW = YES
 
 # By enabling USE_INLINE_TREES, doxygen will generate the Groups, Directories,
 # and Class Hierarchy pages using a tree view instead of an ordered list.
@@ -974,7 +974,7 @@ FORMULA_FONTSIZE = 10
 # there is already a search function so this one should typically
 # be disabled.
 
-SEARCHENGINE = YES
+SEARCHENGINE = NO
 
 #---------------------------------------------------------------------------
 # configuration options related to the LaTeX output
