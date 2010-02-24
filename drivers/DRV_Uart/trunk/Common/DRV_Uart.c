@@ -227,59 +227,69 @@ DRV_Uart_Error DRV_Uart_TXFlush( DRV_Uart_Handle hDeviceHandle )
 ***************************************************************/
 int DRV_Uart_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucBuffer , int iLength )
 {
-	int iBufferIndex;
+	int iBufferIndex=0;
 	DRV_Uart_Arch_RxSafeEnter(pUart);
-	//Append data to the rx buffer
-	for( iBufferIndex=0;iBufferIndex<iLength ; iBufferIndex++ )
+	//if(pUart->eRxState = RXEmpty)
 	{
-		if( pUart->cfg.eSLIPModeEnable )
+		//Append data to the rx buffer
+		for( iBufferIndex=0;iBufferIndex<iLength ; iBufferIndex++ )
 		{
-			pUart->iRxBuffIndex=DRV_Uart_Slip_Rx( &pUart->tSLIP , *(pucBuffer++) , pUart->tucRXBuff ,kDRV_Uart_RXBuffSize);
-			if(  pUart->iRxBuffIndex )
-			{   //A SLIP packet was received
-				pUart->eRxState = RXFull;
-				break;
-			}
-		}
-		else
-		{
-			if( pUart->iRxBuffIndex < kDRV_Uart_RXBuffSize )
+			if( pUart->cfg.eSLIPModeEnable )
 			{
-
-				pUart->tucRXBuff[pUart->iRxBuffIndex] =*(pucBuffer++);
-				//checking end of packet
-				if( pUart->cfg.cEndOfBuff )
+				if(pUart->eRxState == RXEmpty)
 				{
-					if(pUart->tucRXBuff[pUart->iRxBuffIndex++] == pUart->cfg.cEndOfBuff )
-					{
-						pUart->eRxState = RXFull;
-						break;
-					}
-				}
-				else if( pUart->cfg.iRXNbChar )
-				{
-					if( pUart->cfg.iRXNbChar > pUart->iRxBuffIndex++ )
-					{
+					pUart->iRxBuffIndex=DRV_Uart_Slip_Rx( &pUart->tSLIP , *(pucBuffer++) , pUart->tucRXBuff ,kDRV_Uart_RXBuffSize);
+					if(  pUart->iRxBuffIndex )
+					{   //A SLIP packet was received
 						pUart->eRxState = RXFull;
 						break;
 					}
 				}
 				else
 				{
-					pUart->iRxBuffIndex++;
-					pUart->eRxState = RXFull;
-					break;
+					iBufferIndex=0;
+					break ;
 				}
-
 			}
 			else
-				break;
+			{
+				if( pUart->iRxBuffIndex < kDRV_Uart_RXBuffSize )
+				{
+
+					pUart->tucRXBuff[pUart->iRxBuffIndex] =*(pucBuffer++);
+					//checking end of packet
+					if( pUart->cfg.cEndOfBuff )
+					{
+						if(pUart->tucRXBuff[pUart->iRxBuffIndex++] == pUart->cfg.cEndOfBuff )
+						{
+							pUart->eRxState = RXFull;
+							break;
+						}
+					}
+					else if( pUart->cfg.iRXNbChar )
+					{
+						if( pUart->cfg.iRXNbChar > pUart->iRxBuffIndex++ )
+						{
+							pUart->eRxState = RXFull;
+							break;
+						}
+					}
+					else
+					{
+						pUart->iRxBuffIndex++;
+						pUart->eRxState = RXFull;
+						break;
+					}
+
+				}
+				else
+					break;
+			}
+
 		}
-
 	}
-
 	DRV_Uart_Arch_RxSafeLeave(pUart);
 	// return the number of read chars in the input buffer
-	return iLength - iBufferIndex;
+	return iBufferIndex;
 }
 

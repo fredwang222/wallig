@@ -171,9 +171,9 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 
 static void *DRV_Uart_RX_Thread( void * arg )
 {
-	unsigned char tucBuffIn[255];
+	unsigned char tucBuffIn[450];
 	unsigned char *pucBuff=tucBuffIn;
-	unsigned int uiRxChars , uiReadChars=0;
+	unsigned int uiRxChars , uiReadChars=0,uiRemainingChars=0;
 	DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata*) arg;
 	DRV_UART_ARCH_Data *pData =(DRV_UART_ARCH_Data *) pUart->pArchData ;
     //Allow the application to kill the thread
@@ -181,15 +181,18 @@ static void *DRV_Uart_RX_Thread( void * arg )
 
     while(1)
     {
-    	uiRxChars = read( pData->fd , pucBuff , sizeof(tucBuffIn)-(uiReadChars) );
-    	uiReadChars = DRV_Uart_Private_Callback( pUart , tucBuffIn , uiRxChars );
-    	if(uiReadChars)
+    	uiRxChars = read( pData->fd , pucBuff , sizeof(tucBuffIn)-(uiRemainingChars) );
+    	uiRemainingChars+=uiRxChars;
+    	uiReadChars = DRV_Uart_Private_Callback( pUart , tucBuffIn , uiRemainingChars );
+    	/* Update the remaining number of chars in the buffer*/
+    	uiRemainingChars -=uiReadChars;
+    	if(uiRemainingChars)
 		{
-			//There is still some unread data in the buffer, update the FIFIO
-			for( uiRxChars=0;uiRxChars<uiReadChars ; uiRxChars++ )
+			//update the FIFIO
+			for( uiRxChars=0;uiRxChars<uiRemainingChars ; uiRxChars++ )
 				tucBuffIn[uiRxChars]=tucBuffIn[uiRxChars+uiReadChars];
 		}
-    	pucBuff = &tucBuffIn[uiReadChars];
+    	pucBuff = &tucBuffIn[uiRemainingChars];
     }
     pthread_exit (0);
 
