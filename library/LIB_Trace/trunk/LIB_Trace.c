@@ -69,6 +69,7 @@ void LIBTrace_Init( int iDebugLevel , LIB_Trace_InitPAram *pInitParam)
 #if kTRACE_SERIAL
 
 #endif
+	LIB_Trace_Printf(1,"[Trace] Init Ok");
 }
 
 PT_THREAD ( LIBTrace_Thread( void ))
@@ -96,6 +97,7 @@ PT_THREAD ( LIBTrace_Thread( void ))
 void LIB_Trace_Printf( int iLevel , char *pcFormat, ... )
 {
 	int iMessageIndex;
+	LIB_TRACE_Message *pMessage;
 	va_list args;
 	va_start (args, pcFormat);
 
@@ -104,9 +106,15 @@ void LIB_Trace_Printf( int iLevel , char *pcFormat, ... )
 		iMessageIndex = tTraceData.iNextMessageToSend+tTraceData.iMessageInBufferCount;
 		if( iMessageIndex >= kTRACE_MAX_MESSAGE_COUNT )
 			iMessageIndex-=kTRACE_MAX_MESSAGE_COUNT;
-		vsnprintf ( tTraceData.tMessages[iMessageIndex].tcBuffer , kTRACE_MAX_MESSAGE_LENGTH ,pcFormat, args);
-		tTraceData.tMessages[iMessageIndex].tcBuffer[kTRACE_MAX_MESSAGE_LENGTH-1]=0;
-		tTraceData.tMessages[iMessageIndex].iLen = strlen(tTraceData.tMessages[iMessageIndex].tcBuffer);
+		pMessage = &tTraceData.tMessages[iMessageIndex];
+		vsnprintf ( pMessage->tcBuffer , kTRACE_MAX_MESSAGE_LENGTH ,pcFormat, args);
+		pMessage->tcBuffer[kTRACE_MAX_MESSAGE_LENGTH-1]=0;
+		pMessage->iLen = strlen(pMessage->tcBuffer);
+		if( pMessage->iLen > (kTRACE_MAX_MESSAGE_LENGTH-1))
+			pMessage->iLen--;
+		pMessage->tcBuffer[pMessage->iLen-1]='\n';
+		pMessage->tcBuffer[pMessage->iLen]=0;
+		pMessage->iLen++;
 		tTraceData.iMessageInBufferCount++;
 	}
 
