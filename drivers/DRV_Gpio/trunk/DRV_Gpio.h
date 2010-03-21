@@ -39,7 +39,7 @@
  *  @{
  */
 
-#include "Arch/Stm32/DRV_Gpio_Arch.h"
+#include "Arch/DRV_Gpio_Arch.h"
 #define BOOL unsigned char
 /**************************************************************
 						Typedef
@@ -61,7 +61,7 @@ typedef enum
 	GPIO_AlreadyOpened,
 	GPIO_Init_Error,
 	GPIO_Bad_Param,
-	GPIO_Unknown      //!< unexpected error
+	GPIO_Err_Unknown      //!< unexpected error
 } DRV_Gpio_Error;
 
 /** @defgroup DRV_Gpio_Settings PIO basics settings
@@ -78,7 +78,7 @@ typedef enum
         GPIO_Output,         //!<
         GPIO_Input,         //!<
         GPIO_IO,       //!<
-        BRUnknown      //!< unexpected error
+        GPIO_Unknown      //!< unexpected error
 } DRV_Gpio_Type;
 
 /*!

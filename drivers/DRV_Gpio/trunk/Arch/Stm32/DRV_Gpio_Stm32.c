@@ -10,7 +10,9 @@ DRV_Gpio_Error DRV_Gpio_Init( void )
 	 /* Enable GPIOB clock */
 	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 	  /* Enable GPIOB clock */
-  	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+  	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+  	/* Enable GPIOC clock */
+	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
   	return GPIO_No_Error;
 
 }
@@ -20,8 +22,9 @@ DRV_Gpio_Error DRV_Gpio_Terminate( void )
 	 /* Enable GPIOB clock */
 	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, DISABLE);
 	  /* Enable GPIOB clock */
-
-	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, DISABLE);
+	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, DISABLE);
+	  /* Enable GPIOC clock */
+	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, DISABLE);
 	  return GPIO_No_Error;
 
 }
@@ -52,6 +55,7 @@ DRV_Gpio_Error DRV_Gpio_Open( DRV_Gpio_Handle *phDeviceHandle , DRV_Gpio_Cfg *pt
 	for( iCount=0; !(uiPio&1);iCount++)
 		uiPio>>=1;
 	uiPio=iCount;
+	GpioHandles[uiPio+16*uiBank]=*ptSettings;
 	  *phDeviceHandle=(DRV_Gpio_Handle)&GpioHandles[uiPio+16*uiBank];
 
 	  GPIO_InitStructure.GPIO_Pin = ptSettings->Id.Pio ;
