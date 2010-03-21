@@ -38,27 +38,27 @@ DRV_UART_ARCH_Device tDeviceListe[]={{"UART1",USART1,NULL,0 } ,{"UART2",USART2,N
 
 void DRV_Uart_Arch_RxSafeEnter( DRV_Uart_Devicedata *pUart )
 {
-	DRV_UART_ARCH_Device *pUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-	USART_ITConfig(pUART->Handle, USART_IT_RXNE, DISABLE);
+	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
+	USART_ITConfig(pArchUART->Handle, USART_IT_RXNE, DISABLE);
 
 }
 void DRV_Uart_Arch_RxSafeLeave( DRV_Uart_Devicedata *pUart )
 {
-	DRV_UART_ARCH_Device *pUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-	USART_ITConfig(pUART->Handle, USART_IT_RXNE, ENABLE);
+	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
+	USART_ITConfig(pArchUART->Handle, USART_IT_RXNE, ENABLE);
 
 }
 
 void DRV_Uart_Arch_TxSafeEnter( DRV_Uart_Devicedata *pUart )
 {
-	DRV_UART_ARCH_Device *pUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-	USART_ITConfig(pUART->Handle, USART_IT_TXE, DISABLE);
+	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
+	USART_ITConfig(pArchUART->Handle, USART_IT_TXE, DISABLE);
 
 }
 void DRV_Uart_Arch_TxSafeLeave( DRV_Uart_Devicedata *pUart )
 {
-	DRV_UART_ARCH_Device *pUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-	USART_ITConfig(pUART->Handle, USART_IT_TXE, ENABLE);
+	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
+	USART_ITConfig(pArchUART->Handle, USART_IT_TXE, ENABLE);
 
 }
 
@@ -229,12 +229,12 @@ DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart )
 DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pucBuffer , int iLength)
 {
 
-	DRV_UART_ARCH_Device *pUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
+	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
 
-	pUART->puCTxBuff=pucBuffer;
-	pUART->uiTxCount=(u32)iLength;
-	USART_SendData(USART2, *(pUART->puCTxBuff++));
-	pUART->uiTxCount--;
+	pArchUART->puCTxBuff=pucBuffer;
+	pArchUART->uiTxCount=(u32)iLength;
+	USART_SendData(USART2, *(pArchUART->puCTxBuff++));
+	pArchUART->uiTxCount--;
 	return UART_No_Error;
 }
 
@@ -247,8 +247,8 @@ DRV_Uart_Error  DRV_Uart_ArchRXFlush( DRV_Uart_Devicedata *pUart)
 
 DRV_Uart_Error DRV_Uart_ArchTXFlush( DRV_Uart_Devicedata *pUart)
 {
-	//DRV_UART_ARCH_Data *pData =(DRV_UART_ARCH_Data *) pUart->pArchData ;
-	//TODO
+	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
+	pArchUART->uiTxCount=0;
 	return UART_No_Error;
 }
 
