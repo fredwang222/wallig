@@ -39,7 +39,7 @@
  *  @{
  */
 
-
+#include "Arch/Stm32/DRV_Gpio_Arch.h"
 #define BOOL unsigned char
 /**************************************************************
 						Typedef
@@ -86,8 +86,8 @@ typedef enum
  */
 typedef struct
 {
-	char cBank;
-	char cPio;
+	tPIO_BANK Bank;
+	tPIO_Pin Pio;
 } DRV_GpioID;
 
 /*!
@@ -121,7 +121,7 @@ typedef struct
 	DRV_GpioID Id;
 	DRV_Gpio_Type Type;
     unsigned int uiOption;
-    DRV_GpioINT Int
+    DRV_GpioINT Int;
 } DRV_Gpio_Cfg;
 
 /** @} */ //
