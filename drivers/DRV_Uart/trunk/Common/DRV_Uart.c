@@ -163,8 +163,7 @@ DRV_Uart_Error DRV_Uart_Receive( DRV_Uart_Handle hDeviceHandle , unsigned char *
 
 
 	DRV_Uart_Arch_RxSafeEnter(pUart);
-	if( *piLength > pUart->iRxBuffIndex)
-	  *piLength = pUart->iRxBuffIndex;
+    *piLength = pUart->iRxBuffIndex;
 	//Copy data to user buffer
 	memcpy(pucBuffer,pUart->tucRXBuff,*piLength);
 	pUart->iRxBuffIndex-=*piLength;

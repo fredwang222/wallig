@@ -32,6 +32,8 @@ typedef struct
 
 DRV_UART_ARCH_Device tDeviceListe[]={{"UART1",USART1,NULL,0 } ,{"UART2",USART2,NULL,0 },{NULL,0,NULL,0}};
 
+
+static void UART_Gpio_Config( u8 ucUARTIndex);
 /**************************************************************
                  private Functions
 ***************************************************************/
@@ -64,6 +66,8 @@ void DRV_Uart_Arch_TxSafeLeave( DRV_Uart_Devicedata *pUart )
 
 DRV_Uart_Error DRV_Uart_ArchInit(void )
 {
+	/* Configure the NVIC Preemption Priority Bits */
+	  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
 	return UART_No_Error;
 }
 
@@ -159,7 +163,8 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 
 	USART_ITConfig(tDeviceListe[iDeviceIndex].Handle, USART_IT_RXNE, ENABLE);
 	USART_ITConfig(tDeviceListe[iDeviceIndex].Handle, USART_IT_TXE, ENABLE);
-
+	 USART_Cmd(tDeviceListe[iDeviceIndex].Handle, ENABLE);
+	 UART_Gpio_Config(iDeviceIndex);
 	return tError;
 }
 
@@ -170,9 +175,10 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void USART1_IRQHandler(void)
+void __attribute__((__interrupt__)) USART1_IRQHandler(void)
 {
 	u8 ucCharIn;
+	volatile u32 uiSRValue = ((volatile USART_TypeDef*)USART1)->SR;
 
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
@@ -184,10 +190,17 @@ void USART1_IRQHandler(void)
 	{
 		if(tDeviceListe[0].uiTxCount)
 		{
-			USART_SendData(USART2, *(tDeviceListe[0].puCTxBuff++));
+			USART_SendData(USART1, *(tDeviceListe[0].puCTxBuff++));
 			tDeviceListe[0].uiTxCount--;
+			if(!tDeviceListe[0].uiTxCount)
+				tDeviceListe[0].pUart->eTxState= TXIdle;
+		}
+		else
+		{
+			USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
 		}
 	}
+	//NVIC_ClearIRQChannelPendingBit(NVIC_GetCurrentPendingIRQChannel());
 }
 
 /*******************************************************************************
@@ -233,8 +246,11 @@ DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pu
 
 	pArchUART->puCTxBuff=pucBuffer;
 	pArchUART->uiTxCount=(u32)iLength;
-	USART_SendData(USART2, *(pArchUART->puCTxBuff++));
+	USART_SendData(pArchUART->Handle, *(pArchUART->puCTxBuff++));
+	USART_ITConfig(pArchUART->Handle, USART_IT_TXE, ENABLE);
+
 	pArchUART->uiTxCount--;
+
 	return UART_No_Error;
 }
 
@@ -250,5 +266,60 @@ DRV_Uart_Error DRV_Uart_ArchTXFlush( DRV_Uart_Devicedata *pUart)
 	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
 	pArchUART->uiTxCount=0;
 	return UART_No_Error;
+}
+
+static void UART_Gpio_Config( u8 ucUARTIndex)
+{
+  GPIO_InitTypeDef GPIO_InitStructure;
+  NVIC_InitTypeDef NVIC_InitStructure;
+
+#ifdef USE_STM3210B_EVAL
+  /* Enable the USART2 Pins Software Remapping */
+  GPIO_PinRemapConfig(GPIO_Remap_USART2, ENABLE);
+#endif
+
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+  if( !ucUARTIndex )
+  {
+	  /* Configure USART1 Rx (PA.10) as input floating */
+	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+	  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  }
+  else
+  {
+	  /* Configure USART2 Rx as input floating */
+	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+	  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  }
+
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+  if( !ucUARTIndex )
+  {
+	  /* Configure USART1 Tx (PA.09) as alternate function push-pull */
+	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+	  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  }
+  else
+  {
+	  /* Configure USART2 Tx as alternate function push-pull */
+	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+	  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  }
+
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  if( !ucUARTIndex )
+  {
+	  /* Enable the USART1 Interrupt */
+	  NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQChannel;
+  }
+  else
+  {
+	  /* Enable the USART2 Interrupt */
+	  NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQChannel;
+  }
+   NVIC_Init(&NVIC_InitStructure);
 }
 
