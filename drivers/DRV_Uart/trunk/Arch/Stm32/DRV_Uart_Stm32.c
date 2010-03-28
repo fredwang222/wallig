@@ -178,7 +178,6 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 void __attribute__((__interrupt__)) USART1_IRQHandler(void)
 {
 	u8 ucCharIn;
-	volatile u32 uiSRValue = ((volatile USART_TypeDef*)USART1)->SR;
 
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
@@ -192,12 +191,11 @@ void __attribute__((__interrupt__)) USART1_IRQHandler(void)
 		{
 			USART_SendData(USART1, *(tDeviceListe[0].puCTxBuff++));
 			tDeviceListe[0].uiTxCount--;
-			if(!tDeviceListe[0].uiTxCount)
-				tDeviceListe[0].pUart->eTxState= TXIdle;
 		}
 		else
 		{
 			USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
+			tDeviceListe[0].pUart->eTxState= TXIdle;
 		}
 	}
 	//NVIC_ClearIRQChannelPendingBit(NVIC_GetCurrentPendingIRQChannel());
@@ -222,10 +220,15 @@ void USART2_IRQHandler(void)
 
 	if(USART_GetITStatus(USART2, USART_IT_TXE) != RESET)
 	{
-		if(tDeviceListe[1].uiTxCount)
+		if(tDeviceListe[0].uiTxCount)
 		{
 			USART_SendData(USART2, *(tDeviceListe[1].puCTxBuff++));
-			tDeviceListe[1].uiTxCount--;
+			tDeviceListe[0].uiTxCount--;
+		}
+		else
+		{
+			USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
+			tDeviceListe[1].pUart->eTxState= TXIdle;
 		}
 
 	}

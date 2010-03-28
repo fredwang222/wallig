@@ -129,9 +129,9 @@ int DRV_Uart_TXBusy( DRV_Uart_Handle hDeviceHandle )
 	DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 	tTxState eState;
 
-	DRV_Uart_Arch_RxSafeEnter(pUart);
+	//DRV_Uart_Arch_RxSafeEnter(pUart);
 	eState = pUart->eTxState;
-	DRV_Uart_Arch_RxSafeLeave(pUart);
+	//DRV_Uart_Arch_RxSafeLeave(pUart);
 
 	if(eState  == TXIdle )
 		return 0;
@@ -144,9 +144,9 @@ int DRV_Uart_RXDataReceived( DRV_Uart_Handle hDeviceHandle )
         DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
         tRxState eState;
 
-        DRV_Uart_Arch_RxSafeEnter(pUart);
+        // DRV_Uart_Arch_RxSafeEnter(pUart);
         eState = pUart->eRxState;
-        DRV_Uart_Arch_RxSafeLeave(pUart);
+       // DRV_Uart_Arch_RxSafeLeave(pUart);
 
         if( eState == RXFull )
         	return 1;
