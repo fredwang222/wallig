@@ -75,6 +75,9 @@
  *  @{
  */
 
+//! number of devices configured
+#ifndef DRV_UART_H
+#define DRV_UART_H
 /**************************************************************
 						Typedef
 ***************************************************************/
@@ -155,7 +158,8 @@ typedef struct
       int iRXNbChar;                    //!< Expected number of char to receive
       char cEndOfBuff;                  //!< End char for rx buff
       char eSLIPModeEnable;
-      void (*RXCallBack)(char *pcBuffer , int iLength);
+      void (*RXCallBack)( DRV_Uart_Handle hDeviceHandle , unsigned char *pcBuffer , int *piLength);
+      void (*TXCallBack)( DRV_Uart_Handle hDeviceHandle );
 } DRV_Uart_Cfg;
 
 /** @} */ //
@@ -250,3 +254,4 @@ DRV_Uart_Error DRV_Uart_TXFlush( DRV_Uart_Handle hDeviceHandle );
 
 DRV_Uart_Error DRV_Uart_RXFlush( DRV_Uart_Handle hDeviceHandle );
 /** @} */ // end of DRV_Uart_Public_grp
+#endif

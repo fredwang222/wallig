@@ -183,7 +183,7 @@ static void *DRV_Uart_RX_Thread( void * arg )
     {
     	uiRxChars = read( pData->fd , pucBuff , sizeof(tucBuffIn)-(uiRemainingChars) );
     	uiRemainingChars+=uiRxChars;
-    	uiReadChars = DRV_Uart_Private_Callback( pUart , tucBuffIn , uiRemainingChars );
+    	uiReadChars = DRV_Uart_RX_Private_Callback( pUart , tucBuffIn , uiRemainingChars );
     	/* Update the remaining number of chars in the buffer*/
     	uiRemainingChars -=uiReadChars;
     	if(uiRemainingChars)

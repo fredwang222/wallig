@@ -16,6 +16,13 @@
 
 #include "DRV_Uart_SLIP.h"
 #include "DRV_Uart_CFG.h"
+/**************************************************************
+					Define
+***************************************************************/
+
+/**************************************************************
+						Typedef
+***************************************************************/
 
 /** @defgroup DRV_Uart_Private_Common_grp private common
  *
@@ -53,6 +60,8 @@ typedef struct
 	tTxState eTxState;
 } DRV_Uart_Devicedata;
 
+extern DRV_Uart_Devicedata tsUartsDeviceList[];
+
 /*!
  *  \brief RX function call by the device
  *  \param pUart device data
@@ -60,8 +69,8 @@ typedef struct
  *  \param iLength Number of char in the buffer
  *  \return the number of char read in the buffer
  */
-int DRV_Uart_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucBuffer , int iLength );
-
+int DRV_Uart_RX_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *pucBuffer , int iLength );
+int DRV_Uart_EndTX_Private_Callback( DRV_Uart_Devicedata *pUart );
 /** @} */
 
 /** @defgroup DRV_Uart_Private_Arch_grp private Architecture
