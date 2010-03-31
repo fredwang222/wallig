@@ -41,26 +41,26 @@ static void UART_Gpio_Config( u8 ucUARTIndex);
 void DRV_Uart_Arch_RxSafeEnter( DRV_Uart_Devicedata *pUart )
 {
 	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-	//USART_ITConfig(pArchUART->Handle, USART_IT_RXNE, DISABLE);
+	USART_ITConfig(pArchUART->Handle, USART_IT_RXNE, DISABLE);
 
 }
 void DRV_Uart_Arch_RxSafeLeave( DRV_Uart_Devicedata *pUart )
 {
 	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-	//USART_ITConfig(pArchUART->Handle, USART_IT_RXNE, ENABLE);
+	USART_ITConfig(pArchUART->Handle, USART_IT_RXNE, ENABLE);
 
 }
 
 void DRV_Uart_Arch_TxSafeEnter( DRV_Uart_Devicedata *pUart )
 {
 	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-	//USART_ITConfig(pArchUART->Handle, USART_IT_TXE, DISABLE);
+//	USART_ITConfig(pArchUART->Handle, USART_IT_TXE, DISABLE);
 
 }
 void DRV_Uart_Arch_TxSafeLeave( DRV_Uart_Devicedata *pUart )
 {
 	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-	//USART_ITConfig(pArchUART->Handle, USART_IT_TXE, ENABLE);
+//	USART_ITConfig(pArchUART->Handle, USART_IT_TXE, ENABLE);
 
 }
 
@@ -83,6 +83,7 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 	DRV_Uart_Error tError = UART_No_Error;
 	USART_InitTypeDef USART_InitStructure;
 	int iDeviceIndex=0;
+	char cDummy;
 
 	while(tDeviceListe[iDeviceIndex].Handle)
 	{
@@ -102,13 +103,13 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 	switch( (u32) tDeviceListe[iDeviceIndex].Handle )
 	{
 		case (u32)USART1:
-			RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+			RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1| RCC_APB2Periph_AFIO, ENABLE);
 			break;
 		case (u32)USART2:
 			RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
 			break;
 	}
-
+	USART_StructInit(&USART_InitStructure);
 	switch( pUart->cfg.eBaudRate )
 	{
 		case BR4800:
@@ -160,10 +161,9 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 	USART_Init(tDeviceListe[iDeviceIndex].Handle, &USART_InitStructure);
-	USART_ReceiveData(tDeviceListe[iDeviceIndex].Handle);
+
 
 	USART_ITConfig(tDeviceListe[iDeviceIndex].Handle, USART_IT_RXNE, ENABLE);
-	USART_ITConfig(tDeviceListe[iDeviceIndex].Handle, USART_IT_TXE, ENABLE);
 	 USART_Cmd(tDeviceListe[iDeviceIndex].Handle, ENABLE);
 	 UART_Gpio_Config(iDeviceIndex);
 	return tError;
@@ -178,7 +178,7 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 *******************************************************************************/
 void __attribute__((__interrupt__)) USART1_IRQHandler(void)
 {
-	u8 ucCharIn = 0;
+	u8 ucCharIn;
 
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
@@ -200,7 +200,6 @@ void __attribute__((__interrupt__)) USART1_IRQHandler(void)
 			DRV_Uart_EndTX_Private_Callback(tDeviceListe[0].pUart);
 		}
 	}
-	//NVIC_ClearIRQChannelPendingBit(NVIC_GetCurrentPendingIRQChannel());
 }
 
 /*******************************************************************************
@@ -222,15 +221,16 @@ void USART2_IRQHandler(void)
 
 	if(USART_GetITStatus(USART2, USART_IT_TXE) != RESET)
 	{
-		if(tDeviceListe[0].uiTxCount)
+		if(tDeviceListe[1].uiTxCount)
 		{
 			USART_SendData(USART2, *(tDeviceListe[1].puCTxBuff++));
-			tDeviceListe[0].uiTxCount--;
+			tDeviceListe[1].uiTxCount--;
 		}
 		else
 		{
 			USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
 			tDeviceListe[1].pUart->eTxState= TXIdle;
+			DRV_Uart_EndTX_Private_Callback(tDeviceListe[1].pUart);
 		}
 
 	}
@@ -251,10 +251,9 @@ DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pu
 
 	pArchUART->puCTxBuff=pucBuffer;
 	pArchUART->uiTxCount=(u32)iLength;
+	pArchUART->uiTxCount--;
 	USART_SendData(pArchUART->Handle, *(pArchUART->puCTxBuff++));
 	USART_ITConfig(pArchUART->Handle, USART_IT_TXE, ENABLE);
-
-	pArchUART->uiTxCount--;
 
 	return UART_No_Error;
 }

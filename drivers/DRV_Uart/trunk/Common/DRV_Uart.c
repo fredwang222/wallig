@@ -119,7 +119,7 @@ DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned char *pucB
   }
   else
 	  memmove( pUart->tucTXBuff , pucBuffer , iLength );
-  DRV_Uart_Arch_TxSafeLeave(pUart);
+  //DRV_Uart_Arch_TxSafeLeave(pUart);
   return DRV_Uart_ArchSend( pUart , pUart->tucTXBuff  , iLength);
  }
 
@@ -128,9 +128,9 @@ int DRV_Uart_TXBusy( DRV_Uart_Handle hDeviceHandle )
 	DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
 	tTxState eState;
 
-	//DRV_Uart_Arch_RxSafeEnter(pUart);
+	DRV_Uart_Arch_RxSafeEnter(pUart);
 	eState = pUart->eTxState;
-	//DRV_Uart_Arch_RxSafeLeave(pUart);
+	DRV_Uart_Arch_RxSafeLeave(pUart);
 
 	if(eState  == TXIdle )
 		return 0;
@@ -143,9 +143,9 @@ int DRV_Uart_RXDataReceived( DRV_Uart_Handle hDeviceHandle )
         DRV_Uart_Devicedata *pUart = (DRV_Uart_Devicedata *) hDeviceHandle;
         tRxState eState;
 
-        // DRV_Uart_Arch_RxSafeEnter(pUart);
+         DRV_Uart_Arch_RxSafeEnter(pUart);
         eState = pUart->eRxState;
-       // DRV_Uart_Arch_RxSafeLeave(pUart);
+        DRV_Uart_Arch_RxSafeLeave(pUart);
 
         if( eState == RXFull )
         	return 1;
@@ -264,15 +264,15 @@ int DRV_Uart_RX_Private_Callback( DRV_Uart_Devicedata *pUart ,  unsigned char *p
 							break;
 						}
 					}
-					else if( pUart->cfg.iRXNbChar )
+					if( pUart->cfg.iRXNbChar )
 					{
-						if( pUart->cfg.iRXNbChar > pUart->iRxBuffIndex++ )
+						if( pUart->cfg.iRXNbChar >= pUart->iRxBuffIndex++ )
 						{
 							pUart->eRxState = RXFull;
 							break;
 						}
 					}
-					else
+					if(pUart->eRxState != RXFull)
 					{
 						pUart->iRxBuffIndex++;
 						pUart->eRxState = RXFull;
