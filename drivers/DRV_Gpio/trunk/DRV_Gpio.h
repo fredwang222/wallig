@@ -118,10 +118,10 @@ typedef struct
  */
 typedef struct
 {
-	DRV_GpioID Id;
+
 	DRV_Gpio_Type Type;
     unsigned int uiOption;
-    DRV_GpioINT Int;
+    //DRV_GpioINT Int;
 } DRV_Gpio_Cfg;
 
 /** @} */ //
@@ -145,7 +145,8 @@ DRV_Gpio_Error DRV_Gpio_Terminate( void );
  *  \param ptSettings device settings
  *  \return Driver error.
  */
-DRV_Gpio_Error DRV_Gpio_Open( DRV_Gpio_Handle *phDeviceHandle , DRV_Gpio_Cfg *ptSettings);
+DRV_Gpio_Error DRV_Gpio_Open( char *Name , DRV_Gpio_Handle *phDeviceHandle , DRV_GpioINT *pGpioIntCfg);
+
 /*! \fn DRV_Gpio_Error DRV_Gpio_Close( DRV_Gpio_Handle hDeviceHandle );
  *  \brief Close an instance of the driver.
  *  \param hDeviceHandle Handle of the instance to close.
