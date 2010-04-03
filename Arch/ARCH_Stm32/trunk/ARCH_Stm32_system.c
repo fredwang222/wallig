@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include "stm32f10x_lib.h"
-
+#include "stm32f10x.h"
+#include "misc.h"
+#include "system_stm32f10x.h"
 ErrorStatus HSEStartUpStatus;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -10,8 +11,10 @@ void Delay(vu32 nCount);
 
 void System_init( void )
 {
+	 /*  Setup the microcontroller system */
+	  SystemInit();
 	  /* Configure the system clocks */
-	  RCC_Configuration();
+	  //RCC_Configuration();
 
 	  /* NVIC Configuration */
 	  NVIC_Configuration();
@@ -25,6 +28,7 @@ void System_init( void )
 * Output         : None
 * Return         : None
 *******************************************************************************/
+#if 0
 void RCC_Configuration(void)
 {
   /* RCC system reset(for debug purpose) */
@@ -73,7 +77,7 @@ void RCC_Configuration(void)
     }
   }
 }
-
+#endif
 /*******************************************************************************
 * Function Name  : NVIC_Configuration
 * Description    : Configures Vector Table base location.
