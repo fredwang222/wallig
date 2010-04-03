@@ -126,7 +126,7 @@ typedef unsigned short uip_stats_t;
  *
  * \hideinitializer
  */
-#define UIP_CONF_UDP             0
+#define UIP_CONF_UDP             1
 
 /**
  * UDP checksums on or off
@@ -142,15 +142,14 @@ typedef unsigned short uip_stats_t;
  */
 #define UIP_CONF_STATISTICS      1
 
-/* Here we include the header file for the application(s) we use in
-   our project. */
-/*#include "smtp.h"*/
-//#include "hello-world.h"
-/*#include "telnetd.h"*/
-//#include "webserver.h"
-/*#include "dhcpc.h"*/
-/*#include "resolv.h"*/
-/*#include "webclient.h"*/
+typedef int uip_tcp_appstate_t;
+#if UIP_CONF_UDP
+void uip_udp_test_APPCALL( void );
+typedef int uip_udp_appstate_t;
+#ifndef UIP_UDP_APPCALL
+#define UIP_UDP_APPCALL() uip_router_udp_APPCALL()
+#endif
+#endif
 void uip_router_tcp_appcall(void);
 #ifndef UIP_APPCALL
 #define UIP_APPCALL uip_router_tcp_appcall
