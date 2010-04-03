@@ -1,5 +1,5 @@
 #include <string.h>
-#include "stm32f10x_lib.h"
+#include "stm32f10x.h"
 #include "../../DRV_Gpio.h"
 #include "DRV_Gpio_Cfg.h"
 
@@ -26,7 +26,7 @@ DRV_Gpio_Error DRV_Gpio_Init( void )
 {
 	  iPioCount=0;
 	 /* Enable GPIOB clock */
-	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA  | RCC_APB2Periph_AFIO , ENABLE);
 	  /* Enable GPIOB clock */
   	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
   	/* Enable GPIOC clock */
@@ -87,12 +87,14 @@ DRV_Gpio_Error DRV_Gpio_Open( char *Name , DRV_Gpio_Handle *phDeviceHandle , DRV
 			break;
 	}
 
+	GPIO_StructInit(&GPIO_InitStructure);
 	uiPio=pGpioData->Id.Pio;
 	for( iCount=0; !(uiPio&1);iCount++)
 		uiPio>>=1;
 	uiPio=iCount;
-	GPIO_StructInit(&GPIO_InitStructure);
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
+	GPIO_InitStructure.GPIO_Pin = pGpioData->Id.Pio;
+	if( pGpioData->Cfg.Type == GPIO_Output )
+		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
 	GPIO_InitStructure.GPIO_Mode = pGpioData->Cfg.uiOption;
 	GPIO_Init(pGpioData->Id.Bank, &GPIO_InitStructure);
 
@@ -111,26 +113,26 @@ DRV_Gpio_Error DRV_Gpio_Open( char *Name , DRV_Gpio_Handle *phDeviceHandle , DRV
 		 	  switch( pGpioData->Id.Pio )
 		 	  {
 				  case GPIO_Pin_0:
-					  NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQChannel;
+					  NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
 					  break;
 				  case GPIO_Pin_1:
-					  NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQChannel;
+					  NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
 					  break;
 				  case GPIO_Pin_2:
-					  NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQChannel;
+					  NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
 					  break;
 				  case GPIO_Pin_3:
-					  NVIC_InitStructure.NVIC_IRQChannel = EXTI3_IRQChannel;
+					  NVIC_InitStructure.NVIC_IRQChannel = EXTI3_IRQn;
 					  break;
 				  case GPIO_Pin_4:
-					  NVIC_InitStructure.NVIC_IRQChannel = EXTI4_IRQChannel;
+					  NVIC_InitStructure.NVIC_IRQChannel = EXTI4_IRQn;
 					  break;
 				  case GPIO_Pin_5:
 				  case GPIO_Pin_6:
 				  case GPIO_Pin_7:
 				  case GPIO_Pin_8:
 				  case GPIO_Pin_9:
-					  NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQChannel;
+					  NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
 					  break;
 				  case GPIO_Pin_10:
 				  case GPIO_Pin_11:
@@ -138,13 +140,13 @@ DRV_Gpio_Error DRV_Gpio_Open( char *Name , DRV_Gpio_Handle *phDeviceHandle , DRV
 				  case GPIO_Pin_13:
 				  case GPIO_Pin_14:
 				  case GPIO_Pin_15:
-					  NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQChannel;
+					  NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
 					  break;
 		 	  }
 		 	  NVIC_Init(&NVIC_InitStructure);
 
 			/* Connect PIO EXTI Line to Key Button GPIO Pin */
-		    GPIO_EXTILineConfig(uiBank ,uiPio);
+		    GPIO_EXTILineConfig(pGpioData->Id.Bank ,pGpioData->Id.Pio);
 		    /* Configure PIO EXTI Line to generate an interrupt  */
 			switch( pGpioData->Int.EventType )
 			{
@@ -179,7 +181,7 @@ DRV_Gpio_Error DRV_Gpio_Close( DRV_Gpio_Handle hDeviceHandle )
 
 BOOL DRV_Gpio_ValueGet( DRV_Gpio_Handle hDeviceHandle )
 {
- return (BOOL) GPIO_ReadOutputDataBit( ((GPIO_Data *)hDeviceHandle)->Id.Bank, ((GPIO_Data *)hDeviceHandle)->Id.Pio );
+ return (BOOL) GPIO_ReadInputDataBit( ((GPIO_Data *)hDeviceHandle)->Id.Bank, ((GPIO_Data *)hDeviceHandle)->Id.Pio );
 }
 
 
@@ -218,7 +220,7 @@ void EXTI0_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line0) != RESET)
 	{
-		if(tGpioIrqHandler != NULL )
+		if(tGpioIrqHandler[0] != NULL )
 		tGpioIrqHandler[0]();
 		/* Clear the Key Button EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line0);

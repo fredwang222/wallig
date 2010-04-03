@@ -1,5 +1,5 @@
 #ifdef ARCH_STM32
-#include "stm32f10x_lib.h"
+#include "stm32f10x.h"
 
 typedef GPIO_TypeDef* tPIO_BANK;
 typedef u16 tPIO_Pin;
