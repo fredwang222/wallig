@@ -19,7 +19,7 @@
 *    \endif
 *   \author Gwendal Le Gall
 *
-*	\date 20/02/2010
+*	\date 14/03/2010
 *
 *	\section Description Description
 *	This a simple SPI driver
