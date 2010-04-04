@@ -3,7 +3,7 @@
 #include "../../DRV_Pwm.h"
 #include "DRV_Pwm_Cfg.h"
 
-#define PWM_DEVICE_COUNT ( sizeof(Pwm_DeviceData)/sizeof(DRV_Pwm_Device_Data))
+#define PWM_DEVICE_COUNT ( sizeof(tPWM_DeviceData)/sizeof(DRV_Pwm_Device_Data))
 
 typedef struct
 {
@@ -22,7 +22,7 @@ typedef struct
 
 } DRV_Pwm_Device_Data;
 
-static DRV_Pwm_Device_Data Pwm_DeviceData[] = DRV_PWM_INIT_DATA;
+static DRV_Pwm_Device_Data tPWM_DeviceData[] = DRV_PWM_INIT_DATA;
 void DRV_Pwmm_GPIO_config( DRV_Pwm_PioCfg *pGpioCFG);
 void DRV_Pwm_Init(void )
 {
@@ -53,9 +53,9 @@ DRV_Pwm_Error DRV_Pwm_Open( char *pcName , DRV_Pwm_Handle *pHandle)
 
 	for ( iPwmIndex = 0 ; iPwmIndex < PWM_DEVICE_COUNT ; iPwmIndex++ )
 	{
-		if( !strcmp( pcName , Pwm_DeviceData[iPwmIndex].pcName) )
+		if( !strcmp( pcName , tPWM_DeviceData[iPwmIndex].pcName) )
 		{
-			pPwmData = &Pwm_DeviceData[iPwmIndex];
+			pPwmData = &tPWM_DeviceData[iPwmIndex];
 			eError=Pwm_No_Error;
 			break;
 		}
