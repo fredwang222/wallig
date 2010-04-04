@@ -11,13 +11,13 @@ typedef struct
 	DRV_GpioINT Int;
 
 } GPIO_Data;
-#define GPIO_DEVICE_COUNT ( sizeof(GpioDevicesData)/sizeof(GPIO_Data))
+#define GPIO_DEVICE_COUNT ( sizeof(tGPIO_DevicesData)/sizeof(GPIO_Data))
 
 typedef void (*GPIO_Handler)(void);
 
 GPIO_Handler tGpioIrqHandler[16];
 
-GPIO_Data GpioDevicesData[]= DRV_GPIO_INIT_CFG;
+GPIO_Data tGPIO_DevicesData[]= DRV_GPIO_INIT_CFG;
 //DRV_Gpio_Cfg GpioHandles[16*3];
 int iPioCount;
 
@@ -63,9 +63,9 @@ DRV_Gpio_Error DRV_Gpio_Open( char *Name , DRV_Gpio_Handle *phDeviceHandle , DRV
 
 	for ( iGpioIndex = 0 ; iGpioIndex < GPIO_DEVICE_COUNT ; iGpioIndex++ )
 	{
-		if( !strcmp( Name , GpioDevicesData[iGpioIndex].Name) )
+		if( !strcmp( Name , tGPIO_DevicesData[iGpioIndex].Name) )
 		{
-			pGpioData = &GpioDevicesData[iGpioIndex];
+			pGpioData = &tGPIO_DevicesData[iGpioIndex];
 			eError=GPIO_No_Error;
 			break;
 		}
