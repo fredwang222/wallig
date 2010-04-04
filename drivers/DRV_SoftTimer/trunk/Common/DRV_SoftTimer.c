@@ -23,6 +23,7 @@ static struct
 {
     DRV_Softimer_Devicedata tsSoftTimers[kDRV_SofTimer_MaxDevices];
     unsigned char ucTimerCount;
+    unsigned int uisystemTicks;
 } sDRV_SoftTimer_MainData;
 
 /**************************************************************
@@ -45,6 +46,8 @@ DRV_SoftTimer_Error DRV_SoftTimer_Init( void )
         }
         //reset the number of used timers
         sDRV_SoftTimer_MainData.ucTimerCount=0;
+        //reset the system ticks count
+        sDRV_SoftTimer_MainData.uisystemTicks=0;
         //Architecture dependent init of the main timer
         DRV_SofTimer_MainInit();
 
@@ -181,6 +184,8 @@ void DRV_Softimer_TimerCallBack( void )
 {
 	unsigned char ucTimerIndex;
 
+	//update system ticks
+	sDRV_SoftTimer_MainData.uisystemTicks++;
 	//update timers
 	for( ucTimerIndex=0 ; ucTimerIndex < kDRV_SofTimer_MaxDevices; ucTimerIndex++)
 	{
@@ -221,3 +226,7 @@ static void DRV_SoftTimer_ResetValues( DRV_Softimer_Devicedata *pTimer )
       pTimer->uiReturnedValue = pTimer->cfg.uiValue ;
 }
 
+unsigned int DRV_SoftTimer_Getsysticks( void )
+{
+	return sDRV_SoftTimer_MainData.uisystemTicks;
+}

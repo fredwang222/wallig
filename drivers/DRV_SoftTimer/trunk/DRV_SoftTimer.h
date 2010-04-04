@@ -156,3 +156,5 @@ unsigned int DRV_SoftTimer_GetValue( DRV_SoftTimer_Handle hDeviceHandle );
  *  \return The value of the timer.
  */
 void DRV_SoftTimer_Reset( DRV_SoftTimer_Handle hDeviceHandle );
+
+unsigned int DRV_SoftTimer_Getsysticks( void );

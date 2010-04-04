@@ -11,7 +11,7 @@
 
 */
 #include <DRV_SoftTimer.h>
-#include "stm32f10x_lib.h"
+#include "stm32f10x.h"
 #include "Inc/DRV_SoftTimer_private.h"
 
 /**************************************************************
@@ -21,25 +21,21 @@
 /**************************************************************
                  private Functions
 ***************************************************************/
-void *MaintTimer( void * arg );
 
 void DRV_SoftTimer_SafeEnter( void )
 {
-	 SysTick_ITConfig(DISABLE);
+	// SysTick_ITConfig(DISABLE);
 }
 void DRV_SoftTimer_SafeLeave( void )
 {
-	 SysTick_ITConfig(ENABLE);
+	// SysTick_ITConfig(ENABLE);
 
 }
 
 DRV_SoftTimer_Error DRV_SofTimer_MainInit(void )
 {
 	/* SysTick end of count event each 1ms with input clock equal to 9MHz (HCLK/8, default) */
-	  SysTick_SetReload(9000);
-	  SysTick_ITConfig(ENABLE);
-	  /* Enable SysTick interrupt */
-	  SysTick_ITConfig(ENABLE);
+	SysTick_Config(SystemCoreClock / 1000);
   return SOFTTIMER_No_Error;
 }
 
@@ -47,6 +43,8 @@ DRV_SoftTimer_Error DRV_SofTimer_MainTerminate(void )
 {
     return SOFTTIMER_No_Error;
 }
+
+static vu32 TimingDelay;
 
 /*******************************************************************************
 * Function Name  : SysTickHandler
@@ -57,7 +55,25 @@ DRV_SoftTimer_Error DRV_SofTimer_MainTerminate(void )
 *******************************************************************************/
 void SysTickHandler(void)
 {
-
-       //test the end of the thread
-      DRV_Softimer_TimerCallBack();
+     DRV_Softimer_TimerCallBack();
+	/*if (TimingDelay != 0x00)
+	  {
+	    TimingDelay--;
+	  }*/
 }
+#if 0
+void Delay(u32 nTime)
+{
+  /* Enable the SysTick Counter */
+  SysTick_CounterCmd(SysTick_Counter_Enable);
+
+  TimingDelay = nTime;
+
+  while(TimingDelay != 0);
+
+  /* Disable SysTick Counter */
+  SysTick_CounterCmd(SysTick_Counter_Disable);
+  /* Clear SysTick Counter */
+  SysTick_CounterCmd(SysTick_Counter_Clear);
+}
+#endif
