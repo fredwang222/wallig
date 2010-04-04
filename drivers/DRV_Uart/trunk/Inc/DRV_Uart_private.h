@@ -60,7 +60,7 @@ typedef struct
 	tTxState eTxState;
 } DRV_Uart_Devicedata;
 
-extern DRV_Uart_Devicedata tsUartsDeviceList[];
+extern DRV_Uart_Devicedata tUART_DeviceList[];
 
 /*!
  *  \brief RX function call by the device

@@ -19,7 +19,7 @@ typedef struct
 
 static const char *tpcUartDeviceName[]={kDRV_Uart_DeviceNameList};
 
-UART_FIFO_Type UART_FIFO_List[ kNumberOfUARTDevices ];
+UART_FIFO_Type tUART_FIFO_List[ kNumberOfUARTDevices ];
 
 void UART_FIFO_RXCallBack( DRV_Uart_Handle hDeviceHandle , unsigned char *pcBuffer , int *piLength);
 void UART_FIFO_TXCallBack( DRV_Uart_Handle hDeviceHandle );
@@ -32,16 +32,16 @@ DRV_Uart_Error DRV_Uart_Fifo_Open( const char * pcDeviceName , DRV_Uart_Handle *
 
 	for(iUartIndex=0 ; iUartIndex<kNumberOfUARTDevices ; iUartIndex++ )
 	{
-		if( !strcmp(pcDeviceName, tsUartsDeviceList[iUartIndex].pcDeviceName ))
+		if( !strcmp(pcDeviceName, tUART_DeviceList[iUartIndex].pcDeviceName ))
 		{
 			ptSettings->RXCallBack = UART_FIFO_RXCallBack;
 			ptSettings->TXCallBack = UART_FIFO_TXCallBack;
-			Error = DRV_Uart_Open(pcDeviceName,&UART_FIFO_List[iUartIndex].hDeviceHandle,ptSettings);
+			Error = DRV_Uart_Open(pcDeviceName,&tUART_FIFO_List[iUartIndex].hDeviceHandle,ptSettings);
 			if(Error != UART_No_Error)
 				return Error;
-			UART_FIFO_List[iUartIndex].RX_Fifo = *pRX_Fifo;
-			UART_FIFO_List[iUartIndex].TX_Fifo = *pTX_Fifo;
-			*phDeviceHandle = (DRV_Uart_Handle)&UART_FIFO_List[iUartIndex];
+			tUART_FIFO_List[iUartIndex].RX_Fifo = *pRX_Fifo;
+			tUART_FIFO_List[iUartIndex].TX_Fifo = *pTX_Fifo;
+			*phDeviceHandle = (DRV_Uart_Handle)&tUART_FIFO_List[iUartIndex];
 			break;
 		}
 	}
@@ -143,8 +143,8 @@ UART_FIFO_Type *DRV_Uart_Fifo_GetFifoHandle(DRV_Uart_Handle hDeviceHandle  )
 
 		for(iUartIndex=0 ; iUartIndex<kNumberOfUARTDevices ; iUartIndex++ )
 		{
-			if( hDeviceHandle == UART_FIFO_List[iUartIndex].hDeviceHandle)
-				return &UART_FIFO_List[iUartIndex];
+			if( hDeviceHandle == tUART_FIFO_List[iUartIndex].hDeviceHandle)
+				return &tUART_FIFO_List[iUartIndex];
 		}
 		return NULL;
 }

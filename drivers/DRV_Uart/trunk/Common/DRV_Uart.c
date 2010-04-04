@@ -21,7 +21,7 @@ static const char *tpcUartDeviceName[]={kDRV_Uart_DeviceNameList};
  * \brief Uart Driver Data
  *  @ingroup DRV_Uart_Public_grp
  */
-DRV_Uart_Devicedata tsUartsDeviceList[kNumberOfUARTDevices];	//!< Array of devices data
+DRV_Uart_Devicedata tUART_DeviceList[kNumberOfUARTDevices];	//!< Array of devices data
 
 /**************************************************************
                  local Functions declaration
@@ -36,9 +36,9 @@ DRV_Uart_Error DRV_Uart_Init( void )
 
     for(iUartIndex=0;iUartIndex<kNumberOfUARTDevices;iUartIndex++)
     {
-    	tsUartsDeviceList[iUartIndex].pcDeviceName = (char*)tpcUartDeviceName[iUartIndex];
-    	tsUartsDeviceList[iUartIndex].eRxState = RXClosed;
-    	tsUartsDeviceList[iUartIndex].eTxState = TXClosed;
+    	tUART_DeviceList[iUartIndex].pcDeviceName = (char*)tpcUartDeviceName[iUartIndex];
+    	tUART_DeviceList[iUartIndex].eRxState = RXClosed;
+    	tUART_DeviceList[iUartIndex].eTxState = TXClosed;
     }
 	DRV_Uart_ArchInit();
  	return UART_No_Error;
@@ -59,12 +59,12 @@ DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDev
 
         for(iUartIndex=0;iUartIndex<kNumberOfUARTDevices;iUartIndex++)
         {
-        	if( !strcmp(pcDeviceName, tsUartsDeviceList[iUartIndex].pcDeviceName ))
+        	if( !strcmp(pcDeviceName, tUART_DeviceList[iUartIndex].pcDeviceName ))
         	{    //The device name match
         		//check if the device is not already open
-				if( tsUartsDeviceList[iUartIndex].eRxState != RXClosed )
+				if( tUART_DeviceList[iUartIndex].eRxState != RXClosed )
 					return UART_AlreadyOpened;
-				pUart = &tsUartsDeviceList[iUartIndex];
+				pUart = &tUART_DeviceList[iUartIndex];
 				pUart->cfg=*ptSettings;
         		tError = DRV_UART_ArchOpen(pUart);
         		if( tError != UART_No_Error)
