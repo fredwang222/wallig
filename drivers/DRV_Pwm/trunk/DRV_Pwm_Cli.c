@@ -15,7 +15,7 @@ char DRV_Pwm_Cli_open( int *pState , char *pcArgs , char *pcOutput , int iOutput
 		return 0;
 	}
 	pcChar++;
-	if (DRV_Pwm_Open( pcChar ,&hPwm) != Pwm_No_Error )
+	if (DRV_Pwm_Open( pcChar ,&hPwm , 128) != Pwm_No_Error )
 	{
 		strncpy( pcOutput , "Error while opening\r" , iOutputLen);
 	}
@@ -31,7 +31,6 @@ char DRV_Pwm_Cli_Duty( int *pState , char *pcArgs , char *pcOutput , int iOutput
 {
 	char *pcChar;
 	unsigned int uiValue;
-	unsigned short usDuty;
 
 	if( hPwm == NULL )
 	{
@@ -47,9 +46,7 @@ char DRV_Pwm_Cli_Duty( int *pState , char *pcArgs , char *pcOutput , int iOutput
 		}
 		pcChar++;
 		uiValue=atoi(pcChar);
-		uiValue = (PWM_DUTY_CYCLE_FULL*uiValue)/100;
-		usDuty=(unsigned short) uiValue;
-		DRV_Pwm_DutyCycleSet(hPwm , usDuty );
+		DRV_Pwm_DutyCycleSet(hPwm , (unsigned char)uiValue );
 	}
 	return 0;
 }

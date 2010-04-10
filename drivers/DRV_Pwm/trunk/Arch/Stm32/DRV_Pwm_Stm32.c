@@ -3,7 +3,7 @@
 #include "../../DRV_Pwm.h"
 #include "DRV_Pwm_Cfg.h"
 
-#define PWM_DEVICE_COUNT ( sizeof(tPWM_DeviceData)/sizeof(DRV_Pwm_Device_Data))
+#define PWM_DEVICE_COUNT ( sizeof(PWM_DeviceCfgListe)/sizeof(Pwm_Device_Data_t))
 
 typedef struct
 {
@@ -18,18 +18,37 @@ typedef struct
 	char *pcName;
 	char cChannel;
 	DRV_Pwm_PioCfg PioCfg;
+	void (*OCxInit)(TIM_TypeDef* TIMx, TIM_OCInitTypeDef* TIM_OCInitStruct);
+	void (*OCxPreloadConfig)(TIM_TypeDef* TIMx, uint16_t TIM_OCPreload);
+	void (*SetCompareX)(TIM_TypeDef* TIMx, uint16_t Compare1);
+}Pwm_Device_Cfg_t;
+typedef struct
+{
+	const Pwm_Device_Cfg_t *pCfg;
+	DRV_Pwm_Device_State eState;
 	unsigned short usDutycycle;
 
-} DRV_Pwm_Device_Data;
+} Pwm_Device_Data_t;
 
-static DRV_Pwm_Device_Data tPWM_DeviceData[] = DRV_PWM_INIT_DATA;
-void DRV_Pwmm_GPIO_config( DRV_Pwm_PioCfg *pGpioCFG);
+static const Pwm_Device_Cfg_t PWM_DeviceCfgListe[]=DRV_PWM_INIT_CFG;
+static Pwm_Device_Data_t PWM_DeviceDataListe[PWM_DEVICE_COUNT];
+
+void DRV_Pwmm_GPIO_config( const DRV_Pwm_PioCfg *pGpioCFG);
 void DRV_Pwm_Init(void )
 {
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 
+	int iDevicecount;
+
+	for( iDevicecount = 0 ; iDevicecount < PWM_DEVICE_COUNT ; iDevicecount++)
+	{
+		PWM_DeviceDataListe[iDevicecount].pCfg = &PWM_DeviceCfgListe[iDevicecount];
+		PWM_DeviceDataListe[iDevicecount].usDutycycle=0;
+		PWM_DeviceDataListe[iDevicecount].eState = Pwm_Device_Close;
+	}
+
 	/* PWM_TIMER clock enable */
-	RCC_APB1PeriphClockCmd(PWM_TIMER_CLOCK, ENABLE);
+	PWM_TIMER_CLK_CMD(PWM_TIMER_CLOCK, ENABLE);
 
 	/* Time base configuration */
 	TIM_TimeBaseStructure.TIM_Period = PWM_DUTY_CYCLE_FULL;
@@ -43,58 +62,39 @@ void DRV_Pwm_Init(void )
 
 }
 
-DRV_Pwm_Error DRV_Pwm_Open( char *pcName , DRV_Pwm_Handle *pHandle)
+DRV_Pwm_Error DRV_Pwm_Open( const char *pcName , DRV_Pwm_Handle *pHandle ,const  unsigned short ucDutycycle)
 {
 	DRV_Pwm_Error eError = Pwm_Device_Not_Found;
 	int iPwmIndex;
-	DRV_Pwm_Device_Data *pPwmData;
+	Pwm_Device_Data_t *pPwmData;
 	TIM_OCInitTypeDef  TIM_OCInitStructure;
 
 
 	for ( iPwmIndex = 0 ; iPwmIndex < PWM_DEVICE_COUNT ; iPwmIndex++ )
 	{
-		if( !strcmp( pcName , tPWM_DeviceData[iPwmIndex].pcName) )
+		if( !strcmp( pcName , PWM_DeviceDataListe[iPwmIndex].pCfg->pcName ) )
 		{
-			pPwmData = &tPWM_DeviceData[iPwmIndex];
+			pPwmData = &PWM_DeviceDataListe[iPwmIndex];
 			eError=Pwm_No_Error;
 			break;
 		}
 	}
 	if( eError==Pwm_Device_Not_Found )
 		return eError;
+	if(  pPwmData->eState != Pwm_Device_Close )
+		return Pwm_AlreadyOpened;
 	*pHandle=(DRV_Pwm_Handle) pPwmData;
-	DRV_Pwmm_GPIO_config(&pPwmData->PioCfg);
+	pPwmData->usDutycycle = (PWM_DUTY_CYCLE_FULL*ucDutycycle)/256; ;
+	DRV_Pwmm_GPIO_config(&(pPwmData->pCfg->PioCfg));
 	/* PWM1 Mode configuration: Channel */
 	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
 	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
 	TIM_OCInitStructure.TIM_Pulse = pPwmData->usDutycycle;
 	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-
-	switch( pPwmData->cChannel)
-	{
-		case 1:
-			TIM_OC1Init(PWM_TIMER, &TIM_OCInitStructure);
-			TIM_OC1PreloadConfig(PWM_TIMER, TIM_OCPreload_Enable);
-			break;
-		case 2:
-			TIM_OC2Init(PWM_TIMER, &TIM_OCInitStructure);
-			TIM_OC2PreloadConfig(PWM_TIMER, TIM_OCPreload_Enable);
-			break;
-		case 3:
-			TIM_OC3Init(PWM_TIMER, &TIM_OCInitStructure);
-			TIM_OC3PreloadConfig(PWM_TIMER, TIM_OCPreload_Enable);
-			break;
-		case 4:
-			TIM_OC4Init(PWM_TIMER, &TIM_OCInitStructure);
-			TIM_OC4PreloadConfig(PWM_TIMER, TIM_OCPreload_Enable);
-			break;
-		default:
-			;
-	}
-
+	pPwmData->pCfg->OCxInit(PWM_TIMER ,  &TIM_OCInitStructure);
+	pPwmData->pCfg->OCxPreloadConfig(PWM_TIMER , TIM_OCPreload_Enable);
 
 	return eError;
-
 }
 
 void DRV_Pwm_Enable( DRV_Pwm_Handle Handle )
@@ -107,29 +107,20 @@ void DRV_Pwm_Disable( DRV_Pwm_Handle Handle )
 
 }
 
-void DRV_Pwm_DutyCycleSet( DRV_Pwm_Handle Handle , unsigned short usDutyCycle)
+DRV_Pwm_Error DRV_Pwm_DutyCycleSet(const DRV_Pwm_Handle Handle , const unsigned char ucDutycycle)
 {
-	DRV_Pwm_Device_Data *pDeviceData =(DRV_Pwm_Device_Data *)Handle;
+	Pwm_Device_Data_t *pDeviceData =(Pwm_Device_Data_t *)Handle;
 
-	switch( pDeviceData->cChannel)
+	if( pDeviceData != NULL )
 	{
-		case 1:
-			TIM_SetCompare1( PWM_TIMER , usDutyCycle);
-			break;
-		case 2:
-			TIM_SetCompare2( PWM_TIMER , usDutyCycle);
-			break;
-		case 3:
-			TIM_SetCompare3( PWM_TIMER , usDutyCycle);
-			break;
-		case 4:
-			TIM_SetCompare4( PWM_TIMER , usDutyCycle);
-			break;
-		default:
-			;
+		pDeviceData->pCfg->SetCompareX(PWM_TIMER,(PWM_DUTY_CYCLE_FULL*ucDutycycle)/256);
 	}
+	else
+		return Pwm_Bad_Param;
+
+	return Pwm_No_Error;
 }
-void DRV_Pwmm_GPIO_config( DRV_Pwm_PioCfg *pGpioCFG)
+void DRV_Pwmm_GPIO_config( const DRV_Pwm_PioCfg *pGpioCFG)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	/* Configure alternate output for GPIO*/

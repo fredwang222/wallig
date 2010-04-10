@@ -12,11 +12,16 @@ typedef enum
 	Pwm_Err_Unknown      //!< unexpected error
 } DRV_Pwm_Error;
 
+typedef enum
+{
+	Pwm_Device_Close,
+	Pwm_Device_Open,
+} DRV_Pwm_Device_State;
 
 void DRV_Pwm_Init(void );
-DRV_Pwm_Error DRV_Pwm_Open( char *pcName , DRV_Pwm_Handle *pHandle);
+DRV_Pwm_Error DRV_Pwm_Open( const char *pcName , DRV_Pwm_Handle *pHandle ,const  unsigned short ucDutycycle);
 void DRV_Pwm_Close( DRV_Pwm_Handle Handle);
 void DRV_Pwm_Enable( DRV_Pwm_Handle Handle );
 void DRV_Pwm_Disable( DRV_Pwm_Handle Handle );
-void DRV_Pwm_DutyCycleSet( DRV_Pwm_Handle Handle , unsigned short usDutyCycle);
+DRV_Pwm_Error DRV_Pwm_DutyCycleSet(const DRV_Pwm_Handle Handle , const unsigned char ucDutycycle);
 
