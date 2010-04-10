@@ -3,35 +3,59 @@
 #include "../../DRV_Gpio.h"
 #include "DRV_Gpio_Cfg.h"
 
+#define GPIO_DEVICE_COUNT ( sizeof(GPIO_DeviceCfg)/sizeof(GPIO_Cfg_t))
+
+/*!
+ *  \brief GPIO identification
+ */
 typedef struct
 {
-	char *Name;
+	GPIO_TypeDef* PORT;
+	u16 Pio;
+} DRV_GpioID;
+
+typedef struct
+{
+	char *pcName;
 	DRV_GpioID Id;
-	DRV_Gpio_Cfg Cfg;
+	GPIOSpeed_TypeDef Speed;
+	GPIOMode_TypeDef Mode;
+	uint8_t PortSource;
+} GPIO_Cfg_t;
+
+typedef struct
+{
+	const GPIO_Cfg_t *pCfg;
 	DRV_GpioINT Int;
+	DRV_Gpio_Device_State eState;
+} GPIO_Data_t;
 
-} GPIO_Data;
-#define GPIO_DEVICE_COUNT ( sizeof(tGPIO_DevicesData)/sizeof(GPIO_Data))
 
-typedef void (*GPIO_Handler)(void);
+typedef void (*GPIO_Handler_t)(void);
 
-GPIO_Handler tGpioIrqHandler[16];
-
-GPIO_Data tGPIO_DevicesData[]= DRV_GPIO_INIT_CFG;
-//DRV_Gpio_Cfg GpioHandles[16*3];
-int iPioCount;
-
+GPIO_Handler_t GPIO_IrqHandler[16];
+static const GPIO_Cfg_t  GPIO_DeviceCfg[]= DRV_GPIO_INIT_CFG;
+static GPIO_Data_t GPIO_DevicesData[GPIO_DEVICE_COUNT];
 
 DRV_Gpio_Error DRV_Gpio_Init( void )
 {
-	  iPioCount=0;
+	int iDevicecount;
+
+	for( iDevicecount = 0 ; iDevicecount < GPIO_DEVICE_COUNT ; iDevicecount++)
+	{
+		GPIO_DevicesData[iDevicecount].pCfg = &GPIO_DeviceCfg[iDevicecount];
+		GPIO_DevicesData[iDevicecount].eState = Gpio_Device_Close;
+		GPIO_DevicesData[iDevicecount].Int.CallBack=NULL;
+		GPIO_DevicesData[iDevicecount].Int.EventType = GPIO_INT_None;
+	}
+
 	 /* Enable GPIOB clock */
 	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA  | RCC_APB2Periph_AFIO , ENABLE);
 	  /* Enable GPIOB clock */
   	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
   	/* Enable GPIOC clock */
 	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
-	  memset( tGpioIrqHandler , 0 , sizeof(tGpioIrqHandler));
+	  memset( GPIO_IrqHandler , 0 , sizeof(GPIO_IrqHandler));
   	return GPIO_No_Error;
 
 }
@@ -51,7 +75,7 @@ DRV_Gpio_Error DRV_Gpio_Terminate( void )
 DRV_Gpio_Error DRV_Gpio_Open( char *Name , DRV_Gpio_Handle *phDeviceHandle , DRV_GpioINT *pGpioIntCfg)
 {
 	int iGpioIndex;
-	GPIO_Data *pGpioData;
+	GPIO_Data_t *pGpioData;
 	EXTI_InitTypeDef EXTI_InitStructure;
 	GPIO_InitTypeDef GPIO_InitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
@@ -59,44 +83,44 @@ DRV_Gpio_Error DRV_Gpio_Open( char *Name , DRV_Gpio_Handle *phDeviceHandle , DRV
 
 	int iCount;
 	unsigned int uiPio;
-	unsigned int uiBank;
+	unsigned int uiPORT;
 
 	for ( iGpioIndex = 0 ; iGpioIndex < GPIO_DEVICE_COUNT ; iGpioIndex++ )
 	{
-		if( !strcmp( Name , tGPIO_DevicesData[iGpioIndex].Name) )
+		if( !strcmp( Name , GPIO_DevicesData[iGpioIndex].pCfg->pcName) )
 		{
-			pGpioData = &tGPIO_DevicesData[iGpioIndex];
+			pGpioData = &GPIO_DevicesData[iGpioIndex];
 			eError=GPIO_No_Error;
 			break;
 		}
 	}
 	if( eError==GPIO_Device_Not_Found )
 		return eError;
-
+	if( pGpioData->eState != Gpio_Device_Close )
+		return GPIO_AlreadyOpened;
 	*phDeviceHandle=(DRV_Gpio_Handle)pGpioData;
-	switch((u32)pGpioData->Id.Bank)
+	switch((u32)pGpioData->pCfg->Id.PORT)
 	{
 		case (u32)GPIOA:
-			uiBank=0;
+			uiPORT=0;
 			break;
 		case (u32)GPIOB:
-			uiBank=1;
+			uiPORT=1;
 			break;
 		case (u32)GPIOC:
-			uiBank=2;
+			uiPORT=2;
 			break;
 	}
 
 	GPIO_StructInit(&GPIO_InitStructure);
-	uiPio=pGpioData->Id.Pio;
+	uiPio=pGpioData->pCfg->Id.Pio;
 	for( iCount=0; !(uiPio&1);iCount++)
 		uiPio>>=1;
 	uiPio=iCount;
-	GPIO_InitStructure.GPIO_Pin = pGpioData->Id.Pio;
-	if( pGpioData->Cfg.Type == GPIO_Output )
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-	GPIO_InitStructure.GPIO_Mode = pGpioData->Cfg.uiOption;
-	GPIO_Init(pGpioData->Id.Bank, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = pGpioData->pCfg->Id.Pio;
+	GPIO_InitStructure.GPIO_Speed = pGpioData->pCfg->Speed;
+	GPIO_InitStructure.GPIO_Mode = pGpioData->pCfg->Mode;
+	GPIO_Init(pGpioData->pCfg->Id.PORT, &GPIO_InitStructure);
 
 	if( pGpioIntCfg != NULL )
 		pGpioData->Int = *pGpioIntCfg;
@@ -109,8 +133,8 @@ DRV_Gpio_Error DRV_Gpio_Open( char *Name , DRV_Gpio_Handle *phDeviceHandle , DRV
 		 	  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
 		 	  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 		 	  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-		 	 tGpioIrqHandler[uiPio] = pGpioData->Int.CallBack;
-		 	  switch( pGpioData->Id.Pio )
+		 	 GPIO_IrqHandler[uiPio] = pGpioData->Int.CallBack;
+		 	  switch( pGpioData->pCfg->Id.Pio )
 		 	  {
 				  case GPIO_Pin_0:
 					  NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
@@ -146,7 +170,7 @@ DRV_Gpio_Error DRV_Gpio_Open( char *Name , DRV_Gpio_Handle *phDeviceHandle , DRV
 		 	  NVIC_Init(&NVIC_InitStructure);
 
 			/* Connect PIO EXTI Line to Key Button GPIO Pin */
-		    GPIO_EXTILineConfig(pGpioData->Id.Bank ,pGpioData->Id.Pio);
+		    GPIO_EXTILineConfig(pGpioData->pCfg->PortSource ,pGpioData->pCfg->Id.Pio);
 		    /* Configure PIO EXTI Line to generate an interrupt  */
 			switch( pGpioData->Int.EventType )
 			{
@@ -161,7 +185,7 @@ DRV_Gpio_Error DRV_Gpio_Open( char *Name , DRV_Gpio_Handle *phDeviceHandle , DRV
 				  EXTI_InitStructure.EXTI_Trigger=EXTI_Trigger_Rising_Falling;
 				  break;
 			}
-			EXTI_InitStructure.EXTI_Line = pGpioData->Id.Pio;
+			EXTI_InitStructure.EXTI_Line = pGpioData->pCfg->Id.Pio;
 			EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
 			EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 			EXTI_Init(&EXTI_InitStructure);
@@ -175,36 +199,36 @@ DRV_Gpio_Error DRV_Gpio_Open( char *Name , DRV_Gpio_Handle *phDeviceHandle , DRV
 
 DRV_Gpio_Error DRV_Gpio_Close( DRV_Gpio_Handle hDeviceHandle )
 {
-	GPIO_DeInit(((GPIO_Data *)hDeviceHandle)->Id.Bank);
+	GPIO_DeInit(((GPIO_Data_t *)hDeviceHandle)->pCfg->Id.PORT);
 	return GPIO_No_Error;
 }
 
 BOOL DRV_Gpio_ValueGet( DRV_Gpio_Handle hDeviceHandle )
 {
- return (BOOL) GPIO_ReadInputDataBit( ((GPIO_Data *)hDeviceHandle)->Id.Bank, ((GPIO_Data *)hDeviceHandle)->Id.Pio );
+ return (BOOL) GPIO_ReadInputDataBit( ((GPIO_Data_t *)hDeviceHandle)->pCfg->Id.PORT, ((GPIO_Data_t *)hDeviceHandle)->pCfg->Id.Pio );
 }
 
 
 DRV_Gpio_Error DRV_Gpio_ValueSet( DRV_Gpio_Handle hDeviceHandle , BOOL bValue)
 {
 	if( bValue )
-		GPIO_SetBits(((GPIO_Data*)hDeviceHandle)->Id.Bank, ((GPIO_Data*)hDeviceHandle)->Id.Pio);
+		GPIO_SetBits(((GPIO_Data_t*)hDeviceHandle)->pCfg->Id.PORT, ((GPIO_Data_t*)hDeviceHandle)->pCfg->Id.Pio);
 	else
-		GPIO_ResetBits(((GPIO_Data*)hDeviceHandle)->Id.Bank, ((GPIO_Data*)hDeviceHandle)->Id.Pio);
+		GPIO_ResetBits(((GPIO_Data_t*)hDeviceHandle)->pCfg->Id.PORT, ((GPIO_Data_t*)hDeviceHandle)->pCfg->Id.Pio);
 	return GPIO_No_Error;
 }
 
-DRV_Gpio_Error DRV_Gpio_TypeSet( DRV_Gpio_Handle hDeviceHandle , DRV_Gpio_Type eType)
+DRV_Gpio_Error DRV_Gpio_TypeSet( DRV_Gpio_Handle hDeviceHandle , char eType)
 {
 	return GPIO_No_Error;
 }
 
-DRV_Gpio_Error DRV_Gpio_OptionSet( DRV_Gpio_Handle hDeviceHandle , unsigned int uiOption)
+DRV_Gpio_Error DRV_Gpio_OptionSet( DRV_Gpio_Handle hDeviceHandle , unsigned int Mode)
 {
 	return GPIO_No_Error;
 }
 
-DRV_Gpio_Error DRV_Gpio_OptionReSet( DRV_Gpio_Handle hDeviceHandle , unsigned int uiOption)
+DRV_Gpio_Error DRV_Gpio_OptionReSet( DRV_Gpio_Handle hDeviceHandle , unsigned int Mode)
 {
 	return GPIO_No_Error;
 }
@@ -220,8 +244,8 @@ void EXTI0_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line0) != RESET)
 	{
-		if(tGpioIrqHandler[0] != NULL )
-		tGpioIrqHandler[0]();
+		if(GPIO_IrqHandler[0] != NULL )
+		GPIO_IrqHandler[0]();
 		/* Clear the Key Button EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line0);
 	}
@@ -238,8 +262,8 @@ void EXTI1_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line1) != RESET)
 	{
-		if(tGpioIrqHandler[1] != NULL )
-			tGpioIrqHandler[1]();
+		if(GPIO_IrqHandler[1] != NULL )
+			GPIO_IrqHandler[1]();
 		/* Clear the Key Button EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line1);
 	}
@@ -255,8 +279,8 @@ void EXTI2_IRQHandler(void)
 {
 		if(EXTI_GetITStatus(EXTI_Line2) != RESET)
 		{
-			if(tGpioIrqHandler[2] != NULL )
-				tGpioIrqHandler[2]();
+			if(GPIO_IrqHandler[2] != NULL )
+				GPIO_IrqHandler[2]();
 			/* Clear the Key Button EXTI line pending bit */
 			EXTI_ClearITPendingBit(EXTI_Line2);
 		}
@@ -273,8 +297,8 @@ void EXTI3_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line3) != RESET)
 	{
-		if(tGpioIrqHandler[3] != NULL )
-			tGpioIrqHandler[3]();
+		if(GPIO_IrqHandler[3] != NULL )
+			GPIO_IrqHandler[3]();
 		/* Clear the Key Button EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line3);
 	}
@@ -292,8 +316,8 @@ void EXTI4_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line4) != RESET)
 	{
-		if(tGpioIrqHandler[4] != NULL )
-			tGpioIrqHandler[4]();
+		if(GPIO_IrqHandler[4] != NULL )
+			GPIO_IrqHandler[4]();
 		/* Clear the Key Button EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line4);
 	}
@@ -315,8 +339,8 @@ void EXTI9_5_IRQHandler(void)
 		EXTI_LINE=1<<(5+iCount);
 		if(EXTI_GetITStatus(EXTI_LINE) != RESET)
 		{
-			if(tGpioIrqHandler[5+iCount] != NULL )
-				tGpioIrqHandler[5+iCount]();
+			if(GPIO_IrqHandler[5+iCount] != NULL )
+				GPIO_IrqHandler[5+iCount]();
 			/* Clear the Key Button EXTI line pending bit */
 			EXTI_ClearITPendingBit(EXTI_LINE);
 		}
@@ -340,8 +364,8 @@ void EXTI15_10_IRQHandler(void)
 		EXTI_LINE=1<<(10+iCount);
 		if(EXTI_GetITStatus(EXTI_LINE) != RESET)
 		{
-			if(tGpioIrqHandler[10+iCount] != NULL )
-				tGpioIrqHandler[10+iCount]();
+			if(GPIO_IrqHandler[10+iCount] != NULL )
+				GPIO_IrqHandler[10+iCount]();
 			/* Clear the Key Button EXTI line pending bit */
 			EXTI_ClearITPendingBit(EXTI_LINE);
 		}

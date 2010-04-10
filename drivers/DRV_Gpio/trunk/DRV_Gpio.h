@@ -64,31 +64,17 @@ typedef enum
 	GPIO_Err_Unknown      //!< unexpected error
 } DRV_Gpio_Error;
 
+typedef enum
+{
+	Gpio_Device_Close,
+	Gpio_Device_Open,
+} DRV_Gpio_Device_State;
+
 /** @defgroup DRV_Gpio_Settings PIO basics settings
  *  @ingroup DRV_Gpio_Public_grp
  *  @{
  */
 
-/*!
- *  \brief Type
- *  \public
- */
-typedef enum
-{
-        GPIO_Output,         //!<
-        GPIO_Input,         //!<
-        GPIO_IO,       //!<
-        GPIO_Unknown      //!< unexpected error
-} DRV_Gpio_Type;
-
-/*!
- *  \brief GPIO identification
- */
-typedef struct
-{
-	tPIO_BANK Bank;
-	tPIO_Pin Pio;
-} DRV_GpioID;
 
 /*!
  *  \brief Type
@@ -113,16 +99,7 @@ typedef struct
 
 
 
-/*!
- *  \brief configuration parameters for GPIO
- */
-typedef struct
-{
 
-	DRV_Gpio_Type Type;
-    unsigned int uiOption;
-    //DRV_GpioINT Int;
-} DRV_Gpio_Cfg;
 
 /** @} */ //
 /**************************************************************
@@ -175,7 +152,7 @@ DRV_Gpio_Error DRV_Gpio_ValueSet( DRV_Gpio_Handle hDeviceHandle , BOOL bValue);
  *  \param eType new type
  *  \return Driver error.
  */
-DRV_Gpio_Error DRV_Gpio_TypeSet( DRV_Gpio_Handle hDeviceHandle , DRV_Gpio_Type eType);
+DRV_Gpio_Error DRV_Gpio_TypeSet( DRV_Gpio_Handle hDeviceHandle , char  eType);
 
 /*! \fn DRV_Gpio_Error DRV_Gpio_Send( DRV_Gpio_Handle hDeviceHandle ,unsigned char *pucBuffer , int iLength);
  *  \brief Set an option
