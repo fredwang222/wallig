@@ -1,42 +1,10 @@
-/*-----------------------------------------------------------------------*/
-/* MMC/SDSC/SDHC (in SPI mode) control module for STM32 Version 1.1.6    */
-/* (C) Martin Thomas, 2010 - based on the AVR MMC module (C)ChaN, 2007   */
-/*-----------------------------------------------------------------------*/
-
-/* Copyright (c) 2010, Martin Thomas, ChaN
-   All rights reserved.
-
-   Redistribution and use in source and binary forms, with or without
-   modification, are permitted provided that the following conditions are met:
-
-   * Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in
-     the documentation and/or other materials provided with the
-     distribution.
-   * Neither the name of the copyright holders nor the names of
-     contributors may be used to endorse or promote products derived
-     from this software without specific prior written permission.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE. */
 #include <string.h>
 #include "stm32f10x.h"
 #include "DRV_Spi.h"
 #include "DRV_Spi_Cfg.h"
 
 
-#define SPI_DEVICE_COUNT ( sizeof(tSPI_DeviceCfgList)/sizeof(Spi_Device_Cfg))
+#define SPI_DEVICE_COUNT ( sizeof(SPI_DeviceCfgList)/sizeof(Spi_Device_Cfg))
 
 typedef struct
 {
@@ -77,8 +45,8 @@ typedef struct
 	DRV_Spi_Device_State eState;
 } Spi_Device_Data;
 
-const Spi_Device_Cfg tSPI_DeviceCfgList[]=SPI_INIT_CFG;
-Spi_Device_Data tSPI_DeviceDataList[SPI_DEVICE_COUNT];
+const Spi_Device_Cfg SPI_DeviceCfgList[]=SPI_INIT_CFG;
+Spi_Device_Data SPI_DeviceDataList[SPI_DEVICE_COUNT];
 
 void stm32_dma_transfer(	Spi_Device_Data *pSpiData , char receive, const uint8_t *buff, uint16_t btr  );
 
@@ -88,12 +56,12 @@ void DRV_Spi_Init(void )
 
 	for( iDevicecount = 0 ; iDevicecount < SPI_DEVICE_COUNT ; iDevicecount++)
 	{
-		tSPI_DeviceDataList[iDevicecount].pCfg = (Spi_Device_Cfg*)&tSPI_DeviceCfgList[iDevicecount];
-		tSPI_DeviceDataList[iDevicecount].eState = Spi_Device_Close;
+		SPI_DeviceDataList[iDevicecount].pCfg = (Spi_Device_Cfg*)&SPI_DeviceCfgList[iDevicecount];
+		SPI_DeviceDataList[iDevicecount].eState = Spi_Device_Close;
 	}
 }
 
-DRV_Spi_Error DRV_Spi_Open( char *pcName , DRV_Spi_Handle *pHandle)
+DRV_Spi_Error DRV_Spi_Open( const char *pcName , DRV_Spi_Handle *pHandle)
 {
 	DRV_Spi_Error eError = Spi_Device_Not_Found;
 	int iSpiIndex;
@@ -104,9 +72,9 @@ DRV_Spi_Error DRV_Spi_Open( char *pcName , DRV_Spi_Handle *pHandle)
 
 	for ( iSpiIndex = 0 ; iSpiIndex < SPI_DEVICE_COUNT ; iSpiIndex++ )
 	{
-		if( !strcmp( pcName , tSPI_DeviceDataList[iSpiIndex].pCfg->pcName) )
+		if( !strcmp( pcName , SPI_DeviceDataList[iSpiIndex].pCfg->pcName) )
 		{
-			pSpiData = &tSPI_DeviceDataList[iSpiIndex];
+			pSpiData = &SPI_DeviceDataList[iSpiIndex];
 			eError=Spi_No_Error;
 			break;
 		}
@@ -159,6 +127,9 @@ DRV_Spi_Error DRV_Spi_Speed_Set( DRV_Spi_Handle Handle , uint16_t u16Speed)
 	Spi_Device_Data *pSpiData = (Spi_Device_Data *) Handle ;
 	uint32_t tmp;
 
+	if( pSpiData == NULL)
+		return Spi_Bad_Param;
+
 	tmp = pSpiData->pCfg->pDevice->CR1;
 	if ( u16Speed == DRV_SPI_SLOW ) {
 		/* Set slow clock (100k-400k) */
@@ -175,6 +146,10 @@ DRV_Spi_Error DRV_Spi_Speed_Set( DRV_Spi_Handle Handle , uint16_t u16Speed)
 unsigned short DRV_Spi_RW_Byte( DRV_Spi_Handle Handle , unsigned char ucOut)
 {
 	Spi_Device_Data *pSpiData = (Spi_Device_Data *) Handle ;
+
+	if( pSpiData == NULL)
+		return 0;
+
 	/* Send byte through the SPI peripheral */
 	SPI_I2S_SendData(pSpiData->pCfg->pDevice, ucOut);
 
@@ -188,6 +163,10 @@ unsigned short DRV_Spi_RW_Byte( DRV_Spi_Handle Handle , unsigned char ucOut)
 unsigned short DRV_Spi_Read_Buffer( DRV_Spi_Handle Handle , unsigned char *pcBuffer , unsigned int uiLen)
 {
 	Spi_Device_Data *pSpiData = (Spi_Device_Data *) Handle ;
+
+	if( pSpiData == NULL)
+		return 0;
+
 	stm32_dma_transfer(pSpiData , TRUE , pcBuffer , uiLen);
 	return 0;
 }
@@ -195,6 +174,10 @@ unsigned short DRV_Spi_Read_Buffer( DRV_Spi_Handle Handle , unsigned char *pcBuf
 unsigned short DRV_Spi_Write_Buffer( DRV_Spi_Handle Handle , unsigned char *pcBuffer , unsigned int uiLen)
 {
 	Spi_Device_Data *pSpiData = (Spi_Device_Data *) Handle ;
+
+	if( pSpiData == NULL)
+		return 0;
+
 	stm32_dma_transfer(pSpiData , FALSE , pcBuffer , uiLen);
 	return 0;
 }

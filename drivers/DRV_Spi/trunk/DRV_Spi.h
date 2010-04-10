@@ -23,7 +23,7 @@ typedef enum
 } DRV_Spi_Device_State;
 
 void DRV_Spi_Init(void );
-DRV_Spi_Error DRV_Spi_Open( char *pcName , DRV_Spi_Handle *pHandle);
+DRV_Spi_Error DRV_Spi_Open( const char *pcName , DRV_Spi_Handle *pHandle);
 void DRV_Spi_Close( DRV_Spi_Handle Handle);
 DRV_Spi_Error DRV_Spi_Speed_Set( DRV_Spi_Handle Handle , uint16_t u16Speed);
 unsigned short DRV_Spi_RW_Byte( DRV_Spi_Handle Handle , unsigned char ucOut);
