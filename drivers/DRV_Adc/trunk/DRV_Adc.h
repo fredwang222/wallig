@@ -19,7 +19,7 @@ typedef enum
 } DRV_Adc_Device_State;
 
 void DRV_Adc_Init(void );
-DRV_Adc_Error DRV_Adc_Open( char *pcName , DRV_Adc_Handle *pHandle);
+DRV_Adc_Error DRV_Adc_Open( const char *pcName , DRV_Adc_Handle *pHandle);
 void DRV_Adc_Close( DRV_Adc_Handle Handle);
 unsigned short DRV_Adc_Read( DRV_Adc_Handle Handle );
 

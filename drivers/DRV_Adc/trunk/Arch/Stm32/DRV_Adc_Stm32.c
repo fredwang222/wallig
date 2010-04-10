@@ -3,7 +3,7 @@
 #include "DRV_Adc.h"
 
 
-#define ADC_DEVICE_COUNT ( sizeof(tDeviceCfgList)/sizeof(Adc_Device_Cfg))
+#define ADC_DEVICE_COUNT ( sizeof(ADC_DeviceCfgList)/sizeof(Adc_Device_Cfg_t))
 
 typedef struct
 {
@@ -12,14 +12,14 @@ typedef struct
 	unsigned char SampleTime;
 	GPIO_TypeDef* PORT;
 	u16 Pin;
-} Adc_Device_Cfg;
+} Adc_Device_Cfg_t;
 
 typedef struct
 {
-	Adc_Device_Cfg *pCfg;
+	Adc_Device_Cfg_t *pCfg;
 	unsigned short *pusMeasure;
 	DRV_Adc_Device_State eState;
-} Adc_Device_Data;
+} Adc_Device_Data_t;
 
 struct
 {
@@ -27,14 +27,14 @@ struct
 } sADC_Driver_Data;
 
 
-const Adc_Device_Cfg tDeviceCfgList[]=ADC_INIT_CFG;
-__IO unsigned short tusMesures[ADC_DEVICE_COUNT];
-Adc_Device_Data tADC_DeviceDataList[ADC_DEVICE_COUNT];
+static const Adc_Device_Cfg_t ADC_DeviceCfgList[]=ADC_INIT_CFG;
+static unsigned short ADC_tusMesures[ADC_DEVICE_COUNT];
+static Adc_Device_Data_t ADC_DeviceDataList[ADC_DEVICE_COUNT];
 
 void DRV_Adc_DmaInit( unsigned char ucBufferSize );
 void DRV_Adc_AdcInit( unsigned char ucNBofChannel );
 void DRV_Adc_Calibration( void );
-void DRV_Adc_RemapAdcMeasurePointer(Adc_Device_Data *pDeviceData , unsigned short *pusMeasure);
+void DRV_Adc_RemapAdcMeasurePointer(Adc_Device_Data_t *pDeviceData , unsigned short *pusMeasure);
 
 void DRV_Adc_Init(void )
 {
@@ -42,9 +42,9 @@ void DRV_Adc_Init(void )
 
 	for( iDevicecount = 0 ; iDevicecount < ADC_DEVICE_COUNT ; iDevicecount++)
 	{
-		tADC_DeviceDataList[iDevicecount].pCfg = (Adc_Device_Cfg*)&tDeviceCfgList[iDevicecount];
-		tADC_DeviceDataList[iDevicecount].pusMeasure =(unsigned short *) &tusMesures[iDevicecount];
-		tADC_DeviceDataList[iDevicecount].eState = Adc_Device_Close;
+		ADC_DeviceDataList[iDevicecount].pCfg = (Adc_Device_Cfg_t*)&ADC_DeviceCfgList[iDevicecount];
+		ADC_DeviceDataList[iDevicecount].pusMeasure =(unsigned short *) &ADC_tusMesures[iDevicecount];
+		ADC_DeviceDataList[iDevicecount].eState = Adc_Device_Close;
 	}
 	sADC_Driver_Data.ucOpenedDeviceIndex = 0;
 
@@ -53,19 +53,19 @@ void DRV_Adc_Init(void )
 
 }
 
-DRV_Adc_Error DRV_Adc_Open( char *pcName , DRV_Adc_Handle *pHandle)
+DRV_Adc_Error DRV_Adc_Open( const char *pcName , DRV_Adc_Handle *pHandle)
 {
 	  GPIO_InitTypeDef GPIO_InitStructure;
 	  DRV_Adc_Error eError = Adc_Device_Not_Found;
-	  Adc_Device_Data *pAdcData;
+	  Adc_Device_Data_t *pAdcData;
 	  int iAdcIndex;
 	  int iRank=1;
 
 	  for ( iAdcIndex = 0 ; iAdcIndex < ADC_DEVICE_COUNT ; iAdcIndex++ )
 	  	{
-	  		if( !strcmp( pcName , tADC_DeviceDataList[iAdcIndex].pCfg->pcName) )
+	  		if( !strcmp( pcName , ADC_DeviceDataList[iAdcIndex].pCfg->pcName) )
 	  		{
-	  			pAdcData = &tADC_DeviceDataList[iAdcIndex];
+	  			pAdcData = &ADC_DeviceDataList[iAdcIndex];
 	  			eError=Adc_No_Error;
 	  			break;
 	  		}
@@ -80,8 +80,8 @@ DRV_Adc_Error DRV_Adc_Open( char *pcName , DRV_Adc_Handle *pHandle)
 	  sADC_Driver_Data.ucOpenedDeviceIndex++;
 	  pAdcData->eState = Adc_Device_Open;
 	  /* Remap the measure pointer */
-	 // DRV_Adc_RemapAdcMeasurePointer(tADC_DeviceDataList , ( unsigned short *) tusMesures );
-	  pAdcData->pusMeasure = (unsigned short*)&tusMesures[sADC_Driver_Data.ucOpenedDeviceIndex-1];
+	 // DRV_Adc_RemapAdcMeasurePointer(ADC_DeviceDataList , ( unsigned short *) ADC_tusMesures );
+	  pAdcData->pusMeasure = (unsigned short*)&ADC_tusMesures[sADC_Driver_Data.ucOpenedDeviceIndex-1];
 	  DRV_Adc_AdcInit(sADC_Driver_Data.ucOpenedDeviceIndex);
 	  /* Reconfigure the DMA */
 	  DRV_Adc_DmaInit( sADC_Driver_Data.ucOpenedDeviceIndex );
@@ -98,10 +98,10 @@ DRV_Adc_Error DRV_Adc_Open( char *pcName , DRV_Adc_Handle *pHandle)
 	  for ( iAdcIndex = 0 ; iAdcIndex < ADC_DEVICE_COUNT ; iAdcIndex++ )
 	  {
 
-		  if( tADC_DeviceDataList[iAdcIndex].eState == Adc_Device_Open )
+		  if( ADC_DeviceDataList[iAdcIndex].eState == Adc_Device_Open )
 		  {
-			  ADC_RegularChannelConfig(ADC_DEVICE, tADC_DeviceDataList[iAdcIndex].pCfg->Channel , iRank++ , tADC_DeviceDataList[iAdcIndex].pCfg->SampleTime);
-			  if( tADC_DeviceDataList[iAdcIndex].pCfg->Channel == ADC_Channel_17 || tADC_DeviceDataList[iAdcIndex].pCfg->Channel == ADC_Channel_16 )
+			  ADC_RegularChannelConfig(ADC_DEVICE, ADC_DeviceDataList[iAdcIndex].pCfg->Channel , iRank++ , ADC_DeviceDataList[iAdcIndex].pCfg->SampleTime);
+			  if( ADC_DeviceDataList[iAdcIndex].pCfg->Channel == ADC_Channel_17 || ADC_DeviceDataList[iAdcIndex].pCfg->Channel == ADC_Channel_16 )
 				  ADC_TempSensorVrefintCmd(ENABLE);
 		  }
 	  }
@@ -124,8 +124,11 @@ void DRV_Adc_Close( DRV_Adc_Handle Handle)
 }
 unsigned short DRV_Adc_Read( DRV_Adc_Handle Handle )
 {
-	Adc_Device_Data *pAdcData = (Adc_Device_Data *)Handle;
-	return *pAdcData->pusMeasure;
+	Adc_Device_Data_t *pAdcData = (Adc_Device_Data_t *)Handle;
+
+	if( pAdcData != NULL )
+		return *pAdcData->pusMeasure;
+	return 0;
 }
 
 void DRV_Adc_DmaInit( unsigned char ucBufferSize )
@@ -135,7 +138,7 @@ void DRV_Adc_DmaInit( unsigned char ucBufferSize )
 	DMA_Cmd(ADC_DMA_CHANNEL, DISABLE);
 	DMA_DeInit(ADC_DMA_CHANNEL);
 	DMA_InitStructure.DMA_PeripheralBaseAddr = ADC_ADR_SRC;
-	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)tusMesures;
+	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)ADC_tusMesures;
 	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
 	DMA_InitStructure.DMA_BufferSize = ucBufferSize;
 	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
@@ -176,7 +179,7 @@ void DRV_Adc_Calibration( void )
 	while(ADC_GetCalibrationStatus(ADC_DEVICE));
 
 }
-void DRV_Adc_RemapAdcMeasurePointer(Adc_Device_Data *pDeviceData , unsigned short *pusMeasure )
+void DRV_Adc_RemapAdcMeasurePointer(Adc_Device_Data_t *pDeviceData , unsigned short *pusMeasure )
 {
 	unsigned char ucAdcIndex,ucChannelIndex;
 
