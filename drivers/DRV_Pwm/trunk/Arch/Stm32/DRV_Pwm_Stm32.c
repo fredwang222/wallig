@@ -39,6 +39,7 @@ typedef struct
 {
 	GPIO_TypeDef* PORT;
 	u16 Pin;
+	GPIOMode_TypeDef Mode;
 	uint32_t GPIO_Remap;
 	FunctionalState NewState;
 } DRV_Pwm_PioCfg;
@@ -169,7 +170,7 @@ void Pwm_GPIO_config( const DRV_Pwm_PioCfg *pGpioCFG)
 	GPIO_InitTypeDef GPIO_InitStructure;
 	/* Configure alternate output for GPIO*/
 	GPIO_InitStructure.GPIO_Pin = pGpioCFG->Pin ;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure.GPIO_Mode = pGpioCFG->Mode;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 
 	GPIO_Init(pGpioCFG->PORT , &GPIO_InitStructure);
