@@ -1,11 +1,40 @@
+/*
+ *    This file is part of Wallig Library and Drivers.
+ *
+ *    Copyright (C) 2010  Gwendal Le Gall
+ *
+ *    This program is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 #include <string.h>
 #include "stm32f10x.h"
 #include "DRV_Spi.h"
 #include "DRV_Spi_Cfg.h"
 
 
+/********************************************************************************************************/
+/*							Define																		*/
+/********************************************************************************************************/
 #define SPI_DEVICE_COUNT ( sizeof(SPI_DeviceCfgList)/sizeof(Spi_Device_Cfg))
 
+/********************************************************************************************************/
+/*							Macro																		*/
+/********************************************************************************************************/
+
+/********************************************************************************************************/
+/*							Typedef																		*/
+/********************************************************************************************************/
 typedef struct
 {
 	char *pcName;
@@ -45,11 +74,20 @@ typedef struct
 	DRV_Spi_Device_State eState;
 } Spi_Device_Data;
 
-const Spi_Device_Cfg SPI_DeviceCfgList[]=SPI_INIT_CFG;
-Spi_Device_Data SPI_DeviceDataList[SPI_DEVICE_COUNT];
+/********************************************************************************************************/
+/*							Local Variables																*/
+/********************************************************************************************************/
+static const Spi_Device_Cfg SPI_DeviceCfgList[]=SPI_INIT_CFG;
+static Spi_Device_Data SPI_DeviceDataList[SPI_DEVICE_COUNT];
 
-void stm32_dma_transfer(	Spi_Device_Data *pSpiData , char receive, const uint8_t *buff, uint16_t btr  );
+/********************************************************************************************************/
+/*							Local functions	declaration													*/
+/********************************************************************************************************/
+void Spi_Dma_Transfer(	Spi_Device_Data *pSpiData , char receive, const uint8_t *buff, uint16_t btr  );
 
+/********************************************************************************************************/
+/*							Public functions															*/
+/********************************************************************************************************/
 void DRV_Spi_Init(void )
 {
 	int iDevicecount;
@@ -102,7 +140,7 @@ DRV_Spi_Error DRV_Spi_Open( const char *pcName , DRV_Spi_Handle *pHandle)
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-	SPI_InitStructure.SPI_BaudRatePrescaler =  pSpiData->pCfg->speed[DRV_SPI_SLOW]; // 72000kHz/256=281kHz < 400kHz
+	SPI_InitStructure.SPI_BaudRatePrescaler =  pSpiData->pCfg->speed[DRV_SPI_SLOW];
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 
@@ -111,7 +149,8 @@ DRV_Spi_Error DRV_Spi_Open( const char *pcName , DRV_Spi_Handle *pHandle)
 	SPI_Cmd(pSpiData->pCfg->pDevice, ENABLE);
 
 	/* drain SPI */
-	while (SPI_I2S_GetFlagStatus(pSpiData->pCfg->pDevice, SPI_I2S_FLAG_TXE) == RESET) { ; }
+	while (SPI_I2S_GetFlagStatus(pSpiData->pCfg->pDevice, SPI_I2S_FLAG_TXE) == RESET)
+		;
 	ucDummyread = SPI_I2S_ReceiveData(pSpiData->pCfg->pDevice);
 
 	return eError;
@@ -167,7 +206,7 @@ unsigned short DRV_Spi_Read_Buffer( DRV_Spi_Handle Handle , unsigned char *pcBuf
 	if( pSpiData == NULL)
 		return 0;
 
-	stm32_dma_transfer(pSpiData , TRUE , pcBuffer , uiLen);
+	Spi_Dma_Transfer(pSpiData , TRUE , pcBuffer , uiLen);
 	return 0;
 }
 
@@ -178,16 +217,19 @@ unsigned short DRV_Spi_Write_Buffer( DRV_Spi_Handle Handle , unsigned char *pcBu
 	if( pSpiData == NULL)
 		return 0;
 
-	stm32_dma_transfer(pSpiData , FALSE , pcBuffer , uiLen);
+	Spi_Dma_Transfer(pSpiData , FALSE , pcBuffer , uiLen);
 	return 0;
 }
 
+/********************************************************************************************************/
+/*							Local functions																*/
+/********************************************************************************************************/
 /* BOOL receive,		FALSE for buff->SPI, TRUE for SPI->buff               */
 /*	const BYTE *buff,	receive TRUE  : 512 byte data block to be transmitted */
 /*						receive FALSE : Data buffer to store received data    */
 /*	UINT btr 			receive TRUE  : Byte count (must be multiple of 2)    */
 /*						receive FALSE : Byte count (must be 512)              */
-void stm32_dma_transfer(	Spi_Device_Data *pSpiData , char receive, const uint8_t *buff, uint16_t btr  )
+void Spi_Dma_Transfer(	Spi_Device_Data *pSpiData , char receive, const uint8_t *buff, uint16_t btr  )
 {
 	DMA_InitTypeDef DMA_InitStructure;
 	uint16_t rw_workbyte[] = { 0xffff };
@@ -205,8 +247,8 @@ void stm32_dma_transfer(	Spi_Device_Data *pSpiData , char receive, const uint8_t
 	DMA_DeInit(pSpiData->pCfg->DMA.RX.Channel );
 	DMA_DeInit(pSpiData->pCfg->DMA.TX.Channel );
 
-	if ( receive ) {
-
+	if ( receive )
+	{
 		/* DMA1 channel2 configuration SPI1 RX ---------------------------------------------*/
 		/* DMA1 channel4 configuration SPI2 RX ---------------------------------------------*/
 		DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)buff;
@@ -252,7 +294,8 @@ void stm32_dma_transfer(	Spi_Device_Data *pSpiData , char receive, const uint8_t
 	/* Wait until DMA1_Channel 3 Transfer Complete */
 	/// not needed: while (DMA_GetFlagStatus(DMA_FLAG_SPI_SD_TC_TX) == RESET) { ; }
 	/* Wait until DMA1_Channel 2 Receive Complete */
-	while (DMA_GetFlagStatus(pSpiData->pCfg->DMA.RX.FlagTc) == RESET) { ; }
+	while (DMA_GetFlagStatus(pSpiData->pCfg->DMA.RX.FlagTc) == RESET)
+		;
 	// same w/o function-call:
 	// while ( ( ( DMA1->ISR ) & DMA_FLAG_SPI_SD_TC_RX ) == RESET ) { ; }
 
