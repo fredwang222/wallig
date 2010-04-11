@@ -3,7 +3,7 @@
 #include "../../DRV_Pwm.h"
 #include "DRV_Pwm_Cfg.h"
 
-#define PWM_DEVICE_COUNT ( sizeof(PWM_DeviceCfgListe)/sizeof(Pwm_Device_Data_t))
+#define PWM_DEVICE_COUNT ( sizeof(PWM_DeviceCfgListe)/sizeof(Pwm_Device_Cfg_t))
 
 typedef struct
 {
