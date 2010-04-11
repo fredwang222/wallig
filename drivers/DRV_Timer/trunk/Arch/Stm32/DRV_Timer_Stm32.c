@@ -1,11 +1,66 @@
 #include <string.h>
-#include "stm32f10x.h"
+#include "System.h"
 #include "DRV_Timer.h"
 #include "DRV_Timer_Cfg.h"
 
+/********************************************************************************************************/
+/*							Define																		*/
+/********************************************************************************************************/
 #define PERIODIC_DEVICE_COUNT (sizeof(Periodic_StaticCfg)/sizeof(DRV_Timer_Periodic_StaticCfg_t))
 
+/********************************************************************************************************/
+/*							Macro																		*/
+/********************************************************************************************************/
+
+/********************************************************************************************************/
+/*							Typedef																		*/
+/********************************************************************************************************/
+typedef struct
+{
+	char *pcName;
+	uint16_t OCx;
+	void (*OCxInit)(TIM_TypeDef* TIMx, TIM_OCInitTypeDef* TIM_OCInitStruct);
+	void (*OCxPreloadConfig)(TIM_TypeDef* TIMx, uint16_t TIM_OCPreload);
+	uint16_t OCxIT;
+
+} DRV_Timer_Periodic_StaticCfg_t;
+
+typedef struct
+{
+	const DRV_Timer_Periodic_StaticCfg_t *pCfgStatic;
+	DRV_Timer_Periodic_Cfg CfgDynamic;
+	DRV_Timer_Device_State eState;
+}
+DRV_Timer_Periodic_Data_t;
+
+
+/********************************************************************************************************/
+/*							Local Variables																*/
+/********************************************************************************************************/
+/*
+ * 				Systick variables
+ */
 static uint32_t DRV_Timer_SysClock_Counter;
+
+/*
+ * 				Periodic timer variables
+ */
+
+static const DRV_Timer_Periodic_StaticCfg_t  Periodic_StaticCfg[]=DRV_TIMER_PERIODIC_OCX_init;
+static DRV_Timer_Periodic_Data_t PeriodicData[PERIODIC_DEVICE_COUNT];
+
+/********************************************************************************************************/
+/*							Local functions	declaration													*/
+/********************************************************************************************************/
+static void Timer_IRQ_Handler(void *pvParam);
+
+/********************************************************************************************************/
+/*							Public functions															*/
+/********************************************************************************************************/
+
+/*
+ * 				Systick functions
+ */
 
 void DRV_Timer_SysClock_Init( void )
 {
@@ -34,28 +89,6 @@ void SysTickHandler(void)
 }
 
 
-typedef struct
-{
-	char *pcName;
-	uint16_t OCx;
-	void (*OCxInit)(TIM_TypeDef* TIMx, TIM_OCInitTypeDef* TIM_OCInitStruct);
-	void (*OCxPreloadConfig)(TIM_TypeDef* TIMx, uint16_t TIM_OCPreload);
-	uint16_t OCxIT;
-
-} DRV_Timer_Periodic_StaticCfg_t;
-
-typedef struct
-{
-	DRV_Timer_Periodic_StaticCfg_t *pCfgStatic;
-	DRV_Timer_Periodic_Cfg CfgDynamic;
-	DRV_Timer_Device_State eState;
-}
-DRV_Timer_Periodic_Data_t;
-
-
-DRV_Timer_Periodic_StaticCfg_t  Periodic_StaticCfg[]=DRV_TIMER_PERIODIC_OCX_init;
-DRV_Timer_Periodic_Data_t PeriodicData[PERIODIC_DEVICE_COUNT];
-
 void DRV_Timer_Periodic_Init( void )
 {
 	int iTimerIndex;
@@ -76,6 +109,8 @@ void DRV_Timer_Periodic_Init( void )
 	TIM_TimeBaseInit(DRV_TIMER_PERIODIC_TIMER, &TimerInit);
 	/* Prescaler configuration */
 	TIM_PrescalerConfig(DRV_TIMER_PERIODIC_TIMER, DRV_TIMER_PERIODIC_TIMER_PRESCALER, TIM_PSCReloadMode_Immediate);
+	/* Register the timer IRQ handler*/
+	Sys_TimerIrq_Register(DRV_TIMER_PERIODIC_TIMER_IRQ_ID,Timer_IRQ_Handler,NULL);
 	/* Enable the TIM global Interrupt */
 	NVIC_InitStructure.NVIC_IRQChannel = DRV_TIMER_PERIODIC_TIMER_IRQ_ID;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
@@ -149,8 +184,11 @@ DRV_Timer_Error DRV_Timer_Periodic_Stop(  DRV_Timer_PeriodicTimer Handle )
 	return eError;
 }
 
+/********************************************************************************************************/
+/*							Local functions																*/
+/********************************************************************************************************/
 
-void DRV_TIMER_PERIODIC_TIMER_IRQ_HANDLER(void)
+static void Timer_IRQ_Handler(void *pvParam)
 {
 	int iTimerIndex;
 	uint16_t usCapture = 0;
@@ -168,3 +206,6 @@ void DRV_TIMER_PERIODIC_TIMER_IRQ_HANDLER(void)
 		}
 	}
 }
+
+
+
