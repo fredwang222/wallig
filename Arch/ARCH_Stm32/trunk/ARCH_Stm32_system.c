@@ -2,6 +2,7 @@
 #include "stm32f10x.h"
 #include "misc.h"
 #include "system_stm32f10x.h"
+#include "ARCH_Stm32_system.h"
 ErrorStatus HSEStartUpStatus;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -147,4 +148,133 @@ static char *heap_ptr;		/* Points to current end of the heap.	*/
  	heap_ptr += nbytes;	/*  Increase heap.  */
 
  	return base;		/*  Return pointer to start of new heap area.  */
+ }
+
+
+ typedef struct
+ {
+ 	IrqTimerHandler_t Handler;
+ 	void *pvParam;
+
+ } SYS_Timer_Irq_Data_t;
+
+ SYS_Timer_Irq_Data_t IRQ_HandlerList[7];
+
+ void Sys_TimerIrq_Init( void)
+ {
+ 	int iHandlerIndex;
+
+ 	for( iHandlerIndex =0 ; iHandlerIndex < 4 ; iHandlerIndex++)
+ 	{
+ 		IRQ_HandlerList[iHandlerIndex].Handler=NULL;
+ 		IRQ_HandlerList[iHandlerIndex].pvParam=NULL;
+ 	}
+ }
+ void Sys_TimerIrq_Register(  uint8_t NVIC_IRQChannel , IrqTimerHandler_t Handler , void *pvParam)
+ {
+ 	int iHandlerIndex;
+ 	switch( NVIC_IRQChannel )
+ 	{
+ 		case TIM1_BRK_IRQn:
+ 			iHandlerIndex=0;
+ 			break;
+ 		case TIM1_UP_IRQn:
+ 			iHandlerIndex=1;
+ 			break;
+ 		case TIM1_TRG_COM_IRQn:
+ 			iHandlerIndex=2;
+ 			break;
+ 		case TIM1_CC_IRQn:
+ 			iHandlerIndex=3;
+ 			break;
+ 		case TIM2_IRQn:
+ 			iHandlerIndex=4;
+ 			break;
+ 		case TIM3_IRQn:
+ 			iHandlerIndex=5;
+ 			break;
+ 		case TIM4_IRQn:
+ 			iHandlerIndex=6;
+ 			break;
+ 		default:
+ 			return;
+ 	}
+ 	IRQ_HandlerList[iHandlerIndex].Handler=Handler;
+ 	IRQ_HandlerList[iHandlerIndex].pvParam=pvParam;
+ }
+
+
+ void Sys_TimerIrq_Unregister(  uint8_t NVIC_IRQChannel )
+ {
+ 	int iHandlerIndex;
+ 	switch( NVIC_IRQChannel )
+ 	{
+ 		case TIM1_BRK_IRQn:
+ 			iHandlerIndex=0;
+ 			break;
+ 		case TIM1_UP_IRQn:
+ 			iHandlerIndex=1;
+ 			break;
+ 		case TIM1_TRG_COM_IRQn:
+ 			iHandlerIndex=2;
+ 			break;
+ 		case TIM1_CC_IRQn:
+ 			iHandlerIndex=3;
+ 			break;
+ 		case TIM2_IRQn:
+ 			iHandlerIndex=4;
+ 			break;
+ 		case TIM3_IRQn:
+ 			iHandlerIndex=5;
+ 			break;
+ 		case TIM4_IRQn:
+ 			iHandlerIndex=6;
+ 			break;
+ 		default:
+ 			return;
+ 	}
+ 	IRQ_HandlerList[iHandlerIndex].Handler=NULL;
+ 	IRQ_HandlerList[iHandlerIndex].pvParam=NULL;
+
+ }
+ void TIM1_BRK_IRQHandler(void)
+ {
+ 	if( IRQ_HandlerList[0].Handler != NULL )
+ 		IRQ_HandlerList[0].Handler(IRQ_HandlerList[0].pvParam);
+ }
+
+ void TIM1_UP_IRQHandler(void)
+ {
+ 	if( IRQ_HandlerList[1].Handler != NULL )
+ 		IRQ_HandlerList[1].Handler(IRQ_HandlerList[1].pvParam);
+ }
+
+ void TIM1_TRG_COM_IRQHandler(void)
+ {
+ 	if( IRQ_HandlerList[2].Handler != NULL )
+ 		IRQ_HandlerList[2].Handler(IRQ_HandlerList[2].pvParam);
+ }
+
+ void TIM1_CC_IRQHandler(void)
+ {
+ 	if( IRQ_HandlerList[3].Handler != NULL )
+ 		IRQ_HandlerList[3].Handler(IRQ_HandlerList[3].pvParam);
+ }
+
+ void TIM2_IRQHandler(void)
+ {
+ 	if( IRQ_HandlerList[4].Handler != NULL )
+ 		IRQ_HandlerList[4].Handler(IRQ_HandlerList[4].pvParam);
+ }
+
+ void TIM3_IRQHandler(void)
+ {
+ 	if( IRQ_HandlerList[5].Handler != NULL )
+ 		IRQ_HandlerList[5].Handler(IRQ_HandlerList[5].pvParam);
+ }
+
+ void TIM4_IRQHandler(void)
+ {
+ 	if( IRQ_HandlerList[6].Handler != NULL )
+ 		IRQ_HandlerList[6].Handler(IRQ_HandlerList[6].pvParam);
  }
