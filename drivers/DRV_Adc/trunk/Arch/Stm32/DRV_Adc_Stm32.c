@@ -1,10 +1,39 @@
+/*
+ *    This file is part of Wallig Library and Drivers.
+ *
+ *    Copyright (C) 2010  Gwendal Le Gall
+ *
+ *    This program is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 #include <string.h>
 #include "stm32f10x.h"
 #include "DRV_Adc.h"
 
 
+/********************************************************************************************************/
+/*							Define																		*/
+/********************************************************************************************************/
 #define ADC_DEVICE_COUNT ( sizeof(ADC_DeviceCfgList)/sizeof(Adc_Device_Cfg_t))
 
+/********************************************************************************************************/
+/*							Macro																		*/
+/********************************************************************************************************/
+
+/********************************************************************************************************/
+/*							Typedef																		*/
+/********************************************************************************************************/
 typedef struct
 {
 	char *pcName;
@@ -27,15 +56,23 @@ struct
 } sADC_Driver_Data;
 
 
+/********************************************************************************************************/
+/*							Local Variables																*/
+/********************************************************************************************************/
 static const Adc_Device_Cfg_t ADC_DeviceCfgList[]=ADC_INIT_CFG;
 static unsigned short ADC_tusMesures[ADC_DEVICE_COUNT];
 static Adc_Device_Data_t ADC_DeviceDataList[ADC_DEVICE_COUNT];
 
-void DRV_Adc_DmaInit( unsigned char ucBufferSize );
-void DRV_Adc_AdcInit( unsigned char ucNBofChannel );
-void DRV_Adc_Calibration( void );
-void DRV_Adc_RemapAdcMeasurePointer(Adc_Device_Data_t *pDeviceData , unsigned short *pusMeasure);
+/********************************************************************************************************/
+/*							Local functions	declaration													*/
+/********************************************************************************************************/
+static void Adc_DmaInit( unsigned char ucBufferSize );
+static void Adc_ChannelInit( unsigned char ucNBofChannel );
+static void Adc_Calibration( void );
 
+/********************************************************************************************************/
+/*							Public functions															*/
+/********************************************************************************************************/
 void DRV_Adc_Init(void )
 {
 	int iDevicecount;
@@ -80,11 +117,10 @@ DRV_Adc_Error DRV_Adc_Open( const char *pcName , DRV_Adc_Handle *pHandle)
 	  sADC_Driver_Data.ucOpenedDeviceIndex++;
 	  pAdcData->eState = Adc_Device_Open;
 	  /* Remap the measure pointer */
-	 // DRV_Adc_RemapAdcMeasurePointer(ADC_DeviceDataList , ( unsigned short *) ADC_tusMesures );
 	  pAdcData->pusMeasure = (unsigned short*)&ADC_tusMesures[sADC_Driver_Data.ucOpenedDeviceIndex-1];
-	  DRV_Adc_AdcInit(sADC_Driver_Data.ucOpenedDeviceIndex);
+	  Adc_ChannelInit(sADC_Driver_Data.ucOpenedDeviceIndex);
 	  /* Reconfigure the DMA */
-	  DRV_Adc_DmaInit( sADC_Driver_Data.ucOpenedDeviceIndex );
+	  Adc_DmaInit( sADC_Driver_Data.ucOpenedDeviceIndex );
 	  /* Configure the input: external or internal */
 	  if( pAdcData->pCfg->Channel != ADC_Channel_17 && pAdcData->pCfg->Channel != ADC_Channel_16 )
 	  {
@@ -107,7 +143,7 @@ DRV_Adc_Error DRV_Adc_Open( const char *pcName , DRV_Adc_Handle *pHandle)
 	  }
 	  ADC_DMACmd(ADC_DEVICE, ENABLE);
 	  ADC_Cmd(ADC_DEVICE, ENABLE);
-	  DRV_Adc_Calibration();
+	  Adc_Calibration();
 	  /* Start ADC Software Conversion */
    	  ADC_SoftwareStartConvCmd(ADC_DEVICE, ENABLE );
    	  /* Test on Channel 1 DMA_FLAG_TC flag */
@@ -131,7 +167,7 @@ unsigned short DRV_Adc_Read( DRV_Adc_Handle Handle )
 	return 0;
 }
 
-void DRV_Adc_DmaInit( unsigned char ucBufferSize )
+static void Adc_DmaInit( unsigned char ucBufferSize )
 {
 	DMA_InitTypeDef   DMA_InitStructure;
 
@@ -154,7 +190,7 @@ void DRV_Adc_DmaInit( unsigned char ucBufferSize )
 	  DMA_Cmd(ADC_DMA_CHANNEL, ENABLE);
 }
 
-void DRV_Adc_AdcInit( unsigned char ucNBofChannel )
+static void Adc_ChannelInit( unsigned char ucNBofChannel )
 {
 	ADC_InitTypeDef   ADC_InitStructure;
 	/* ADC configuration ------------------------------------------------------*/
@@ -168,7 +204,7 @@ void DRV_Adc_AdcInit( unsigned char ucNBofChannel )
 	ADC_InitStructure.ADC_NbrOfChannel = ucNBofChannel;
 	ADC_Init(ADC_DEVICE, &ADC_InitStructure);
 }
-void DRV_Adc_Calibration( void )
+static void Adc_Calibration( void )
 {
 	ADC_ResetCalibration(ADC_DEVICE);
 	/* Check the end of ADC reset calibration register */
@@ -177,25 +213,5 @@ void DRV_Adc_Calibration( void )
 	ADC_StartCalibration(ADC_DEVICE);
 	/* Check the end of ADC calibration */
 	while(ADC_GetCalibrationStatus(ADC_DEVICE));
-
-}
-void DRV_Adc_RemapAdcMeasurePointer(Adc_Device_Data_t *pDeviceData , unsigned short *pusMeasure )
-{
-	unsigned char ucAdcIndex,ucChannelIndex;
-
-	for ( ucChannelIndex = 0 ; ucChannelIndex < ADC_CHANNEL_MAXCOUNT ; ucChannelIndex++ )
-	{
-		for ( ucAdcIndex = 0 ; ucAdcIndex < ADC_DEVICE_COUNT ; ucAdcIndex++)
-		{
-			if( pDeviceData[ucAdcIndex].eState == Adc_Device_Open)
-			{
-				if(pDeviceData[ucAdcIndex].pCfg->Channel == ucChannelIndex)
-				{
-					pDeviceData[ucAdcIndex].pusMeasure = pusMeasure;
-					pusMeasure++;
-				}
-			}
-		}
-	}
 
 }
