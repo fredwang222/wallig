@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <DRV_Timer.h>
+#include "DRV_Timer.h"
 
 char DRV_Timer_Cli_uptime( int *pState , char *pcArgs , char *pcOutput , int iOutputLen)
 {
