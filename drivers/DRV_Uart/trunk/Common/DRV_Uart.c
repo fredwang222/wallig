@@ -7,8 +7,8 @@
 */
 #include <stdio.h>
 #include <string.h>
-#include <DRV_Uart.h>
-#include "Inc/DRV_Uart_private.h"
+#include "../DRV_Uart.h"
+#include "../Inc/DRV_Uart_private.h"
 /**************************************************************
 					Define
 ***************************************************************/

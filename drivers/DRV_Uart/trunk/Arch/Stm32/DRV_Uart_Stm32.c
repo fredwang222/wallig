@@ -13,8 +13,8 @@
 #include <string.h>
 #include "stm32f10x.h"
 #include "stm32f10x_usart.h"
-#include <DRV_Uart.h>
-#include "Inc/DRV_Uart_private.h"
+#include "../../DRV_Uart.h"
+#include "../../Inc/DRV_Uart_private.h"
 
 /**************************************************************
                                         Local variables

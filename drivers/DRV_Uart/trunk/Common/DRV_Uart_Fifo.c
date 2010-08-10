@@ -1,7 +1,7 @@
 #include <string.h>
-#include <DRV_Uart.h>
-#include <DRV_Uart_Fifo.h>
-#include "Inc/DRV_Uart_private.h"
+#include "../DRV_Uart.h"
+#include "../DRV_Uart_Fifo.h"
+#include "../Inc/DRV_Uart_private.h"
 
 
 #define kNumberOfUARTDevices (sizeof(tpcUartDeviceName)/sizeof(char**))
