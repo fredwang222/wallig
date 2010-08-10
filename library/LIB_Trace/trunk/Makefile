@@ -13,4 +13,3 @@ $(ODIR):
 
 clean:
 	rm -rf obj/*
-
