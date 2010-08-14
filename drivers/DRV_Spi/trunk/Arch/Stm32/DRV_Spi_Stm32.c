@@ -71,6 +71,7 @@ typedef struct
 {
 	Spi_Device_Cfg *pCfg;
 	uint16_t *SpeedCfg;
+	uint8_t ucLock;
 	DRV_Spi_Device_State eState;
 } Spi_Device_Data;
 
@@ -124,6 +125,8 @@ DRV_Spi_Error DRV_Spi_Open( const char *pcName , DRV_Spi_Handle *pHandle)
 	*pHandle =(DRV_Spi_Handle) pSpiData;
 	/* Enable SPI clock */
 	pSpiData->pCfg->PeriphClock.Cmd(pSpiData->pCfg->PeriphClock.Clock,ENABLE);
+	  /* Enable SPI_SLAVE DMA clock */
+	  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1  , ENABLE);
 	/* Configure SPI pins: SCK and MOSI with default alternate function (not remapped) push-pull */
 	GPIO_InitStructure.GPIO_Pin   = pSpiData->pCfg->PIO.SCK_Pin | pSpiData->pCfg->PIO.MOSI_Pin;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -132,6 +135,7 @@ DRV_Spi_Error DRV_Spi_Open( const char *pcName , DRV_Spi_Handle *pHandle)
 	/* Configure MISO as Input with internal pull-up */
 	GPIO_InitStructure.GPIO_Pin   = pSpiData->pCfg->PIO.MISO_Pin;
 	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IPU;
+	//GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN_FLOATING;
 	GPIO_Init(pSpiData->pCfg->PIO.PORT, &GPIO_InitStructure);
 	/* SPI configuration */
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
@@ -152,6 +156,8 @@ DRV_Spi_Error DRV_Spi_Open( const char *pcName , DRV_Spi_Handle *pHandle)
 	while (SPI_I2S_GetFlagStatus(pSpiData->pCfg->pDevice, SPI_I2S_FLAG_TXE) == RESET)
 		;
 	ucDummyread = SPI_I2S_ReceiveData(pSpiData->pCfg->pDevice);
+	/* Set device unlock */
+	pSpiData->ucLock=0;
 
 	return eError;
 }
@@ -159,6 +165,31 @@ DRV_Spi_Error DRV_Spi_Open( const char *pcName , DRV_Spi_Handle *pHandle)
 void DRV_Spi_Close( DRV_Spi_Handle Handle)
 {
 
+}
+
+
+DRV_Spi_Error DRV_Spi_LockSet( DRV_Spi_Handle Handle  )
+{
+	Spi_Device_Data *pSpiData = (Spi_Device_Data *) Handle ;
+	if( pSpiData == NULL)
+			return Spi_Bad_Param;
+
+	if( pSpiData->ucLock )
+	  return Spi_Device_Busy;
+
+	pSpiData->ucLock=1;
+
+	return Spi_No_Error;
+}
+
+DRV_Spi_Error DRV_Spi_LockRelease( DRV_Spi_Handle Handle  )
+{
+	Spi_Device_Data *pSpiData = (Spi_Device_Data *) Handle ;
+	if( pSpiData == NULL)
+			return Spi_Bad_Param;
+	pSpiData->ucLock = 0;
+
+	return Spi_No_Error;
 }
 
 DRV_Spi_Error DRV_Spi_Speed_Set( DRV_Spi_Handle Handle , uint16_t u16Speed)
