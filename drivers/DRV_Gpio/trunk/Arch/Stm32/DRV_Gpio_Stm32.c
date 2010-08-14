@@ -1,3 +1,30 @@
+/*
+ * 	 Author : Gwendal Le Gall
+ *   Date 02/02/2010
+ *
+*    Modified from:
+ *     - nRF24l01 driver of Neil MacMillan see: http://code.google.com/p/nrf24l01/
+ *     - http://www.tinkerer.eu/AVRLib/nRF24L01
+
+ *
+ *    This file is part of Wallig Library and Drivers.
+ *
+ *    Copyright (C) 2010  Gwendal Le Gall
+ *
+ *    This program is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 #include <string.h>
 #include "stm32f10x.h"
 #include "../../DRV_Gpio.h"
@@ -244,10 +271,11 @@ void EXTI0_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line0) != RESET)
 	{
-		if(GPIO_IrqHandler[0] != NULL )
-		GPIO_IrqHandler[0]();
 		/* Clear the Key Button EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line0);
+
+		if(GPIO_IrqHandler[0] != NULL )
+		GPIO_IrqHandler[0]();
 	}
 }
 
@@ -262,10 +290,11 @@ void EXTI1_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line1) != RESET)
 	{
-		if(GPIO_IrqHandler[1] != NULL )
-			GPIO_IrqHandler[1]();
 		/* Clear the Key Button EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line1);
+		if(GPIO_IrqHandler[1] != NULL )
+			GPIO_IrqHandler[1]();
+
 	}
 }
 /*******************************************************************************
@@ -279,10 +308,11 @@ void EXTI2_IRQHandler(void)
 {
 		if(EXTI_GetITStatus(EXTI_Line2) != RESET)
 		{
-			if(GPIO_IrqHandler[2] != NULL )
-				GPIO_IrqHandler[2]();
 			/* Clear the Key Button EXTI line pending bit */
 			EXTI_ClearITPendingBit(EXTI_Line2);
+
+			if(GPIO_IrqHandler[2] != NULL )
+				GPIO_IrqHandler[2]();
 		}
 }
 
@@ -297,10 +327,11 @@ void EXTI3_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line3) != RESET)
 	{
-		if(GPIO_IrqHandler[3] != NULL )
-			GPIO_IrqHandler[3]();
 		/* Clear the Key Button EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line3);
+		if(GPIO_IrqHandler[3] != NULL )
+			GPIO_IrqHandler[3]();
+
 	}
 }
 
@@ -316,10 +347,11 @@ void EXTI4_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line4) != RESET)
 	{
-		if(GPIO_IrqHandler[4] != NULL )
-			GPIO_IrqHandler[4]();
 		/* Clear the Key Button EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line4);
+		if(GPIO_IrqHandler[4] != NULL )
+			GPIO_IrqHandler[4]();
+
 	}
 }
 
@@ -339,10 +371,11 @@ void EXTI9_5_IRQHandler(void)
 		EXTI_LINE=1<<(5+iCount);
 		if(EXTI_GetITStatus(EXTI_LINE) != RESET)
 		{
-			if(GPIO_IrqHandler[5+iCount] != NULL )
-				GPIO_IrqHandler[5+iCount]();
 			/* Clear the Key Button EXTI line pending bit */
 			EXTI_ClearITPendingBit(EXTI_LINE);
+			if(GPIO_IrqHandler[5+iCount] != NULL )
+				GPIO_IrqHandler[5+iCount]();
+
 		}
 	}
 }
@@ -364,10 +397,11 @@ void EXTI15_10_IRQHandler(void)
 		EXTI_LINE=1<<(10+iCount);
 		if(EXTI_GetITStatus(EXTI_LINE) != RESET)
 		{
-			if(GPIO_IrqHandler[10+iCount] != NULL )
-				GPIO_IrqHandler[10+iCount]();
 			/* Clear the Key Button EXTI line pending bit */
 			EXTI_ClearITPendingBit(EXTI_LINE);
+			if(GPIO_IrqHandler[10+iCount] != NULL )
+				GPIO_IrqHandler[10+iCount]();
+
 		}
 	}
 }

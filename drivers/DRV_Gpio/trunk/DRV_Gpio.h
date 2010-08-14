@@ -1,3 +1,30 @@
+/*
+ * 	 Author : Gwendal Le Gall
+ *   Date 02/02/2010
+ *
+*    Modified from:
+ *     - nRF24l01 driver of Neil MacMillan see: http://code.google.com/p/nrf24l01/
+ *     - http://www.tinkerer.eu/AVRLib/nRF24L01
+
+ *
+ *    This file is part of Wallig Library and Drivers.
+ *
+ *    Copyright (C) 2010  Gwendal Le Gall
+ *
+ *    This program is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 /**
 *	\file DRV_Gpio.h
 *
@@ -38,7 +65,8 @@
  *  This is the first group
  *  @{
  */
-
+#ifndef DRV_GPIO_H
+#define  DRV_GPIO_H
 #include "Arch/DRV_Gpio_Arch.h"
 #define BOOL unsigned char
 /**************************************************************
@@ -171,3 +199,4 @@ DRV_Gpio_Error DRV_Gpio_OptionSet( DRV_Gpio_Handle hDeviceHandle , unsigned int 
 DRV_Gpio_Error DRV_Gpio_OptionReSet( DRV_Gpio_Handle hDeviceHandle , unsigned int uiOption);
 
 /** @} */ // end of DRV_Gpio_Public_grp
+#endif
