@@ -1,3 +1,33 @@
+/*
+ * 	 Author : Gwendal Le Gall
+ *   Date 14/08/2010
+ *
+*    Modified from:
+ *     - nRF24l01 driver of Neil MacMillan see: http://code.google.com/p/nrf24l01/
+ *     - http://www.tinkerer.eu/AVRLib/nRF24L01
+
+ *
+ *    This file is part of Wallig Library and Drivers.
+ *
+ *    Copyright (C) 2010  Gwendal Le Gall
+ *
+ *    This program is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#ifndef DRV_TIMER_H
+#define DRV_TIMER_H
+
 typedef unsigned int  DRV_Time_TimeOut;
 typedef unsigned int  DRV_Time_Count;
 typedef void * DRV_Timer_PeriodicTimer;
@@ -36,3 +66,4 @@ void DRV_Timer_Periodic_Init( void );
 DRV_Timer_Error DRV_Timer_Periodic_Open( char *pcName , DRV_Timer_PeriodicTimer *pHandle,DRV_Timer_Periodic_Cfg *pCfg );
 DRV_Timer_Error DRV_Timer_Periodic_Start(  DRV_Timer_PeriodicTimer Handle );
 DRV_Timer_Error DRV_Timer_Periodic_Stop(  DRV_Timer_PeriodicTimer Handle );
+#endif
