@@ -113,24 +113,22 @@ echo const unsigned char LUT_${font_name}_${font_size}\[\]\=\{         >>${outpu
 for ((i=0;i<256;i++))
 do
 	count=0
-#	echo $i
+	print0xff=1
 	for letter_code in $list_letters
 	do
 		letter=`echo -n $letter_code | hexdump -e ' "0x%x"'| head -c 4`
 		if((i==letter))
 		then
-			print0xff=0
+			let print0xff=0
 			echo -n $count", "                                            >>${output_directory}/${font_name}_${font_size}.c
-		else
-			print0xff=1
 		fi
 		let "count+=1"
 	done
 	if((i==0x20))
 	then
 		echo -n $count", "                                                >>${output_directory}/${font_name}_${font_size}.c
-	elif((print0xff==1))
-		then
+	elif ((print0xff==1))
+	then
 		echo -n "0xff, "                                                  >>${output_directory}/${font_name}_${font_size}.c
 	fi
 done
