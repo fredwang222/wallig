@@ -57,7 +57,7 @@ convert ${ExtraOption} -background white -fill black -font ${font_name}  -points
 cp ${output_directory}/${pic_type}/$letter_name.${pic_type} ${output_directory}/bin/${letter_name}.bin
 get_pic_name_for_identify
 witdh=`identify  -format "%w" ${pic_name}`
-let witdh=witdh/8+1
+let witdh=(witdh-1)/8+1
 else
 convert ${ExtraOption} -flop -rotate "180" -background white -fill black -font ${font_name}  -pointsize ${font_size} label:"$letter" ${output_directory}/${pic_type}/$letter_name.${pic_type}
 stream -map i -storage-type char ${output_directory}/${pic_type}/$letter_name.${pic_type} ${output_directory}/bin/${letter_name}.bin
@@ -78,7 +78,6 @@ creat_hex
 done
 #special chars
 letter_name=SPACE
-list_letter_name=$list_letter_name" "$letter_name
 letter=" "
 creat_hex
 rm format.txt
@@ -134,7 +133,7 @@ do
 letter_name=`echo -n $letter | hexdump  -e ' "0x%x"'| head -c 4 `
 create_glyph
 done
-letter_namer=SPACE
+letter_name=SPACE
 letter="\" \""
 create_glyph
 
@@ -146,6 +145,8 @@ for letter_name in $list_letter_name
 do
 	echo "                  "\&${font_name}_${font_size}_Glyphe_${letter_name},  >>${output_directory}/${font_name}_${font_size}.c
 done
+letter_name=SPACE
+echo "                  "\&${font_name}_${font_size}_Glyphe_${letter_name},  >>${output_directory}/${font_name}_${font_size}.c
 echo \}\;                                                                        >>${output_directory}/${font_name}_${font_size}.c
 
 ##
@@ -163,7 +164,6 @@ do
 		if((i==letter_name))
 		then
 			let print0xff=0
-			echo $letter_name
 			echo -n $count", "                                            >>${output_directory}/${font_name}_${font_size}.c
 		fi
 		let "count+=1"

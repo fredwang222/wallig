@@ -1,10 +1,27 @@
-/*
- * LIB_Graph_Text.c
+ /*
+ * 	 Author : Gwendal Le Gall
+ *   Date 02/02/2010
  *
- *  Created on: 15 août 2010
- *      Author: luten
+ *    LIB_Graph_Text.c
+ *
+ *    This file is part of Wallig Library and Drivers.
+ *
+ *    Copyright (C) 2010  Gwendal Le Gall
+ *
+ *    This program is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-
 #include <stdint.h>
 #include <LIB_Graph_Base.h>
 #include <LIB_Graph_Text.h>
@@ -18,7 +35,7 @@ void LIB_Graph_Text_Draw_Char( char ucChar , Font_t *pFont ,Point_t tCoord , uin
 	ucGlyphIndex = pFont->tucAscii2GlyphIndex[(unsigned char )ucChar];
 	if( ucGlyphIndex != 0xff )
 	{
-		LIB_Graph_Base_Draw_8bpp_Bmp(tCoord ,(Bitmap_t *) pFont->pGlyphe[ucGlyphIndex] , BGColor , FGColor);
+		LIB_Graph_Base_Draw_Mono_Bmp(tCoord ,(Bitmap_t *) pFont->pGlyphe[ucGlyphIndex] , BGColor , FGColor);
 	}
 }
 
