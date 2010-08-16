@@ -2,10 +2,6 @@
  * 	 Author : Gwendal Le Gall
  *   Date 02/02/2010
  *
-*    Modified from:
- *     - nRF24l01 driver of Neil MacMillan see: http://code.google.com/p/nrf24l01/
- *     - http://www.tinkerer.eu/AVRLib/nRF24L01
-
  *
  *    This file is part of Wallig Library and Drivers.
  *
