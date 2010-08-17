@@ -47,6 +47,10 @@ typedef struct
 	unsigned char *pucBuff;
 } Bitmap_t;
 
+void LIB_Graph_Base_Draw_Point( Point_t tPoint ,  uint16_t Color  );
+void LIB_Graph_Base_Draw_Line( Point_t tP1 , Point_t tP2 , uint16_t Color  );
+void LIB_Graph_Base_Draw_Rectangle( Point_t tCoord ,uint16_t Width, uint16_t Height, uint16_t Color , char bFilled );
+void LIB_Grpah_Draw_Circle( Point_t tCenter , uint16_t Radius , uint16_t Color);
 void LIB_Graph_Base_Draw_Mono_Bmp( Point_t tCoord , Bitmap_t *pBitmap , uint16_t BGColor , uint16_t FGColor );
 void LIB_Graph_Base_Draw_RGB_Bmp( Point_t tCoord , Bitmap_t *pBitmap );
 #endif /* LIB_GRAPH_BASE_H_ */
