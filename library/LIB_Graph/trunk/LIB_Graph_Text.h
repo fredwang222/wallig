@@ -32,7 +32,28 @@ typedef struct
 	const  Bitmap_t const *const*pGlyphe;
 } Font_t;
 
-void LIB_Graph_Text_Draw_Char(  char ucChar , Font_t *pFont ,Point_t tCoord , uint16_t BGColor , uint16_t FGColor);
-void LIB_Graph_Text_Draw_String( char *pcChar , Font_t *pFont ,Point_t tCoord , uint16_t BGColor , uint16_t FGColor);
+typedef enum
+{
+	eLeft,
+	eRight,
+	eCenter
 
+} Justification_t;
+
+typedef struct
+{
+	Font_t *pFont;
+	Point_t tCoord;
+	struct 
+	{
+		uint16_t FG;
+		uint16_t BG;
+	} Color;
+	Justification_t Just;
+
+} String_Attribut_t;
+
+void LIB_Graph_Text_Draw_Char(  char ucChar , Font_t *pFont ,Point_t tCoord , uint16_t BGColor , uint16_t FGColor);
+void LIB_Graph_Text_Draw_String( char *pcChar , String_Attribut_t *pAttr);
+uint16_t LIb_Graph_Get_String_XSize( char *pcChar ,  String_Attribut_t *pAttr  );
 #endif /* LIB_GRAPH_TEXT_H_ */

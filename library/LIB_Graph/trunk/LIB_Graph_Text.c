@@ -39,18 +39,52 @@ void LIB_Graph_Text_Draw_Char( char ucChar , Font_t *pFont ,Point_t tCoord , uin
 	}
 }
 
-void LIB_Graph_Text_Draw_String( char *pcChar , Font_t *pFont ,Point_t tCoord , uint16_t BGColor , uint16_t FGColor)
+void LIB_Graph_Text_Draw_String( char *pcChar ,  String_Attribut_t *pAttr )
 {
+	unsigned char ucGlyphIndex;
+	Point_t tNewCoord = pAttr->tCoord;
+	uint16_t uiXsize=LIb_Graph_Get_String_XSize(pcChar,pAttr);
+
+	switch( pAttr->Just)
+	{
+		default:
+		case eLeft:
+			break;
+		case eCenter:
+			tNewCoord.X -=uiXsize/2;
+			break;
+		case eRight:
+			tNewCoord.X -=uiXsize;
+			break;
+
+	}
+
+	while( *pcChar )
+	{
+		ucGlyphIndex = pAttr->pFont->tucAscii2GlyphIndex[(unsigned char ) *pcChar];
+		if( ucGlyphIndex != 0xff )
+		{
+			LIB_Graph_Text_Draw_Char(*pcChar,pAttr->pFont,tNewCoord,pAttr->Color.BG,pAttr->Color.FG);
+			tNewCoord.X +=( pAttr->pFont->pGlyphe[ucGlyphIndex]->Width + 1);
+		}
+		pcChar++;
+	}
+}
+
+uint16_t LIb_Graph_Get_String_XSize( char *pcChar ,  String_Attribut_t *pAttr  )
+{
+	uint16_t uiXsize=0;
 	unsigned char ucGlyphIndex;
 
 	while( *pcChar )
 	{
-		ucGlyphIndex = pFont->tucAscii2GlyphIndex[(unsigned char ) *pcChar];
+		ucGlyphIndex = pAttr->pFont->tucAscii2GlyphIndex[(unsigned char ) *pcChar];
 		if( ucGlyphIndex != 0xff )
 		{
-			LIB_Graph_Text_Draw_Char(*pcChar,pFont,tCoord,BGColor,FGColor);
-			tCoord.X +=( pFont->pGlyphe[ucGlyphIndex]->Width + 1);
+			uiXsize+=( pAttr->pFont->pGlyphe[ucGlyphIndex]->Width + 1);
 		}
 		pcChar++;
 	}
+
+	return uiXsize;
 }
