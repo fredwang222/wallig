@@ -5,16 +5,20 @@ export LIB_PATH=Lib
 grep -v ^# prj.conf | sed s/#.*$// > prj.tmp
 echo "read project configuration"
 echo "----------------------------------------------"
-export TARGET=`grep "TARGET_" prj.tmp`
+#project name
+export PRJ_NAME=`grep "PRJ_NAME" prj.tmp | sed s/PRJ_NAME=//`
+echo "Project name: "$PRJ_NAME
+export TARGET=`grep "TARGET" prj.tmp | sed s/TARGET=//`
 echo "Target board:" $TARGET
 #svn access type
-if [[ `grep SVN_HTTP prj.tmp` = "SVN_HTTPS" ]]
+if [[ `grep SVN prj.tmp` = "SVN=HTTPS" ]]
 then
 SVN_ACCESS=https
 else
 SVN_ACCESS=http
 fi
 echo ""
+
 echo "----------------------------------------------"
 #get drivers
 export DRVIER_LIST=`grep DRV_ prj.tmp`
@@ -37,6 +41,7 @@ do
 	fi
 done
 echo ""
+
 echo "----------------------------------------------"
 export LIB_LIST=`grep LIB_ prj.tmp`
 echo "Lib List:" $LIB_LIST
@@ -57,9 +62,10 @@ do
 	fi
 done
 echo ""
+
 echo "----------------------------------------------"
 echo "get sytem"
-export ARCH=`grep $TARGET System/System.conf | sed s/.*ARCH=//`
+export ARCH=`grep $TARGET  System/System.conf | grep "ARCH=" | sed s/.*ARCH=//`
 echo "    Arch: "$ARCH
 if grep -q $ARCH System/System.conf
 then
@@ -71,8 +77,10 @@ else
 	echo "    $ARCH not found"
 fi
 echo ""
+
 echo "----------------------------------------------"
 echo "create Makefile"
 Script/createmakefile.sh
+rm prj.tmp
 
 
