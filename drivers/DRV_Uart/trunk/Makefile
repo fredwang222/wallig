@@ -8,10 +8,10 @@ $(OUTOBJ):$(ODIR) $(OBJ)
 	arm-none-eabi-ar -cr $@ $(OBJ)
 
 $(ODIR)/%.o : Arch/Stm32/%.c
-	$(CC) -o $@ -c $< $(CFLAGS) -I . -I$(PROJECT_PATH)/$(CONFIG_PATH) -I$(PROJECT_PATH)/$(ARCH_INCLUDE_PATH) -I$(PROJECT_PATH)/$(LIB_FIFO_PATH)
+	$(CC) -o $@ -c $< $(CFLAGS) $(IDIR) -I$(PROJECT_PATH)/$(CONFIG_PATH) -I$(PROJECT_PATH)/$(ARCH_INCLUDE_PATH) -I$(PROJECT_PATH)/$(LIB_Fifo_PATH)
 
 $(ODIR)/%.o : Common/%.c 
-	$(CC) -o $@ -c $< $(CFLAGS) -I . -I$(PROJECT_PATH)/$(CONFIG_PATH) -I$(PROJECT_PATH)/$(ARCH_INCLUDE_PATH) -I$(PROJECT_PATH)/$(LIB_FIFO_PATH)
+	$(CC) -o $@ -c $< $(CFLAGS) -I . -I$(PROJECT_PATH)/$(CONFIG_PATH) -I$(PROJECT_PATH)/$(ARCH_INCLUDE_PATH) -I$(PROJECT_PATH)/$(LIB_Fifo_PATH)
 
 .PHONY: clean 
 
