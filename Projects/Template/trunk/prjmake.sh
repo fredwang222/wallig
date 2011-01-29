@@ -71,7 +71,7 @@ if grep -q $ARCH System/System.conf
 then
 	if [ ! -e System/$ARCH ]
 	then
-		svn co $SVN_ACCESS"://"`grep ^$ARCH System/System.conf | sed s/.*URL=//` System/$ARCH
+		svn co $SVN_ACCESS"://"`grep ^"$ARCH " System/System.conf | sed s/.*URL=//` System/$ARCH
 	fi
 else
 	echo "    $ARCH not found"
