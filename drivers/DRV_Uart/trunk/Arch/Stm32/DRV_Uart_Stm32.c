@@ -54,13 +54,13 @@ void DRV_Uart_Arch_RxSafeLeave( DRV_Uart_Devicedata *pUart )
 
 void DRV_Uart_Arch_TxSafeEnter( DRV_Uart_Devicedata *pUart )
 {
-	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
+//	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
 //	USART_ITConfig(pArchUART->Handle, USART_IT_TXE, DISABLE);
 
 }
 void DRV_Uart_Arch_TxSafeLeave( DRV_Uart_Devicedata *pUart )
 {
-	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
+//	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
 //	USART_ITConfig(pArchUART->Handle, USART_IT_TXE, ENABLE);
 
 }
@@ -69,6 +69,7 @@ DRV_Uart_Error DRV_Uart_ArchInit(void )
 {
 	/* Configure the NVIC Preemption Priority Bits */
 	  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
+
 	return UART_No_Error;
 }
 
@@ -105,9 +106,13 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 	{
 		case (u32)USART1:
 			RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1| RCC_APB2Periph_AFIO, ENABLE);
+			/* enable pio clock */
+		  	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA  | RCC_APB2Periph_AFIO , ENABLE);
 			break;
 		case (u32)USART2:
 			RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+			/* enable pio clock */
+			RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA  | RCC_APB2Periph_AFIO , ENABLE);
 			break;
 	}
 	USART_StructInit(&USART_InitStructure);
