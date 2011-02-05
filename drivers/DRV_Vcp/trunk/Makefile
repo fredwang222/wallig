@@ -1,5 +1,5 @@
 ODIR=obj
-OBJ= $(ODIR)/usb_desc.o $(ODIR)/usb_endp.o $(ODIR)/usb_istr.o $(ODIR)/usb_prop.o $(ODIR)/usb_pwr.o $(ODIR)/hw_config.o
+OBJ= $(ODIR)/usb_desc.o $(ODIR)/usb_endp.o $(ODIR)/usb_istr.o $(ODIR)/usb_prop.o $(ODIR)/usb_pwr.o $(ODIR)/hw_config.o $(ODIR)/DRV_Vcp.o
 OUTOBJ=$(ODIR)/DRV_Vcp.a
 
 all: $(OUTOBJ)
