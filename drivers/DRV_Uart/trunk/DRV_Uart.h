@@ -50,7 +50,7 @@ typedef enum
  */
 typedef struct
 {
-      void (*RXCallBack)( DRV_Uart_Handle hDeviceHandle , unsigned char *pcBuffer , int *piLength);
+      void (*RXCallBack)( DRV_Uart_Handle hDeviceHandle , uint8_t *pcBuffer , uint8_t *piLength);
       void (*TXCallBack)( DRV_Uart_Handle hDeviceHandle );
 } DRV_Uart_Cb;
 
