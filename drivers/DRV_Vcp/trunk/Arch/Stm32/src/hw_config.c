@@ -22,6 +22,7 @@
 #include "platform_config.h"
 #include "usb_pwr.h"
 #include "DRV_Vcp_p.h"
+#include "DRV_Usb_CFG.h"
 //#include "stm32_eval.h"
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,41 +46,8 @@ extern LINE_CODING linecoding;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
-/*******************************************************************************
-* Function Name  : Set_USBClock
-* Description    : Configures USB Clock input (48MHz)
-* Input          : None.
-* Return         : None.
-*******************************************************************************/
-void Set_USBClock(void)
-{
-#ifdef STM32F10X_CL
-  /* Select USBCLK source */
-  RCC_OTGFSCLKConfig(RCC_OTGFSCLKSource_PLLVCO_Div3);
 
-  /* Enable the USB clock */ 
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_OTG_FS, ENABLE) ;
-#else 
-  /* Select USBCLK source */
-  RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);
-  
-  /* Enable the USB clock */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
-#endif /* STM32F10X_CL */
-}
 
-void cfg_Gpio( void )
-{
-	  GPIO_InitTypeDef GPIO_InitStructure;
-/* Enable USB_DISCONNECT GPIO clock */
-RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIO_DISCONNECT, ENABLE);
-
-/* Configure USB pull-up pin */
-GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_PIN;
-GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
-GPIO_Init(USB_DISCONNECT, &GPIO_InitStructure);
-}
 /*******************************************************************************
 * Function Name  : Enter_LowPowerMode
 * Description    : Power-off system clocks and power while entering suspend mode
@@ -114,38 +82,6 @@ void Leave_LowPowerMode(void)
   }
 }
 
-/*******************************************************************************
-* Function Name  : USB_Interrupts_Config
-* Description    : Configures the USB interrupts
-* Input          : None.
-* Return         : None.
-*******************************************************************************/
-void USB_Interrupts_Config(void)
-{
-  NVIC_InitTypeDef NVIC_InitStructure;
-
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-
-#ifdef STM32F10X_CL 
-  /* Enable the USB Interrupts */
-  NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-#else
-  NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-#endif /* STM32F10X_CL */
-
-  /* Enable USART Interrupt */
-  /*NVIC_InitStructure.NVIC_IRQChannel = EVAL_COM1_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-  NVIC_Init(&NVIC_InitStructure);*/
-}
 
 /*******************************************************************************
 * Function Name  : USB_Cable_Config
@@ -189,15 +125,6 @@ void USB_To_USART_Send_Data(uint8_t* data_buffer, uint8_t Nb_bytes)
 
 	if( DRV_Vcp_Data.Rxcallback != NULL )
 		DRV_Vcp_Data.Rxcallback( data_buffer ,Nb_bytes);
-
- /* uint32_t i;
-  
-  for (i = 0; i < Nb_bytes; i++)
-  {
-	  USART_To_USB_Send_Char(*(data_buffer + i)+1);
-    USART_SendData(EVAL_COM1, *(data_buffer + i));
-    while(USART_GetFlagStatus(EVAL_COM1, USART_FLAG_TXE) == RESET);
-  }*/
 }
 
 /*******************************************************************************

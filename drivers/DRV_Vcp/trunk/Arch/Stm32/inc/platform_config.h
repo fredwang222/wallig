@@ -30,27 +30,6 @@
  //#define USE_STM3210C_EVAL
 #endif
 
-/* Define the STM32F10x hardware depending on the used evaluation board */
-#ifdef USE_STM3210B_EVAL
-  #define USB_DISCONNECT                      GPIOD  
-  #define USB_DISCONNECT_PIN                  GPIO_Pin_2
-  #define RCC_APB2Periph_GPIO_DISCONNECT      RCC_APB2Periph_GPIOD
-  #define EVAL_COM1_IRQn                      USART1_IRQn
-
-#elif defined (USE_STM3210E_EVAL)
-  #define USB_DISCONNECT                      GPIOB  
-  #define USB_DISCONNECT_PIN                  GPIO_Pin_14
-  #define RCC_APB2Periph_GPIO_DISCONNECT      RCC_APB2Periph_GPIOB
-  #define EVAL_COM1_IRQn                      USART1_IRQn
-
-#elif defined (USE_STM3210C_EVAL)
-  #define USB_DISCONNECT                      0  
-  #define USB_DISCONNECT_PIN                  0
-  #define RCC_APB2Periph_GPIO_DISCONNECT      0
-  #define EVAL_COM1_IRQn                      USART2_IRQn
-
-#endif /* USE_STM3210B_EVAL */
-
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 

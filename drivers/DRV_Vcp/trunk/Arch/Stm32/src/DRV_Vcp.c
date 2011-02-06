@@ -9,6 +9,7 @@
 #include "DRV_Vcp_p.h"
 
 tDRV_Vcp_Data DRV_Vcp_Data;
+extern uint8_t  USB_Tx_State;
 
 void DRV_Vcp_Init( void )
 {
@@ -20,4 +21,9 @@ void DRV_Vcp_CallbackRegister( void (*Rxcallback)(uint8_t*, uint8_t),void (*Txca
 {
 	DRV_Vcp_Data.Rxcallback =Rxcallback;
 	DRV_Vcp_Data.Txcallback =Txcallback;
+}
+
+uint8_t DRV_Vcp_TxBusy( void )
+{
+ return USB_Tx_State;
 }

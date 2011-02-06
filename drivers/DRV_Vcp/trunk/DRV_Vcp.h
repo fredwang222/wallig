@@ -10,5 +10,5 @@
 
 void DRV_Vcp_CallbackRegister( void (*Rxcallback)(uint8_t *, uint8_t) ,  void (*Txcallback)(void));
 unsigned int DRV_Vcp_SendBuffer( unsigned char *, unsigned int );
-
+uint8_t DRV_Vcp_TxBusy( void );
 #endif /* LIB_VCP_H_ */
