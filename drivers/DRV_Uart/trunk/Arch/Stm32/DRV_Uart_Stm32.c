@@ -14,165 +14,206 @@
 #include "stm32f10x.h"
 #include "stm32f10x_usart.h"
 #include "../../DRV_Uart.h"
-#include "../../Inc/DRV_Uart_private.h"
+
+/**************************************************************
+                                        Macros
+***************************************************************/
+#define kDRV_UART_DEVICE_COUNT (sizeof(tUART_DeviceListe)/sizeof(DRV_UART_DeviceCfg))
+#define kDRV_Uart_RxSafeEnter( pUart ) USART_ITConfig(pUart->pCfg->Handle, USART_IT_RXNE, DISABLE)
+#define kDRV_Uart_RxSafeLeave( pUart ) USART_ITConfig(pUart->pCfg->Handle, USART_IT_RXNE, ENABLE)
+#define kDRV_Uart_TxSafeEnter( pUart ) USART_ITConfig(pUart->pCfg->Handle, USART_IT_TXE, DISABLE);
+#define kDRV_Uart_TxSafeLeave( pUart ) USART_ITConfig(pUart->pCfg->Handle, USART_IT_TXE, ENABLE);
 
 /**************************************************************
                                         Local variables
 ***************************************************************/
-/** @ingroup DRV_Uart_Private_Arch_grp
- *
- */
+typedef enum
+{
+    RXClosed,
+	RXEmpty,
+	RXFull,
+} tRxState;
+
+typedef enum
+{
+    TXClosed,
+	TXIdle,
+	TXBusy,
+} tTxState;
+
 typedef struct
 {
 	char *pcName;
 	USART_TypeDef* Handle;
-	DRV_Uart_Devicedata *pUart;
-	u32 uiTxCount;
-	u8 *puCTxBuff;
-} DRV_UART_ARCH_Device;
+	USART_InitTypeDef USART_InitStructure;
+	struct
+	{
+		void( *fPeriphClockCmd)(uint32_t , FunctionalState );
+		uint32_t uiPeriph;
+	} UART_ClockCfg;
+	struct
+	{
+		void( *fPeriphClockCmd)(uint32_t , FunctionalState );
+		uint32_t uiPeriph;
+	} UART_PioClkCfg;
+	struct
+	{
+		GPIO_TypeDef tPort;
+		uint32_t uiTxPio;
+		uint32_t uiRxPio;
+	};
+	uint8_t ucIrqChannel;
+} DRV_UART_DeviceCfg;
+typedef struct
+{
+	DRV_UART_DeviceCfg *pCfg;
+	uint32_t uiTxCount;
+	uintt8_t *puCTxBuff;
+	DRV_Uart_Cb CallBacks;
+	tTxState TxState;
+	tRxState RxState;
+} DRV_UART_DeviceData;
 
-DRV_UART_ARCH_Device tUART_ARCH_DeviceListe[]={{"UART1",USART1,NULL,0 } ,{"UART2",USART2,NULL,0 },{NULL,0,NULL,0}};
+static const DRV_UART_DeviceCfg tUART_DeviceCfgListe[]=kDRV_Uart_DEVICE_CONF;
+static DRV_UART_DeviceData tUART_DeviceDataList[kDRV_UART_DEVICE_COUNT];
 
-
-static void UART_Gpio_Config( u8 ucUARTIndex);
+static void UART_Gpio_Config( uintt8_t ucUARTIndex);
 /**************************************************************
                  private Functions
 ***************************************************************/
 
-void DRV_Uart_Arch_RxSafeEnter( DRV_Uart_Devicedata *pUart )
-{
-	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-	USART_ITConfig(pArchUART->Handle, USART_IT_RXNE, DISABLE);
 
-}
-void DRV_Uart_Arch_RxSafeLeave( DRV_Uart_Devicedata *pUart )
-{
-	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-	USART_ITConfig(pArchUART->Handle, USART_IT_RXNE, ENABLE);
-
-}
-
-void DRV_Uart_Arch_TxSafeEnter( DRV_Uart_Devicedata *pUart )
-{
-//	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-//	USART_ITConfig(pArchUART->Handle, USART_IT_TXE, DISABLE);
-
-}
-void DRV_Uart_Arch_TxSafeLeave( DRV_Uart_Devicedata *pUart )
-{
-//	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-//	USART_ITConfig(pArchUART->Handle, USART_IT_TXE, ENABLE);
-
-}
-
-DRV_Uart_Error DRV_Uart_ArchInit(void )
+DRV_Uart_Error DRV_Uart_Init( void )
 {
 	/* Configure the NVIC Preemption Priority Bits */
 	  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
+	  memset( tUART_DeviceDataList , 0 , sizeof(tUART_DeviceDataList));
 
 	return UART_No_Error;
 }
 
-DRV_Uart_Error DRV_Uart_ArchTerminate(void )
+DRV_Uart_Error DRV_Uart_Terminate( void )
 {
 
+	memset( tUART_DeviceDataList , 0 , sizeof(tUART_DeviceDataList));
+    return UART_No_Error;
+}
+
+DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle ,  DRV_Uart_Cb *ptCb)
+{
+	DRV_Uart_Error tError = UART_No_Error;
+	DRV_UART_DeviceData *pUart;
+	GPIO_InitTypeDef GPIO_InitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
+	int iDeviceIndex=0;
+
+	*phDeviceHandle=NULL;
+	for( iDeviceIndex=0 ; iDeviceIndex < kDRV_UART_DEVICE_COUNT; iDeviceIndex++)
+	{
+		if( !strcmp( tUART_DeviceCfgListe[iDeviceIndex ].pcName , pcDeviceName) )
+		{
+			tUART_DeviceDataList[iDeviceIndex].pCfg = &tUART_DeviceCfgListe[iDeviceIndex ];
+			pUart =  &tUART_DeviceDataList[iDeviceIndex];
+
+		}
+	}
+
+	if( pUart == NULL )
+	{
+		return UART_Device_Not_Found;
+	}
+	/* Init UART Clock */
+	pUart->pCfg.UART_ClockCfg.fPeriphClockCmd( pUart->pCfg.UART_ClockCfg.uiPeriph , ENABLE );
+	/* Init Gpio Clock */
+	pUart->pCfg.UART_PioClkCfg.fPeriphClockCmd(pUart->pCfg.UART_PioClkCfg.uiPeriph , ENABLE );
+	/* init Uart device*/
+	USART_Init( pUart->pCfg.tPort, &pUart->pCfg.USART_InitStructure);
+	/* IT config */
+	USART_ITConfig(pUart->pCfg.tPort , USART_IT_RXNE, ENABLE);
+	USART_Cmd( pUart->pCfg.tPort , ENABLE);
+
+	/* Configure USARTx Rx  as input floating */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_InitStructure.GPIO_Pin = pUart->pCfg.uiRxPio ;
+	GPIO_Init(pUart->pCfg.tPort, &GPIO_InitStructure);
+
+	/* Configure  Tx  as push-pull */
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure.GPIO_Pin = pUart->pCfg.uiTxPio;
+	GPIO_Init(pUart->pCfg.tPort, &GPIO_InitStructure);
+
+	/* Enable the USART Interrupt */
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStructure.NVIC_IRQChannel = pUart->pCfg.ucIrqChannel ;
+	NVIC_Init(&NVIC_InitStructure);
+
+	pUart->TxState=TXIdle;
+	pUart->RxState= RXEmpty;
+	/* Callback register */
+	pUart->CallBacks= *ptCb;
+
+	*phDeviceHandle = ( DRV_Uart_Handle *) pUart ;
+	return tError;
+}
+
+DRV_Uart_Error DRV_Uart_Close( DRV_Uart_Handle hDeviceHandle )
+{
+	DRV_UART_DeviceData *pUart = (DRV_UART_DeviceData *)hDeviceHandle; ;
+	pUart->TxState=TXClosed;
+	pUart->RxState= RXClosed;
 
     return UART_No_Error;
 }
 
-DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
+DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned  char *pucBuffer , int iLength)
 {
-	DRV_Uart_Error tError = UART_No_Error;
-	USART_InitTypeDef USART_InitStructure;
-	int iDeviceIndex=0;
-	char cDummy;
 
-	while(tUART_ARCH_DeviceListe[iDeviceIndex].Handle)
+	DRV_UART_DeviceData *pUart = (DRV_UART_DeviceData *)hDeviceHandle;
+
+	if( !DRV_Uart_TXBusy( hDeviceHandle ) )
 	{
-		if( !strcmp(tUART_ARCH_DeviceListe[iDeviceIndex].pcName , pUart->pcDeviceName))
-		{
-			pUart->pArchData = &tUART_ARCH_DeviceListe[iDeviceIndex];
-			tUART_ARCH_DeviceListe[iDeviceIndex].pUart=pUart;
-			break;
-		}
-		iDeviceIndex++;
-	}
-	if( tUART_ARCH_DeviceListe[iDeviceIndex].Handle == NULL )
-	{
-		return UART_Device_Not_Found;
+		pUart->puCTxBuff=pucBuffer;
+		pUart->uiTxCount=(uint32_t)iLength;
+		pUart->uiTxCount--;
+		pUart->TxState=TXBusy;
+		USART_SendData(pUart->pCfg->Handle, *(pUart->puCTxBuff++));
+		USART_ITConfig(pUart->pCfg->Handle, USART_IT_TXE, ENABLE);
+		return UART_No_Error;
 	}
 
-	switch( (u32) tUART_ARCH_DeviceListe[iDeviceIndex].Handle )
-	{
-		case (u32)USART1:
-			RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1| RCC_APB2Periph_AFIO, ENABLE);
-			/* enable pio clock */
-		  	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA  | RCC_APB2Periph_AFIO , ENABLE);
-			break;
-		case (u32)USART2:
-			RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
-			/* enable pio clock */
-			RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA  | RCC_APB2Periph_AFIO , ENABLE);
-			break;
-	}
-	USART_StructInit(&USART_InitStructure);
-	switch( pUart->cfg.eBaudRate )
-	{
-		case BR4800:
-			USART_InitStructure.USART_BaudRate = 4800;
-			break;
-		case BR9600:
-			USART_InitStructure.USART_BaudRate = 9600;
-			break;
-		case BR115200:
-			USART_InitStructure.USART_BaudRate = 115200;
-			break;
-		default:
-		case BRUnknown:
-			return UART_Bad_Param;
-	}
-	switch( pUart->cfg.eParity )
-	{
-		case PARNone:
-			USART_InitStructure.USART_Parity = USART_Parity_No;
-			break;
-		case PAREven:
-			USART_InitStructure.USART_Parity = USART_Parity_Even;
-			break;
-		case PAROdd:
-			USART_InitStructure.USART_Parity = USART_Parity_Odd;
-			break;
-		case PARUnknown:
-		default:
-			return UART_Bad_Param;
-			break;
-	}
-
-	switch( pUart->cfg.eStopBit )
-	{
-		case SB_1:
-			USART_InitStructure.USART_StopBits = USART_StopBits_1;
-			break;
-		case SB_1_5:
-			USART_InitStructure.USART_StopBits = USART_StopBits_1_5;
-			break;
-		case SB_2:
-			USART_InitStructure.USART_StopBits = USART_StopBits_2;
-			break;
-		default:
-		case SBUnknown:
-			break;
-	}
-	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-	USART_Init(tUART_ARCH_DeviceListe[iDeviceIndex].Handle, &USART_InitStructure);
+	return UART_RXError;
+}
 
 
-	USART_ITConfig(tUART_ARCH_DeviceListe[iDeviceIndex].Handle, USART_IT_RXNE, ENABLE);
-	 USART_Cmd(tUART_ARCH_DeviceListe[iDeviceIndex].Handle, ENABLE);
-	 UART_Gpio_Config(iDeviceIndex);
-	return tError;
+int DRV_Uart_TXBusy( DRV_Uart_Handle hDeviceHandle )
+{
+	DRV_UART_DeviceData *pUart = (DRV_UART_DeviceData *) hDeviceHandle;
+	tTxState eState;
+
+	kDRV_Uart_RxSafeEnter(pUart);
+	eState = pUart->TxState;
+	kDRV_Uart_RxSafeLeave(pUart);
+
+	if(eState  == TXIdle )
+		return 0;
+	else
+		return 1;
+}
+
+DRV_Uart_Error DRV_Uart_TXFlush( DRV_Uart_Handle hDeviceHandle )
+{
+	DRV_UART_DeviceData *pUart = (DRV_UART_DeviceData *) hDeviceHandle;
+
+	if( pUart == NULL )
+	   return UART_Input_Null;
+
+	DRV_Uart_RxSafeEnter(pUart);
+	pUart->uiTxCount = 0;
+	pUart->TxState = TXIdle;
+	DRV_Uart_RxSafeLeave(pUart);
+	return UART_No_Error;
 }
 
 /*******************************************************************************
@@ -184,26 +225,28 @@ DRV_Uart_Error DRV_UART_ArchOpen( DRV_Uart_Devicedata *pUart )
 *******************************************************************************/
 void __attribute__((__interrupt__)) USART1_IRQHandler(void)
 {
-	u8 ucCharIn;
+	uintt8_t ucCharIn;
 
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
 		ucCharIn = USART_ReceiveData(USART1);
-		DRV_Uart_RX_Private_Callback( tUART_ARCH_DeviceListe[0].pUart , &ucCharIn , 1 );
+		if( tUART_DeviceDataList[0].CallBacks.RXCallBack )
+			tUART_DeviceDataList[0].CallBacks.RXCallBack(( DRV_Uart_Handle) &tUART_DeviceDataList[0] , &ucCharIn , 1);
 	}
 
 	if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
 	{
-		if(tUART_ARCH_DeviceListe[0].uiTxCount)
+		if(tUART_DeviceDataList[0].uiTxCount)
 		{
-			USART_SendData(USART1, *(tUART_ARCH_DeviceListe[0].puCTxBuff++));
-			tUART_ARCH_DeviceListe[0].uiTxCount--;
+			USART_SendData(USART1, *(tUART_DeviceDataList[0].puCTxBuff++));
+			tUART_DeviceDataList[0].uiTxCount--;
 		}
 		else
 		{
 			USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
-			tUART_ARCH_DeviceListe[0].pUart->eTxState= TXIdle;
-			DRV_Uart_EndTX_Private_Callback(tUART_ARCH_DeviceListe[0].pUart);
+			tUART_DeviceDataList[0].TxState= TXIdle;
+			if( tUART_DeviceDataList[0].CallBacks.TXCallBack )
+				tUART_DeviceDataList[0].CallBacks.TXCallBack(( DRV_Uart_Handle) &tUART_DeviceDataList[0] );
 		}
 	}
 }
@@ -217,119 +260,28 @@ void __attribute__((__interrupt__)) USART1_IRQHandler(void)
 *******************************************************************************/
 void USART2_IRQHandler(void)
 {
-	u8 ucCharIn;
+	uintt8_t ucCharIn;
 
-	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
+	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
-		ucCharIn = USART_ReceiveData(USART2);
-		DRV_Uart_RX_Private_Callback( tUART_ARCH_DeviceListe[1].pUart , &ucCharIn , 1 );
+		ucCharIn = USART_ReceiveData(USART1);
+		if( tUART_DeviceDataList[1].CallBacks.RXCallBack )
+		tUART_DeviceDataList[1].CallBacks.RXCallBack(( DRV_Uart_Handle) &tUART_DeviceDataList[1] , &ucCharIn , 1);
 	}
 
-	if(USART_GetITStatus(USART2, USART_IT_TXE) != RESET)
+	if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
 	{
-		if(tUART_ARCH_DeviceListe[1].uiTxCount)
+		if(tUART_DeviceDataList[1].uiTxCount)
 		{
-			USART_SendData(USART2, *(tUART_ARCH_DeviceListe[1].puCTxBuff++));
-			tUART_ARCH_DeviceListe[1].uiTxCount--;
+			USART_SendData(USART1, *(tUART_DeviceDataList[1].puCTxBuff++));
+			tUART_DeviceDataList[1].uiTxCount--;
 		}
 		else
 		{
-			USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
-			tUART_ARCH_DeviceListe[1].pUart->eTxState= TXIdle;
-			DRV_Uart_EndTX_Private_Callback(tUART_ARCH_DeviceListe[1].pUart);
+			USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
+			tUART_DeviceDataList[1].TxState= TXIdle;
+			if( tUART_DeviceDataList[1].CallBacks.TXCallBack )
+				tUART_DeviceDataList[1].CallBacks.TXCallBack(( DRV_Uart_Handle) &tUART_DeviceDataList[1] );
 		}
-
 	}
 }
-DRV_Uart_Error DRV_UART_ArchClose( DRV_Uart_Devicedata *pUart )
-{
-	//DRV_UART_ARCH_Data *pData =(DRV_UART_ARCH_Data *) pUart->pArchData ;
-	//TODO
-
-    pUart->pArchData=0;
-    return UART_No_Error;
-}
-
-DRV_Uart_Error DRV_Uart_ArchSend( DRV_Uart_Devicedata *pUart , unsigned char *pucBuffer , int iLength)
-{
-
-	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-
-	pArchUART->puCTxBuff=pucBuffer;
-	pArchUART->uiTxCount=(u32)iLength;
-	pArchUART->uiTxCount--;
-	USART_SendData(pArchUART->Handle, *(pArchUART->puCTxBuff++));
-	USART_ITConfig(pArchUART->Handle, USART_IT_TXE, ENABLE);
-
-	return UART_No_Error;
-}
-
-DRV_Uart_Error  DRV_Uart_ArchRXFlush( DRV_Uart_Devicedata *pUart)
-{
-	//DRV_UART_ARCH_Data *pData =(DRV_UART_ARCH_Data *) pUart->pArchData ;
-	//TODO
-	return UART_No_Error;
-}
-
-DRV_Uart_Error DRV_Uart_ArchTXFlush( DRV_Uart_Devicedata *pUart)
-{
-	DRV_UART_ARCH_Device *pArchUART = (DRV_UART_ARCH_Device*)pUart->pArchData;
-	pArchUART->uiTxCount=0;
-	return UART_No_Error;
-}
-
-static void UART_Gpio_Config( u8 ucUARTIndex)
-{
-  GPIO_InitTypeDef GPIO_InitStructure;
-  NVIC_InitTypeDef NVIC_InitStructure;
-
-#ifdef USE_STM3210B_EVAL
-  /* Enable the USART2 Pins Software Remapping */
-  GPIO_PinRemapConfig(GPIO_Remap_USART2, ENABLE);
-#endif
-
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  if( !ucUARTIndex )
-  {
-	  /* Configure USART1 Rx (PA.10) as input floating */
-	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-	  GPIO_Init(GPIOA, &GPIO_InitStructure);
-  }
-  else
-  {
-	  /* Configure USART2 Rx as input floating */
-	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-	  GPIO_Init(GPIOA, &GPIO_InitStructure);
-  }
-
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  if( !ucUARTIndex )
-  {
-	  /* Configure USART1 Tx (PA.09) as alternate function push-pull */
-	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-	  GPIO_Init(GPIOA, &GPIO_InitStructure);
-  }
-  else
-  {
-	  /* Configure USART2 Tx as alternate function push-pull */
-	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-	  GPIO_Init(GPIOA, &GPIO_InitStructure);
-  }
-
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  if( !ucUARTIndex )
-  {
-	  /* Enable the USART1 Interrupt */
-	  NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
-  }
-  else
-  {
-	  /* Enable the USART2 Interrupt */
-	  NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
-  }
-   NVIC_Init(&NVIC_InitStructure);
-}
-
