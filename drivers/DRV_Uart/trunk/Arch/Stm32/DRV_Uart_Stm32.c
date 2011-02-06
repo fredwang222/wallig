@@ -68,7 +68,7 @@ typedef struct
 typedef struct
 {
 	DRV_UART_DeviceCfg *pCfg;
-	uint32_t uiTxCount;
+	uint8_t ucTxCount;
 	uint8_t *pucTxBuff;
 	uint8_t ucTxBuffLen;
 	DRV_Uart_Cb CallBacks;
@@ -150,13 +150,14 @@ DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDev
 	NVIC_InitStructure.NVIC_IRQChannel = pUart->pCfg->ucIrqChannel ;
 	NVIC_Init(&NVIC_InitStructure);
 
-	pUart->TxState=TXIdle;
-	pUart->RxState= RXEmpty;
+	/* Copy user parameters */
 	pUart->pucTxBuff = ptParam->pucTxBuffer;
 	pUart->ucTxBuffLen = ptParam->ucTxBufferLen;
 	/* Callback register */
 	pUart->CallBacks= ptParam->Callbacks;
 
+	pUart->TxState=TXIdle;
+	pUart->RxState= RXEmpty;
 	*phDeviceHandle = ( DRV_Uart_Handle *) pUart ;
 	return tError;
 }
@@ -170,16 +171,16 @@ DRV_Uart_Error DRV_Uart_Close( DRV_Uart_Handle hDeviceHandle )
     return UART_No_Error;
 }
 
-DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned  char *pucBuffer , int iLength)
+DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,uint8_t *pucBuffer , uint8_t ucLength)
 {
 
 	DRV_UART_DeviceData *pUart = (DRV_UART_DeviceData *)hDeviceHandle;
 
-	if( !DRV_Uart_TXBusy( hDeviceHandle ) && iLength<=pUart->ucTxBuffLen)
+	if( !DRV_Uart_TXBusy( hDeviceHandle ) && ucLength<=pUart->ucTxBuffLen)
 	{
-		memcpy(pUart->pucTxBuff,pucBuffer,iLength);
-		pUart->uiTxCount=(uint32_t)iLength;
-		pUart->uiTxCount--;
+		memcpy(pUart->pucTxBuff,pucBuffer,ucLength);
+		pUart->ucTxCount=ucLength;
+		pUart->ucTxCount--;
 		pUart->TxState=TXBusy;
 
 		USART_SendData(pUart->pCfg->Handle, *(pUart->pucTxBuff++));
@@ -214,7 +215,7 @@ DRV_Uart_Error DRV_Uart_TXFlush( DRV_Uart_Handle hDeviceHandle )
 	   return UART_Input_Null;
 
 	kDRV_Uart_RxSafeEnter(pUart);
-	pUart->uiTxCount = 0;
+	pUart->ucTxCount = 0;
 	pUart->TxState = TXIdle;
 	kDRV_Uart_RxSafeLeave(pUart);
 	return UART_No_Error;
@@ -240,10 +241,10 @@ void __attribute__((__interrupt__)) USART1_IRQHandler(void)
 
 	if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
 	{
-		if(tUART_DeviceDataList[0].uiTxCount)
+		if(tUART_DeviceDataList[0].ucTxCount)
 		{
 			USART_SendData(USART1, *(tUART_DeviceDataList[0].pucTxBuff++));
-			tUART_DeviceDataList[0].uiTxCount--;
+			tUART_DeviceDataList[0].ucTxCount--;
 		}
 		else
 		{
@@ -275,10 +276,10 @@ void USART2_IRQHandler(void)
 
 	if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
 	{
-		if(tUART_DeviceDataList[1].uiTxCount)
+		if(tUART_DeviceDataList[1].ucTxCount)
 		{
 			USART_SendData(USART1, *(tUART_DeviceDataList[1].pucTxBuff++));
-			tUART_DeviceDataList[1].uiTxCount--;
+			tUART_DeviceDataList[1].ucTxCount--;
 		}
 		else
 		{

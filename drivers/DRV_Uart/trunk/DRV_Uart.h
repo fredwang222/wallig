@@ -85,14 +85,14 @@ DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDev
  */
 DRV_Uart_Error DRV_Uart_Close( DRV_Uart_Handle hDeviceHandle );
 
-/*! \fn DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned char *pucBuffer , int iLength);
+/*! \fn DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,uint8_t *pucBuffer , uint8_t ucLength);
  *  \brief Sen a buffer to the UART.
  *  \param hDeviceHandle Handle of the instance to close.
  *  \param pucBuffer: pointer to the buffer to send
- *  \param iLength: length of the buffer
+ *  \param ucLength: length of the buffer
  *  \return Driver error.
  */
-DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned  char *pucBuffer , int iLength);
+DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,uint8_t *pucBuffer , uint8_t ucLength);
 
 
 /*!
