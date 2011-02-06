@@ -1,0 +1,16 @@
+/*UART1 CFG */
+#define kUART1_COM_PARAM { 115200 , USART_WordLength_8b , USART_StopBits_1 , USART_Parity_No , USART_Mode_Rx | USART_Mode_Tx , USART_HardwareFlowControl_None }
+#define kUART1_CLK_DEV_PARAM { RCC_APB2PeriphClockCmd , RCC_APB2Periph_USART1| RCC_APB2Periph_AFIO }
+#define kUART1_CLK_PIO_PARAM { RCC_APB2PeriphClockCmd , RCC_APB2Periph_GPIOA  | RCC_APB2Periph_AFIO  }
+#define kUART1_PIO_PARAM { GPIOA , GPIO_Pin_9 , GPIO_Pin_10 }
+#define kUART1_CONF { "UART1" , USART1,  kUART1_COM_PARAM , kUART1_CLK_DEV_PARAM , kUART1_CLK_PIO_PARAM , kUART1_PIO_PARAM , USART1_IRQn }
+
+/*UART2 CFG */
+#define kUART2_COM_PARAM { 115200 , USART_WordLength_8b , USART_StopBits_1 , USART_Parity_No , USART_Mode_Rx | USART_Mode_Tx , USART_HardwareFlowControl_None }
+#define kUART2_CLK_DEV_PARAM { RCC_APB1PeriphClockCmd , RCC_APB1Periph_USART2 }
+#define kUART2_CLK_PIO_PARAM { RCC_APB2PeriphClockCmd , RCC_APB2Periph_GPIOA  | RCC_APB2Periph_AFIO  }
+#define kUART2_PIO_PARAM { GPIOA , GPIO_Pin_2 , GPIO_Pin_3 }
+#define kUART2_CONF { "UART2" , USART2,  kUART2_COM_PARAM , kUART2_CLK_DEV_PARAM , kUART2_CLK_PIO_PARAM , kUART2_PIO_PARAM , USART2_IRQn}
+
+/*Device liste*/
+#define kDRV_Uart_DEVICE_CONF { UART1_CONF , UART2_CONF }
