@@ -10,7 +10,8 @@
 
 typedef struct
 {
-	void (*callback)(uint8_t *, uint8_t);
+	void (*Rxcallback)(uint8_t *, uint8_t);
+	void (*Txcallback)(void);
 } tDRV_Vcp_Data;
 
 extern tDRV_Vcp_Data DRV_Vcp_Data;

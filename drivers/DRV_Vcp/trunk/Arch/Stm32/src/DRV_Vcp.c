@@ -12,10 +12,12 @@ tDRV_Vcp_Data DRV_Vcp_Data;
 
 void DRV_Vcp_Init( void )
 {
-	DRV_Vcp_Data.callback=NULL;
+	DRV_Vcp_Data.Rxcallback=NULL;
+	DRV_Vcp_Data.Txcallback=NULL;
 }
 
-void DRV_Vcp_CallbackRegister( void (*callback)(uint8_t*, uint8_t))
+void DRV_Vcp_CallbackRegister( void (*Rxcallback)(uint8_t*, uint8_t),void (*Txcallback)(void))
 {
-	DRV_Vcp_Data.callback= callback;
+	DRV_Vcp_Data.Rxcallback =Rxcallback;
+	DRV_Vcp_Data.Txcallback =Txcallback;
 }

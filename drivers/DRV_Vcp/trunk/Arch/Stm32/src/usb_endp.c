@@ -20,6 +20,7 @@
 #include "hw_config.h"
 #include "usb_istr.h"
 #include "usb_pwr.h"
+#include "DRV_Vcp_p.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -55,6 +56,8 @@ void EP1_IN_Callback (void)
     if (USART_Rx_length == 0) 
     {
       USB_Tx_State = 0;
+      if( DRV_Vcp_Data.Txcallback )
+    	  DRV_Vcp_Data.Txcallback();
     }
     else 
     {
