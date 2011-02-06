@@ -69,7 +69,8 @@ typedef struct
 {
 	DRV_UART_DeviceCfg *pCfg;
 	uint32_t uiTxCount;
-	uint8_t *puCTxBuff;
+	uint8_t *pucTxBuff;
+	uint8_t ucTxBuffLen;
 	DRV_Uart_Cb CallBacks;
 	tTxState TxState;
 	tRxState RxState;
@@ -99,7 +100,7 @@ DRV_Uart_Error DRV_Uart_Terminate( void )
     return UART_No_Error;
 }
 
-DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle ,  DRV_Uart_Cb *ptCb)
+DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle ,  DRV_Uart_Param *ptParam)
 {
 	DRV_Uart_Error tError = UART_No_Error;
 	DRV_UART_DeviceData *pUart;
@@ -151,8 +152,10 @@ DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDev
 
 	pUart->TxState=TXIdle;
 	pUart->RxState= RXEmpty;
+	pUart->pucTxBuff = ptParam->pucTxBuffer;
+	pUart->ucTxBuffLen = ptParam->ucTxBufferLen;
 	/* Callback register */
-	pUart->CallBacks= *ptCb;
+	pUart->CallBacks= ptParam->Callbacks;
 
 	*phDeviceHandle = ( DRV_Uart_Handle *) pUart ;
 	return tError;
@@ -172,13 +175,14 @@ DRV_Uart_Error DRV_Uart_Send( DRV_Uart_Handle hDeviceHandle ,unsigned  char *puc
 
 	DRV_UART_DeviceData *pUart = (DRV_UART_DeviceData *)hDeviceHandle;
 
-	if( !DRV_Uart_TXBusy( hDeviceHandle ) )
+	if( !DRV_Uart_TXBusy( hDeviceHandle ) && iLength<=pUart->ucTxBuffLen)
 	{
-		pUart->puCTxBuff=pucBuffer;
+		memcpy(pUart->pucTxBuff,pucBuffer,iLength);
 		pUart->uiTxCount=(uint32_t)iLength;
 		pUart->uiTxCount--;
 		pUart->TxState=TXBusy;
-		USART_SendData(pUart->pCfg->Handle, *(pUart->puCTxBuff++));
+
+		USART_SendData(pUart->pCfg->Handle, *(pUart->pucTxBuff++));
 		USART_ITConfig(pUart->pCfg->Handle, USART_IT_TXE, ENABLE);
 		return UART_No_Error;
 	}
@@ -238,7 +242,7 @@ void __attribute__((__interrupt__)) USART1_IRQHandler(void)
 	{
 		if(tUART_DeviceDataList[0].uiTxCount)
 		{
-			USART_SendData(USART1, *(tUART_DeviceDataList[0].puCTxBuff++));
+			USART_SendData(USART1, *(tUART_DeviceDataList[0].pucTxBuff++));
 			tUART_DeviceDataList[0].uiTxCount--;
 		}
 		else
@@ -273,7 +277,7 @@ void USART2_IRQHandler(void)
 	{
 		if(tUART_DeviceDataList[1].uiTxCount)
 		{
-			USART_SendData(USART1, *(tUART_DeviceDataList[1].puCTxBuff++));
+			USART_SendData(USART1, *(tUART_DeviceDataList[1].pucTxBuff++));
 			tUART_DeviceDataList[1].uiTxCount--;
 		}
 		else

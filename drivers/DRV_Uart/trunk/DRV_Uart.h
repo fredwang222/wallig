@@ -7,12 +7,6 @@
 *	\brief Public declaration for the driver
 *
 */
-/*!
- /** @defgroup DRV_Uart_Public_grp Public interface for DRV_Uart driver
- *  This is the first group
- *  @{
- */
-
 //! number of devices configured
 #ifndef DRV_UART_H
 #define DRV_UART_H
@@ -44,15 +38,22 @@ typedef enum
 } DRV_Uart_Error;
 
 
+typedef struct
+{
+	void (*RXCallBack)( DRV_Uart_Handle hDeviceHandle , uint8_t *pcBuffer , uint8_t *piLength);
+	void (*TXCallBack)( DRV_Uart_Handle hDeviceHandle );
+} DRV_Uart_Cb;
 
 /*!
  *  \brief configuration parameters for device
  */
 typedef struct
 {
-      void (*RXCallBack)( DRV_Uart_Handle hDeviceHandle , uint8_t *pcBuffer , uint8_t *piLength);
-      void (*TXCallBack)( DRV_Uart_Handle hDeviceHandle );
-} DRV_Uart_Cb;
+	uint8_t *pucTxBuffer;
+	uint8_t ucTxBufferLen;
+	DRV_Uart_Cb Callbacks;
+
+} DRV_Uart_Param;
 
 /** @} */ //
 /**************************************************************
@@ -69,14 +70,14 @@ DRV_Uart_Error DRV_Uart_Init( void );
  *  \return Driver error.
  */
 DRV_Uart_Error DRV_Uart_Terminate( void );
-/*! \fn DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle, DRV_Uart_Cb *ptCb)
+/*! \fn DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle, DRV_Uart_Param *ptParam)
  *  \brief Open an instance of the driver.
  *  \param pcDeviceName Name of the Device to open.
  *  \param phDeviceHandle Handle of the new instance.
  *  \param ptSettings device settings
  *  \return Driver error.
  */
-DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle , DRV_Uart_Cb *ptCb);
+DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDeviceHandle , DRV_Uart_Param *ptParam);
 /*! \fn DRV_Uart_Error DRV_Uart_Close( DRV_Uart_Handle hDeviceHandle );
  *  \brief Close an instance of the driver.
  *  \param hDeviceHandle Handle of the instance to close.
