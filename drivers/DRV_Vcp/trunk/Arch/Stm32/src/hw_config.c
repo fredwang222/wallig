@@ -68,6 +68,18 @@ void Set_USBClock(void)
 #endif /* STM32F10X_CL */
 }
 
+void cfg_Gpio( void )
+{
+	  GPIO_InitTypeDef GPIO_InitStructure;
+/* Enable USB_DISCONNECT GPIO clock */
+RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIO_DISCONNECT, ENABLE);
+
+/* Configure USB pull-up pin */
+GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_PIN;
+GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+GPIO_Init(USB_DISCONNECT, &GPIO_InitStructure);
+}
 /*******************************************************************************
 * Function Name  : Enter_LowPowerMode
 * Description    : Power-off system clocks and power while entering suspend mode
@@ -175,8 +187,8 @@ void USB_Cable_Config (FunctionalState NewState)
 void USB_To_USART_Send_Data(uint8_t* data_buffer, uint8_t Nb_bytes)
 {
 
-	if( DRV_Vcp_Data.callback != NULL )
-		DRV_Vcp_Data.callback( data_buffer ,Nb_bytes);
+	if( DRV_Vcp_Data.Rxcallback != NULL )
+		DRV_Vcp_Data.Rxcallback( data_buffer ,Nb_bytes);
 
  /* uint32_t i;
   
