@@ -55,6 +55,7 @@ USER_STANDARD_REQUESTS  *pUser_Standard_Requests;
 void DRV_USB_Init(void)
 {
 	//GLG TO be checked
+	cfg_Gpio();
 	Set_USBClock();
 	USB_Interrupts_Config();
   pInformation = &Device_Info;
