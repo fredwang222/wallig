@@ -15,9 +15,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usb_lib.h"
+#include "DRV_Usb_CFG.h"
 
-void Set_USBClock(void);
-void USB_Interrupts_Config(void);
+static void Set_USBClock(void);
+static void USB_Interrupts_Config(void);
+static void cfg_Gpio( void );
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -64,6 +66,52 @@ void DRV_USB_Init(void)
   pUser_Standard_Requests = &User_Standard_Requests;
   /* Initialize devices one by one */
   pProperty->Init();
+}
+
+static void cfg_Gpio( void )
+{
+	  GPIO_InitTypeDef GPIO_InitStructure;
+/* Enable USB_DISCONNECT GPIO clock */
+RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIO_DISCONNECT, ENABLE);
+
+/* Configure USB pull-up pin */
+GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_PIN;
+GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+GPIO_Init(USB_DISCONNECT, &GPIO_InitStructure);
+}
+
+/*******************************************************************************
+* Function Name  : USB_Interrupts_Config
+* Description    : Configures the USB interrupts
+* Input          : None.
+* Return         : None.
+*******************************************************************************/
+static void USB_Interrupts_Config(void)
+{
+  NVIC_InitTypeDef NVIC_InitStructure;
+
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+
+  NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+}
+
+/*******************************************************************************
+* Function Name  : Set_USBClock
+* Description    : Configures USB Clock input (48MHz)
+* Input          : None.
+* Return         : None.
+*******************************************************************************/
+static void Set_USBClock(void)
+{
+  /* Select USBCLK source */
+  RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);
+  /* Enable the USB clock */
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
 }
 
 /******************* (C) COPYRIGHT 2010 STMicroelectronics *****END OF FILE****/
