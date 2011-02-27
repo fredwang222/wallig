@@ -24,21 +24,4 @@
 #define CT_SDC				(CT_SD1|CT_SD2)
 #define CT_BLOCK			0x08
 
-/* Generic command */
-#define CTRL_SYNC			0	/* Mandatory for write functions */
-#define GET_SECTOR_COUNT	1	/* Mandatory for only f_mkfs() */
-#define GET_SECTOR_SIZE		2
-#define GET_BLOCK_SIZE		3	/* Mandatory for only f_mkfs() */
-#define CTRL_POWER			4
-#define CTRL_LOCK			5
-#define CTRL_EJECT			6
-/* MMC/SDC command */
-#define MMC_GET_TYPE		10
-#define MMC_GET_CSD			11
-#define MMC_GET_CID			12
-#define MMC_GET_OCR			13
-#define MMC_GET_SDSTAT		14
-/* ATA/CF command */
-#define ATA_GET_REV			20
-#define ATA_GET_MODEL		21
-#define ATA_GET_SN			22
+
