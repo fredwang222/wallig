@@ -31,13 +31,14 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE. */
 
+#include <stdint.h>
 #include <string.h>
 #include "DRV_Gpio.h"
 #include "DRV_Spi.h"
 #include "DRV_Timer.h"
 #include "LIB_SdCard.h"
 #include "inc/LIB_SdCard_p.h"
-#include "LIB_SdCard_Cfg.h"
+#include "LIB_SdCard_CFG.h"
 
 /* Define */
 #define SDCARD_FLAG_CARD_IN 0x0001
@@ -141,7 +142,7 @@ static LIB_SdCard_Error LIB_SdCard_Write_datablock ( const uint8_t *pucBuff,	uin
 {
 	uint8_t ucResp;
 
-	if (LIB_SdCard_Wait_Ready() != 0xFF) return FALSE;
+	if (LIB_SdCard_Wait_Ready() != 0xFF) return SdCard_Failed;
 
 	DRV_Spi_RW_Byte(SDCARD_Data.hSpi, ucToken);					/* Xmit data token */
 	if (ucToken != 0xFD)
@@ -460,7 +461,7 @@ LIB_SdCard_Error LIB_SdCard_Disk_ioctl ( uint8_t ucDrv,	 uint8_t ctrl, void *pBu
 				break;
 
 			case GET_SECTOR_COUNT :	/* Get number of sectors on the disk (uint32_t) */
-				if ((LIB_SdCard_Send_Cmd(CMD9, 0) == 0) && LIB_SdCard_ReceiveBlock(tucCsd, 16))
+				if ((LIB_SdCard_Send_Cmd(CMD9, 0) == 0) && ( LIB_SdCard_ReceiveBlock(tucCsd, 16)==SdCard_No_Error ))
 				{
 					if ((tucCsd[0] >> 6) == 1)
 					{	/* SDC version 2.00 */
@@ -487,7 +488,7 @@ LIB_SdCard_Error LIB_SdCard_Disk_ioctl ( uint8_t ucDrv,	 uint8_t ctrl, void *pBu
 				{	/* SDC ver 2.00 */
 					if (LIB_SdCard_Send_Cmd(ACMD13, 0) == 0) {	/* Read SD status */
 						DRV_Spi_RW_Byte( SDCARD_Data.hSpi , 0xff );
-						if (LIB_SdCard_ReceiveBlock(tucCsd, 16))
+						if (LIB_SdCard_ReceiveBlock(tucCsd, 16)==SdCard_No_Error )
 						{				/* Read partial block */
 							for (ucN = 64 - 16; ucN; ucN--)
 								DRV_Spi_RW_Byte( SDCARD_Data.hSpi , 0xff );	/* Purge trailing data */
@@ -498,7 +499,7 @@ LIB_SdCard_Error LIB_SdCard_Disk_ioctl ( uint8_t ucDrv,	 uint8_t ctrl, void *pBu
 				}
 				else
 				{					/* SDC ver 1.XX or MMC */
-					if ((LIB_SdCard_Send_Cmd(CMD9, 0) == 0) && LIB_SdCard_ReceiveBlock(tucCsd, 16))
+					if ((LIB_SdCard_Send_Cmd(CMD9, 0) == 0) && (LIB_SdCard_ReceiveBlock(tucCsd, 16)==SdCard_No_Error ))
 					{	/* Read CSD */
 						if (SDCARD_Data.ucCardType & CT_SD1)
 						{	/* SDC ver 1.XX */
@@ -520,13 +521,13 @@ LIB_SdCard_Error LIB_SdCard_Disk_ioctl ( uint8_t ucDrv,	 uint8_t ctrl, void *pBu
 
 			case MMC_GET_CSD :		/* Receive CSD as a data block (16 bytes) */
 				if (LIB_SdCard_Send_Cmd(CMD9, 0) == 0		/* READ_CSD */
-					&& LIB_SdCard_ReceiveBlock(pPtr, 16))
+					&& (LIB_SdCard_ReceiveBlock(pPtr, 16) ==SdCard_No_Error ))
 					eError = SdCard_No_Error;
 				break;
 
 			case MMC_GET_CID :		/* Receive CID as a data block (16 bytes) */
 				if (LIB_SdCard_Send_Cmd(CMD10, 0) == 0		/* READ_CID */
-					&& LIB_SdCard_ReceiveBlock(pPtr, 16))
+					&& (LIB_SdCard_ReceiveBlock(pPtr, 16)==SdCard_No_Error ))
 					eError = SdCard_No_Error;
 				break;
 
@@ -543,7 +544,7 @@ LIB_SdCard_Error LIB_SdCard_Disk_ioctl ( uint8_t ucDrv,	 uint8_t ctrl, void *pBu
 				if (LIB_SdCard_Send_Cmd(ACMD13, 0) == 0)
 				{	/* SD_STATUS */
 					DRV_Spi_RW_Byte( SDCARD_Data.hSpi , 0xff );
-					if (LIB_SdCard_ReceiveBlock(pPtr, 64))
+					if (LIB_SdCard_ReceiveBlock(pPtr, 64)==SdCard_No_Error )
 						eError = SdCard_No_Error;
 				}
 				break;
