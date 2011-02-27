@@ -23,7 +23,8 @@
 #include <string.h>
 #include "stm32f10x.h"
 #include "../../DRV_Gpio.h"
-#include "DRV_Gpio_Cfg.h"
+#include "DRV_Gpio_CFG.h"
+#include "Arch/DRV_Gpio_Arch.h"
 
 #define GPIO_DEVICE_COUNT ( sizeof(GPIO_DeviceCfg)/sizeof(GPIO_Cfg_t))
 

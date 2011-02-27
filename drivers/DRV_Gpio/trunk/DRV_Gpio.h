@@ -63,7 +63,7 @@
  */
 #ifndef DRV_GPIO_H
 #define  DRV_GPIO_H
-#include "Arch/DRV_Gpio_Arch.h"
+
 #define BOOL unsigned char
 /**************************************************************
 						Typedef
