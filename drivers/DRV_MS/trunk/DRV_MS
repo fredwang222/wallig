@@ -1,0 +1,766 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"memory.c"
+  23              	.Ltext0:
+  24              		.file 1 "Arch/Stm32/src/memory.c"
+ 22736              		.align	2
+ 22739              	Block_Read_count:
+ 22740 0000 00000000 		.space	4
+ 22741              		.comm	Block_offset,4,4
+ 22742              		.global	Counter
+ 22743              		.align	2
+ 22746              	Counter:
+ 22747 0004 00000000 		.space	4
+ 22748              		.comm	Idx,4,4
+ 22749              		.comm	Data_Buffer,512,4
+ 22750              		.global	TransferState
+ 22753              	TransferState:
+ 22754 0008 00       		.space	1
+ 22755              		.text
+ 22756              		.align	2
+ 22757              		.global	Read_Memory
+ 22758              		.thumb
+ 22759              		.thumb_func
+ 22761              	Read_Memory:
+ 22762              	.LFB29:
+   1:Arch/Stm32/src/memory.c **** /******************** (C) COPYRIGHT 2010 STMicroelectronics ********************
+   2:Arch/Stm32/src/memory.c **** * File Name          : memory.c
+   3:Arch/Stm32/src/memory.c **** * Author             : MCD Application Team
+   4:Arch/Stm32/src/memory.c **** * Version            : V3.2.1
+   5:Arch/Stm32/src/memory.c **** * Date               : 07/05/2010
+   6:Arch/Stm32/src/memory.c **** * Description        : Memory management layer
+   7:Arch/Stm32/src/memory.c **** ********************************************************************************
+   8:Arch/Stm32/src/memory.c **** * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+   9:Arch/Stm32/src/memory.c **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  10:Arch/Stm32/src/memory.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  11:Arch/Stm32/src/memory.c **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  12:Arch/Stm32/src/memory.c **** * CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  13:Arch/Stm32/src/memory.c **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:Arch/Stm32/src/memory.c **** *******************************************************************************/
+  15:Arch/Stm32/src/memory.c **** 
+  16:Arch/Stm32/src/memory.c **** /* Includes ------------------------------------------------------------------*/
+  17:Arch/Stm32/src/memory.c **** 
+  18:Arch/Stm32/src/memory.c **** #include <stdint.h>
+  19:Arch/Stm32/src/memory.c **** #include "DRV_MS.h"
+  20:Arch/Stm32/src/memory.c **** #include "DRV_Usb_CFG.h"
+  21:Arch/Stm32/src/memory.c **** #include "DRV_MS_p.h"
+  22:Arch/Stm32/src/memory.c **** #include "memory.h"
+  23:Arch/Stm32/src/memory.c **** #include "usb_scsi.h"
+  24:Arch/Stm32/src/memory.c **** #include "usb_bot.h"
+  25:Arch/Stm32/src/memory.c **** #include "usb_regs.h"
+  26:Arch/Stm32/src/memory.c **** #include "usb_mem.h"
+  27:Arch/Stm32/src/memory.c **** #include "hw_config.h"
+  28:Arch/Stm32/src/memory.c **** #include "usb_lib.h"
+  29:Arch/Stm32/src/memory.c **** 
+  30:Arch/Stm32/src/memory.c **** 
+  31:Arch/Stm32/src/memory.c **** /* Private typedef -----------------------------------------------------------*/
+  32:Arch/Stm32/src/memory.c **** /* Private define ------------------------------------------------------------*/
+  33:Arch/Stm32/src/memory.c **** /* Private macro -------------------------------------------------------------*/
+  34:Arch/Stm32/src/memory.c **** /* Private variables ---------------------------------------------------------*/
+  35:Arch/Stm32/src/memory.c **** __IO uint32_t Block_Read_count = 0;
+  36:Arch/Stm32/src/memory.c **** __IO uint32_t Block_offset;
+  37:Arch/Stm32/src/memory.c **** __IO uint32_t Counter = 0;
+  38:Arch/Stm32/src/memory.c **** uint32_t  Idx;
+  39:Arch/Stm32/src/memory.c **** uint32_t Data_Buffer[BULK_MAX_PACKET_SIZE *2]; /* 512 bytes*/
+  40:Arch/Stm32/src/memory.c **** uint8_t TransferState = TXFR_IDLE;
+  41:Arch/Stm32/src/memory.c **** /* Extern variables ----------------------------------------------------------*/
+  42:Arch/Stm32/src/memory.c **** extern uint8_t Bulk_Data_Buff[BULK_MAX_PACKET_SIZE];  /* data buffer*/
+  43:Arch/Stm32/src/memory.c **** extern uint16_t Data_Len;
+  44:Arch/Stm32/src/memory.c **** extern uint8_t Bot_State;
+  45:Arch/Stm32/src/memory.c **** extern Bulk_Only_CBW CBW;
+  46:Arch/Stm32/src/memory.c **** extern Bulk_Only_CSW CSW;
+  47:Arch/Stm32/src/memory.c **** 
+  48:Arch/Stm32/src/memory.c **** /* Private function prototypes -----------------------------------------------*/
+  49:Arch/Stm32/src/memory.c **** /* Extern function prototypes ------------------------------------------------*/
+  50:Arch/Stm32/src/memory.c **** /* Private functions ---------------------------------------------------------*/
+  51:Arch/Stm32/src/memory.c **** 
+  52:Arch/Stm32/src/memory.c **** /*******************************************************************************
+  53:Arch/Stm32/src/memory.c **** * Function Name  : Read_Memory
+  54:Arch/Stm32/src/memory.c **** * Description    : Handle the Read operation from the microSD card.
+  55:Arch/Stm32/src/memory.c **** * Input          : None.
+  56:Arch/Stm32/src/memory.c **** * Output         : None.
+  57:Arch/Stm32/src/memory.c **** * Return         : None.
+  58:Arch/Stm32/src/memory.c **** *******************************************************************************/
+  59:Arch/Stm32/src/memory.c **** void Read_Memory(uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
+  60:Arch/Stm32/src/memory.c **** {
+ 22763              		.loc 1 60 0
+ 22764              		.cfi_startproc
+ 22765              		@ args = 0, pretend = 0, frame = 16
+ 22766              		@ frame_needed = 1, uses_anonymous_args = 0
+ 22767 0000 B0B5     		push	{r4, r5, r7, lr}
+ 22768              	.LCFI0:
+ 22769              		.cfi_def_cfa_offset 16
+ 22770 0002 84B0     		sub	sp, sp, #16
+ 22771              	.LCFI1:
+ 22772              		.cfi_def_cfa_offset 32
+ 22773 0004 00AF     		add	r7, sp, #0
+ 22774              		.cfi_offset 14, -4
+ 22775              		.cfi_offset 7, -8
+ 22776              		.cfi_offset 5, -12
+ 22777              		.cfi_offset 4, -16
+ 22778              	.LCFI2:
+ 22779              		.cfi_def_cfa_register 7
+ 22780 0006 0346     		mov	r3, r0
+ 22781 0008 B960     		str	r1, [r7, #8]
+ 22782 000a 7A60     		str	r2, [r7, #4]
+ 22783 000c FB73     		strb	r3, [r7, #15]
+  61:Arch/Stm32/src/memory.c ****   static uint32_t Offset, Length;
+  62:Arch/Stm32/src/memory.c **** 
+  63:Arch/Stm32/src/memory.c ****   if (TransferState == TXFR_IDLE )
+ 22784              		.loc 1 63 0
+ 22785 000e 40F20003 		movw	r3, #:lower16:TransferState
+ 22786 0012 C0F20003 		movt	r3, #:upper16:TransferState
+ 22787 0016 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 22788 0018 002B     		cmp	r3, #0
+ 22789 001a 34D1     		bne	.L2
+  64:Arch/Stm32/src/memory.c ****   {
+  65:Arch/Stm32/src/memory.c ****     Offset = Memory_Offset * DRV_MS_MemDevice[lun].Block_Size;
+ 22790              		.loc 1 65 0
+ 22791 001c F97B     		ldrb	r1, [r7, #15]	@ zero_extendqisi2
+ 22792 001e 40F20002 		movw	r2, #:lower16:DRV_MS_MemDevice
+ 22793 0022 C0F20002 		movt	r2, #:upper16:DRV_MS_MemDevice
+ 22794 0026 0B46     		mov	r3, r1
+ 22795 0028 4FEAC303 		lsl	r3, r3, #3
+ 22796 002c 5B1A     		subs	r3, r3, r1
+ 22797 002e 4FEA8303 		lsl	r3, r3, #2
+ 22798 0032 D318     		adds	r3, r2, r3
+ 22799 0034 03F11403 		add	r3, r3, #20
+ 22800 0038 1B68     		ldr	r3, [r3, #0]
+ 22801 003a BA68     		ldr	r2, [r7, #8]
+ 22802 003c 02FB03F2 		mul	r2, r2, r3
+ 22803 0040 40F20003 		movw	r3, #:lower16:Offset.4093
+ 22804 0044 C0F20003 		movt	r3, #:upper16:Offset.4093
+ 22805 0048 1A60     		str	r2, [r3, #0]
+  66:Arch/Stm32/src/memory.c ****     Length = Transfer_Length * DRV_MS_MemDevice[lun].Block_Size;
+ 22806              		.loc 1 66 0
+ 22807 004a F97B     		ldrb	r1, [r7, #15]	@ zero_extendqisi2
+ 22808 004c 40F20002 		movw	r2, #:lower16:DRV_MS_MemDevice
+ 22809 0050 C0F20002 		movt	r2, #:upper16:DRV_MS_MemDevice
+ 22810 0054 0B46     		mov	r3, r1
+ 22811 0056 4FEAC303 		lsl	r3, r3, #3
+ 22812 005a 5B1A     		subs	r3, r3, r1
+ 22813 005c 4FEA8303 		lsl	r3, r3, #2
+ 22814 0060 D318     		adds	r3, r2, r3
+ 22815 0062 03F11403 		add	r3, r3, #20
+ 22816 0066 1B68     		ldr	r3, [r3, #0]
+ 22817 0068 7A68     		ldr	r2, [r7, #4]
+ 22818 006a 02FB03F2 		mul	r2, r2, r3
+ 22819 006e 40F20003 		movw	r3, #:lower16:Length.4094
+ 22820 0072 C0F20003 		movt	r3, #:upper16:Length.4094
+ 22821 0076 1A60     		str	r2, [r3, #0]
+  67:Arch/Stm32/src/memory.c ****     TransferState = TXFR_ONGOING;
+ 22822              		.loc 1 67 0
+ 22823 0078 40F20003 		movw	r3, #:lower16:TransferState
+ 22824 007c C0F20003 		movt	r3, #:upper16:TransferState
+ 22825 0080 4FF00102 		mov	r2, #1
+ 22826 0084 1A70     		strb	r2, [r3, #0]
+ 22827              	.L2:
+  68:Arch/Stm32/src/memory.c ****   }
+  69:Arch/Stm32/src/memory.c **** 
+  70:Arch/Stm32/src/memory.c ****   if (TransferState == TXFR_ONGOING )
+ 22828              		.loc 1 70 0
+ 22829 0086 40F20003 		movw	r3, #:lower16:TransferState
+ 22830 008a C0F20003 		movt	r3, #:upper16:TransferState
+ 22831 008e 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 22832 0090 012B     		cmp	r3, #1
+ 22833 0092 40F0B580 		bne	.L3
+  71:Arch/Stm32/src/memory.c ****   {
+  72:Arch/Stm32/src/memory.c ****     if (!Block_Read_count)
+ 22834              		.loc 1 72 0
+ 22835 0096 40F20003 		movw	r3, #:lower16:Block_Read_count
+ 22836 009a C0F20003 		movt	r3, #:upper16:Block_Read_count
+ 22837 009e 1B68     		ldr	r3, [r3, #0]
+ 22838 00a0 002B     		cmp	r3, #0
+ 22839 00a2 54D1     		bne	.L4
+  73:Arch/Stm32/src/memory.c ****     {
+  74:Arch/Stm32/src/memory.c ****       /*MAL_Read(lun ,
+  75:Arch/Stm32/src/memory.c ****                Offset ,
+  76:Arch/Stm32/src/memory.c ****                Data_Buffer,
+  77:Arch/Stm32/src/memory.c ****                DRV_MS_MemDevice[lun].Block_Size);*/
+  78:Arch/Stm32/src/memory.c ****    	  DRV_MS_MemDevice[lun].tIOAccess.Read (lun ,
+ 22840              		.loc 1 78 0
+ 22841 00a4 F97B     		ldrb	r1, [r7, #15]	@ zero_extendqisi2
+ 22842 00a6 40F20002 		movw	r2, #:lower16:DRV_MS_MemDevice
+ 22843 00aa C0F20002 		movt	r2, #:upper16:DRV_MS_MemDevice
+ 22844 00ae 0B46     		mov	r3, r1
+ 22845 00b0 4FEAC303 		lsl	r3, r3, #3
+ 22846 00b4 5B1A     		subs	r3, r3, r1
+ 22847 00b6 4FEA8303 		lsl	r3, r3, #2
+ 22848 00ba D318     		adds	r3, r2, r3
+ 22849 00bc 03F10803 		add	r3, r3, #8
+ 22850 00c0 1C68     		ldr	r4, [r3, #0]
+ 22851 00c2 40F20003 		movw	r3, #:lower16:Offset.4093
+ 22852 00c6 C0F20003 		movt	r3, #:upper16:Offset.4093
+ 22853 00ca 1D68     		ldr	r5, [r3, #0]
+  79:Arch/Stm32/src/memory.c **** 											Offset ,
+  80:Arch/Stm32/src/memory.c **** 											Data_Buffer,
+  81:Arch/Stm32/src/memory.c **** 											DRV_MS_MemDevice[lun].Block_Size);
+ 22854              		.loc 1 81 0
+ 22855 00cc F97B     		ldrb	r1, [r7, #15]	@ zero_extendqisi2
+ 22856 00ce 40F20002 		movw	r2, #:lower16:DRV_MS_MemDevice
+ 22857 00d2 C0F20002 		movt	r2, #:upper16:DRV_MS_MemDevice
+ 22858 00d6 0B46     		mov	r3, r1
+ 22859 00d8 4FEAC303 		lsl	r3, r3, #3
+ 22860 00dc 5B1A     		subs	r3, r3, r1
+ 22861 00de 4FEA8303 		lsl	r3, r3, #2
+ 22862 00e2 D318     		adds	r3, r2, r3
+ 22863 00e4 03F11403 		add	r3, r3, #20
+ 22864 00e8 1B68     		ldr	r3, [r3, #0]
+  78:Arch/Stm32/src/memory.c ****    	  DRV_MS_MemDevice[lun].tIOAccess.Read (lun ,
+ 22865              		.loc 1 78 0
+ 22866 00ea 9BB2     		uxth	r3, r3
+ 22867 00ec FA7B     		ldrb	r2, [r7, #15]	@ zero_extendqisi2
+ 22868 00ee 1046     		mov	r0, r2
+ 22869 00f0 2946     		mov	r1, r5
+ 22870 00f2 40F20002 		movw	r2, #:lower16:Data_Buffer
+ 22871 00f6 C0F20002 		movt	r2, #:upper16:Data_Buffer
+ 22872 00fa A047     		blx	r4
+  82:Arch/Stm32/src/memory.c ****       USB_SIL_Write(EP1_IN, (uint8_t *)Data_Buffer, BULK_MAX_PACKET_SIZE);
+ 22873              		.loc 1 82 0
+ 22874 00fc 40F20003 		movw	r3, #:lower16:Data_Buffer
+ 22875 0100 C0F20003 		movt	r3, #:upper16:Data_Buffer
+ 22876 0104 4FF08100 		mov	r0, #129
+ 22877 0108 1946     		mov	r1, r3
+ 22878 010a 4FF04002 		mov	r2, #64
+ 22879 010e FFF7FEFF 		bl	USB_SIL_Write
+  83:Arch/Stm32/src/memory.c **** 
+  84:Arch/Stm32/src/memory.c ****       Block_Read_count = DRV_MS_MemDevice[lun].Block_Size - BULK_MAX_PACKET_SIZE;
+ 22880              		.loc 1 84 0
+ 22881 0112 F97B     		ldrb	r1, [r7, #15]	@ zero_extendqisi2
+ 22882 0114 40F20002 		movw	r2, #:lower16:DRV_MS_MemDevice
+ 22883 0118 C0F20002 		movt	r2, #:upper16:DRV_MS_MemDevice
+ 22884 011c 0B46     		mov	r3, r1
+ 22885 011e 4FEAC303 		lsl	r3, r3, #3
+ 22886 0122 5B1A     		subs	r3, r3, r1
+ 22887 0124 4FEA8303 		lsl	r3, r3, #2
+ 22888 0128 D318     		adds	r3, r2, r3
+ 22889 012a 03F11403 		add	r3, r3, #20
+ 22890 012e 1B68     		ldr	r3, [r3, #0]
+ 22891 0130 A3F14002 		sub	r2, r3, #64
+ 22892 0134 40F20003 		movw	r3, #:lower16:Block_Read_count
+ 22893 0138 C0F20003 		movt	r3, #:upper16:Block_Read_count
+ 22894 013c 1A60     		str	r2, [r3, #0]
+  85:Arch/Stm32/src/memory.c ****       Block_offset = BULK_MAX_PACKET_SIZE;
+ 22895              		.loc 1 85 0
+ 22896 013e 40F20003 		movw	r3, #:lower16:Block_offset
+ 22897 0142 C0F20003 		movt	r3, #:upper16:Block_offset
+ 22898 0146 4FF04002 		mov	r2, #64
+ 22899 014a 1A60     		str	r2, [r3, #0]
+ 22900 014c 28E0     		b	.L5
+ 22901              	.L4:
+  86:Arch/Stm32/src/memory.c ****     }
+  87:Arch/Stm32/src/memory.c ****     else
+  88:Arch/Stm32/src/memory.c ****     {
+  89:Arch/Stm32/src/memory.c ****       USB_SIL_Write(EP1_IN, (uint8_t *)Data_Buffer + Block_offset, BULK_MAX_PACKET_SIZE);
+ 22902              		.loc 1 89 0
+ 22903 014e 40F20003 		movw	r3, #:lower16:Data_Buffer
+ 22904 0152 C0F20003 		movt	r3, #:upper16:Data_Buffer
+ 22905 0156 40F20002 		movw	r2, #:lower16:Block_offset
+ 22906 015a C0F20002 		movt	r2, #:upper16:Block_offset
+ 22907 015e 1268     		ldr	r2, [r2, #0]
+ 22908 0160 9B18     		adds	r3, r3, r2
+ 22909 0162 4FF08100 		mov	r0, #129
+ 22910 0166 1946     		mov	r1, r3
+ 22911 0168 4FF04002 		mov	r2, #64
+ 22912 016c FFF7FEFF 		bl	USB_SIL_Write
+  90:Arch/Stm32/src/memory.c **** 
+  91:Arch/Stm32/src/memory.c ****       Block_Read_count -= BULK_MAX_PACKET_SIZE;
+ 22913              		.loc 1 91 0
+ 22914 0170 40F20003 		movw	r3, #:lower16:Block_Read_count
+ 22915 0174 C0F20003 		movt	r3, #:upper16:Block_Read_count
+ 22916 0178 1B68     		ldr	r3, [r3, #0]
+ 22917 017a A3F14002 		sub	r2, r3, #64
+ 22918 017e 40F20003 		movw	r3, #:lower16:Block_Read_count
+ 22919 0182 C0F20003 		movt	r3, #:upper16:Block_Read_count
+ 22920 0186 1A60     		str	r2, [r3, #0]
+  92:Arch/Stm32/src/memory.c ****       Block_offset += BULK_MAX_PACKET_SIZE;
+ 22921              		.loc 1 92 0
+ 22922 0188 40F20003 		movw	r3, #:lower16:Block_offset
+ 22923 018c C0F20003 		movt	r3, #:upper16:Block_offset
+ 22924 0190 1B68     		ldr	r3, [r3, #0]
+ 22925 0192 03F14002 		add	r2, r3, #64
+ 22926 0196 40F20003 		movw	r3, #:lower16:Block_offset
+ 22927 019a C0F20003 		movt	r3, #:upper16:Block_offset
+ 22928 019e 1A60     		str	r2, [r3, #0]
+ 22929              	.L5:
+  93:Arch/Stm32/src/memory.c ****     }
+  94:Arch/Stm32/src/memory.c **** 
+  95:Arch/Stm32/src/memory.c ****     SetEPTxCount(ENDP1, BULK_MAX_PACKET_SIZE);
+ 22930              		.loc 1 95 0
+ 22931 01a0 4FF00100 		mov	r0, #1
+ 22932 01a4 4FF04001 		mov	r1, #64
+ 22933 01a8 FFF7FEFF 		bl	SetEPTxCount
+  96:Arch/Stm32/src/memory.c **** #ifndef USE_STM3210C_EVAL
+  97:Arch/Stm32/src/memory.c ****     SetEPTxStatus(ENDP1, EP_TX_VALID);
+ 22934              		.loc 1 97 0
+ 22935 01ac 4FF00100 		mov	r0, #1
+ 22936 01b0 4FF03001 		mov	r1, #48
+ 22937 01b4 FFF7FEFF 		bl	SetEPTxStatus
+  98:Arch/Stm32/src/memory.c **** #endif    
+  99:Arch/Stm32/src/memory.c ****     Offset += BULK_MAX_PACKET_SIZE;
+ 22938              		.loc 1 99 0
+ 22939 01b8 40F20003 		movw	r3, #:lower16:Offset.4093
+ 22940 01bc C0F20003 		movt	r3, #:upper16:Offset.4093
+ 22941 01c0 1B68     		ldr	r3, [r3, #0]
+ 22942 01c2 03F14002 		add	r2, r3, #64
+ 22943 01c6 40F20003 		movw	r3, #:lower16:Offset.4093
+ 22944 01ca C0F20003 		movt	r3, #:upper16:Offset.4093
+ 22945 01ce 1A60     		str	r2, [r3, #0]
+ 100:Arch/Stm32/src/memory.c ****     Length -= BULK_MAX_PACKET_SIZE;
+ 22946              		.loc 1 100 0
+ 22947 01d0 40F20003 		movw	r3, #:lower16:Length.4094
+ 22948 01d4 C0F20003 		movt	r3, #:upper16:Length.4094
+ 22949 01d8 1B68     		ldr	r3, [r3, #0]
+ 22950 01da A3F14002 		sub	r2, r3, #64
+ 22951 01de 40F20003 		movw	r3, #:lower16:Length.4094
+ 22952 01e2 C0F20003 		movt	r3, #:upper16:Length.4094
+ 22953 01e6 1A60     		str	r2, [r3, #0]
+ 101:Arch/Stm32/src/memory.c **** 
+ 102:Arch/Stm32/src/memory.c ****     CSW.dDataResidue -= BULK_MAX_PACKET_SIZE;
+ 22954              		.loc 1 102 0
+ 22955 01e8 40F20003 		movw	r3, #:lower16:CSW
+ 22956 01ec C0F20003 		movt	r3, #:upper16:CSW
+ 22957 01f0 9B68     		ldr	r3, [r3, #8]
+ 22958 01f2 A3F14002 		sub	r2, r3, #64
+ 22959 01f6 40F20003 		movw	r3, #:lower16:CSW
+ 22960 01fa C0F20003 		movt	r3, #:upper16:CSW
+ 22961 01fe 9A60     		str	r2, [r3, #8]
+ 22962              	.L3:
+ 103:Arch/Stm32/src/memory.c ****    // Led_RW_ON();
+ 104:Arch/Stm32/src/memory.c ****   }
+ 105:Arch/Stm32/src/memory.c ****   if (Length == 0)
+ 22963              		.loc 1 105 0
+ 22964 0200 40F20003 		movw	r3, #:lower16:Length.4094
+ 22965 0204 C0F20003 		movt	r3, #:upper16:Length.4094
+ 22966 0208 1B68     		ldr	r3, [r3, #0]
+ 22967 020a 002B     		cmp	r3, #0
+ 22968 020c 22D1     		bne	.L1
+ 106:Arch/Stm32/src/memory.c ****   {
+ 107:Arch/Stm32/src/memory.c ****     Block_Read_count = 0;
+ 22969              		.loc 1 107 0
+ 22970 020e 40F20003 		movw	r3, #:lower16:Block_Read_count
+ 22971 0212 C0F20003 		movt	r3, #:upper16:Block_Read_count
+ 22972 0216 4FF00002 		mov	r2, #0
+ 22973 021a 1A60     		str	r2, [r3, #0]
+ 108:Arch/Stm32/src/memory.c ****     Block_offset = 0;
+ 22974              		.loc 1 108 0
+ 22975 021c 40F20003 		movw	r3, #:lower16:Block_offset
+ 22976 0220 C0F20003 		movt	r3, #:upper16:Block_offset
+ 22977 0224 4FF00002 		mov	r2, #0
+ 22978 0228 1A60     		str	r2, [r3, #0]
+ 109:Arch/Stm32/src/memory.c ****     Offset = 0;
+ 22979              		.loc 1 109 0
+ 22980 022a 40F20003 		movw	r3, #:lower16:Offset.4093
+ 22981 022e C0F20003 		movt	r3, #:upper16:Offset.4093
+ 22982 0232 4FF00002 		mov	r2, #0
+ 22983 0236 1A60     		str	r2, [r3, #0]
+ 110:Arch/Stm32/src/memory.c ****     Bot_State = BOT_DATA_IN_LAST;
+ 22984              		.loc 1 110 0
+ 22985 0238 40F20003 		movw	r3, #:lower16:Bot_State
+ 22986 023c C0F20003 		movt	r3, #:upper16:Bot_State
+ 22987 0240 4FF00302 		mov	r2, #3
+ 22988 0244 1A70     		strb	r2, [r3, #0]
+ 111:Arch/Stm32/src/memory.c ****     TransferState = TXFR_IDLE;
+ 22989              		.loc 1 111 0
+ 22990 0246 40F20003 		movw	r3, #:lower16:TransferState
+ 22991 024a C0F20003 		movt	r3, #:upper16:TransferState
+ 22992 024e 4FF00002 		mov	r2, #0
+ 22993 0252 1A70     		strb	r2, [r3, #0]
+ 22994              	.L1:
+ 112:Arch/Stm32/src/memory.c ****     //Led_RW_OFF();
+ 113:Arch/Stm32/src/memory.c ****   }
+ 114:Arch/Stm32/src/memory.c **** }
+ 22995              		.loc 1 114 0
+ 22996 0254 07F11007 		add	r7, r7, #16
+ 22997 0258 BD46     		mov	sp, r7
+ 22998 025a B0BD     		pop	{r4, r5, r7, pc}
+ 22999              		.cfi_endproc
+ 23000              	.LFE29:
+ 23002              		.align	2
+ 23003              		.global	Write_Memory
+ 23004              		.thumb
+ 23005              		.thumb_func
+ 23007              	Write_Memory:
+ 23008              	.LFB30:
+ 115:Arch/Stm32/src/memory.c **** 
+ 116:Arch/Stm32/src/memory.c **** /*******************************************************************************
+ 117:Arch/Stm32/src/memory.c **** * Function Name  : Write_Memory
+ 118:Arch/Stm32/src/memory.c **** * Description    : Handle the Write operation to the microSD card.
+ 119:Arch/Stm32/src/memory.c **** * Input          : None.
+ 120:Arch/Stm32/src/memory.c **** * Output         : None.
+ 121:Arch/Stm32/src/memory.c **** * Return         : None.
+ 122:Arch/Stm32/src/memory.c **** *******************************************************************************/
+ 123:Arch/Stm32/src/memory.c **** void Write_Memory (uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
+ 124:Arch/Stm32/src/memory.c **** {
+ 23009              		.loc 1 124 0
+ 23010              		.cfi_startproc
+ 23011              		@ args = 0, pretend = 0, frame = 24
+ 23012              		@ frame_needed = 1, uses_anonymous_args = 0
+ 23013 025c B0B5     		push	{r4, r5, r7, lr}
+ 23014              	.LCFI3:
+ 23015              		.cfi_def_cfa_offset 16
+ 23016 025e 86B0     		sub	sp, sp, #24
+ 23017              	.LCFI4:
+ 23018              		.cfi_def_cfa_offset 40
+ 23019 0260 00AF     		add	r7, sp, #0
+ 23020              		.cfi_offset 14, -4
+ 23021              		.cfi_offset 7, -8
+ 23022              		.cfi_offset 5, -12
+ 23023              		.cfi_offset 4, -16
+ 23024              	.LCFI5:
+ 23025              		.cfi_def_cfa_register 7
+ 23026 0262 0346     		mov	r3, r0
+ 23027 0264 B960     		str	r1, [r7, #8]
+ 23028 0266 7A60     		str	r2, [r7, #4]
+ 23029 0268 FB73     		strb	r3, [r7, #15]
+ 125:Arch/Stm32/src/memory.c **** 
+ 126:Arch/Stm32/src/memory.c ****   static uint32_t W_Offset, W_Length;
+ 127:Arch/Stm32/src/memory.c **** 
+ 128:Arch/Stm32/src/memory.c ****   uint32_t temp =  Counter + 64;
+ 23030              		.loc 1 128 0
+ 23031 026a 40F20003 		movw	r3, #:lower16:Counter
+ 23032 026e C0F20003 		movt	r3, #:upper16:Counter
+ 23033 0272 1B68     		ldr	r3, [r3, #0]
+ 23034 0274 03F14003 		add	r3, r3, #64
+ 23035 0278 7B61     		str	r3, [r7, #20]
+ 129:Arch/Stm32/src/memory.c **** 
+ 130:Arch/Stm32/src/memory.c ****   if (TransferState == TXFR_IDLE )
+ 23036              		.loc 1 130 0
+ 23037 027a 40F20003 		movw	r3, #:lower16:TransferState
+ 23038 027e C0F20003 		movt	r3, #:upper16:TransferState
+ 23039 0282 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 23040 0284 002B     		cmp	r3, #0
+ 23041 0286 34D1     		bne	.L8
+ 131:Arch/Stm32/src/memory.c ****   {
+ 132:Arch/Stm32/src/memory.c ****     W_Offset = Memory_Offset * DRV_MS_MemDevice[lun].Block_Size;
+ 23042              		.loc 1 132 0
+ 23043 0288 F97B     		ldrb	r1, [r7, #15]	@ zero_extendqisi2
+ 23044 028a 40F20002 		movw	r2, #:lower16:DRV_MS_MemDevice
+ 23045 028e C0F20002 		movt	r2, #:upper16:DRV_MS_MemDevice
+ 23046 0292 0B46     		mov	r3, r1
+ 23047 0294 4FEAC303 		lsl	r3, r3, #3
+ 23048 0298 5B1A     		subs	r3, r3, r1
+ 23049 029a 4FEA8303 		lsl	r3, r3, #2
+ 23050 029e D318     		adds	r3, r2, r3
+ 23051 02a0 03F11403 		add	r3, r3, #20
+ 23052 02a4 1B68     		ldr	r3, [r3, #0]
+ 23053 02a6 BA68     		ldr	r2, [r7, #8]
+ 23054 02a8 02FB03F2 		mul	r2, r2, r3
+ 23055 02ac 40F20003 		movw	r3, #:lower16:W_Offset.4100
+ 23056 02b0 C0F20003 		movt	r3, #:upper16:W_Offset.4100
+ 23057 02b4 1A60     		str	r2, [r3, #0]
+ 133:Arch/Stm32/src/memory.c ****     W_Length = Transfer_Length * DRV_MS_MemDevice[lun].Block_Size;
+ 23058              		.loc 1 133 0
+ 23059 02b6 F97B     		ldrb	r1, [r7, #15]	@ zero_extendqisi2
+ 23060 02b8 40F20002 		movw	r2, #:lower16:DRV_MS_MemDevice
+ 23061 02bc C0F20002 		movt	r2, #:upper16:DRV_MS_MemDevice
+ 23062 02c0 0B46     		mov	r3, r1
+ 23063 02c2 4FEAC303 		lsl	r3, r3, #3
+ 23064 02c6 5B1A     		subs	r3, r3, r1
+ 23065 02c8 4FEA8303 		lsl	r3, r3, #2
+ 23066 02cc D318     		adds	r3, r2, r3
+ 23067 02ce 03F11403 		add	r3, r3, #20
+ 23068 02d2 1B68     		ldr	r3, [r3, #0]
+ 23069 02d4 7A68     		ldr	r2, [r7, #4]
+ 23070 02d6 02FB03F2 		mul	r2, r2, r3
+ 23071 02da 40F20003 		movw	r3, #:lower16:W_Length.4101
+ 23072 02de C0F20003 		movt	r3, #:upper16:W_Length.4101
+ 23073 02e2 1A60     		str	r2, [r3, #0]
+ 134:Arch/Stm32/src/memory.c ****     TransferState = TXFR_ONGOING;
+ 23074              		.loc 1 134 0
+ 23075 02e4 40F20003 		movw	r3, #:lower16:TransferState
+ 23076 02e8 C0F20003 		movt	r3, #:upper16:TransferState
+ 23077 02ec 4FF00102 		mov	r2, #1
+ 23078 02f0 1A70     		strb	r2, [r3, #0]
+ 23079              	.L8:
+ 135:Arch/Stm32/src/memory.c ****   }
+ 136:Arch/Stm32/src/memory.c **** 
+ 137:Arch/Stm32/src/memory.c ****   if (TransferState == TXFR_ONGOING )
+ 23080              		.loc 1 137 0
+ 23081 02f2 40F20003 		movw	r3, #:lower16:TransferState
+ 23082 02f6 C0F20003 		movt	r3, #:upper16:TransferState
+ 23083 02fa 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 23084 02fc 012B     		cmp	r3, #1
+ 23085 02fe 40F0CD80 		bne	.L9
+ 138:Arch/Stm32/src/memory.c ****   {
+ 139:Arch/Stm32/src/memory.c **** 
+ 140:Arch/Stm32/src/memory.c ****     for (Idx = 0 ; Counter < temp; Counter++)
+ 23086              		.loc 1 140 0
+ 23087 0302 40F20003 		movw	r3, #:lower16:Idx
+ 23088 0306 C0F20003 		movt	r3, #:upper16:Idx
+ 23089 030a 4FF00002 		mov	r2, #0
+ 23090 030e 1A60     		str	r2, [r3, #0]
+ 23091 0310 27E0     		b	.L10
+ 23092              	.L11:
+ 141:Arch/Stm32/src/memory.c ****     {
+ 142:Arch/Stm32/src/memory.c ****       *((uint8_t *)Data_Buffer + Counter) = Bulk_Data_Buff[Idx++];
+ 23093              		.loc 1 142 0 discriminator 2
+ 23094 0312 40F20003 		movw	r3, #:lower16:Data_Buffer
+ 23095 0316 C0F20003 		movt	r3, #:upper16:Data_Buffer
+ 23096 031a 40F20002 		movw	r2, #:lower16:Counter
+ 23097 031e C0F20002 		movt	r2, #:upper16:Counter
+ 23098 0322 1268     		ldr	r2, [r2, #0]
+ 23099 0324 9918     		adds	r1, r3, r2
+ 23100 0326 40F20003 		movw	r3, #:lower16:Idx
+ 23101 032a C0F20003 		movt	r3, #:upper16:Idx
+ 23102 032e 1A68     		ldr	r2, [r3, #0]
+ 23103 0330 40F20003 		movw	r3, #:lower16:Bulk_Data_Buff
+ 23104 0334 C0F20003 		movt	r3, #:upper16:Bulk_Data_Buff
+ 23105 0338 9B5C     		ldrb	r3, [r3, r2]	@ zero_extendqisi2
+ 23106 033a 0B70     		strb	r3, [r1, #0]
+ 23107 033c 02F10102 		add	r2, r2, #1
+ 23108 0340 40F20003 		movw	r3, #:lower16:Idx
+ 23109 0344 C0F20003 		movt	r3, #:upper16:Idx
+ 23110 0348 1A60     		str	r2, [r3, #0]
+ 140:Arch/Stm32/src/memory.c ****     for (Idx = 0 ; Counter < temp; Counter++)
+ 23111              		.loc 1 140 0 discriminator 2
+ 23112 034a 40F20003 		movw	r3, #:lower16:Counter
+ 23113 034e C0F20003 		movt	r3, #:upper16:Counter
+ 23114 0352 1B68     		ldr	r3, [r3, #0]
+ 23115 0354 03F10102 		add	r2, r3, #1
+ 23116 0358 40F20003 		movw	r3, #:lower16:Counter
+ 23117 035c C0F20003 		movt	r3, #:upper16:Counter
+ 23118 0360 1A60     		str	r2, [r3, #0]
+ 23119              	.L10:
+ 140:Arch/Stm32/src/memory.c ****     for (Idx = 0 ; Counter < temp; Counter++)
+ 23120              		.loc 1 140 0 is_stmt 0 discriminator 1
+ 23121 0362 40F20003 		movw	r3, #:lower16:Counter
+ 23122 0366 C0F20003 		movt	r3, #:upper16:Counter
+ 23123 036a 1A68     		ldr	r2, [r3, #0]
+ 23124 036c 7B69     		ldr	r3, [r7, #20]
+ 23125 036e 9A42     		cmp	r2, r3
+ 23126 0370 CFD3     		bcc	.L11
+ 143:Arch/Stm32/src/memory.c ****     }
+ 144:Arch/Stm32/src/memory.c **** 
+ 145:Arch/Stm32/src/memory.c ****     W_Offset += Data_Len;
+ 23127              		.loc 1 145 0 is_stmt 1
+ 23128 0372 40F20003 		movw	r3, #:lower16:Data_Len
+ 23129 0376 C0F20003 		movt	r3, #:upper16:Data_Len
+ 23130 037a 1B88     		ldrh	r3, [r3, #0]
+ 23131 037c 1A46     		mov	r2, r3
+ 23132 037e 40F20003 		movw	r3, #:lower16:W_Offset.4100
+ 23133 0382 C0F20003 		movt	r3, #:upper16:W_Offset.4100
+ 23134 0386 1B68     		ldr	r3, [r3, #0]
+ 23135 0388 D218     		adds	r2, r2, r3
+ 23136 038a 40F20003 		movw	r3, #:lower16:W_Offset.4100
+ 23137 038e C0F20003 		movt	r3, #:upper16:W_Offset.4100
+ 23138 0392 1A60     		str	r2, [r3, #0]
+ 146:Arch/Stm32/src/memory.c ****     W_Length -= Data_Len;
+ 23139              		.loc 1 146 0
+ 23140 0394 40F20003 		movw	r3, #:lower16:W_Length.4101
+ 23141 0398 C0F20003 		movt	r3, #:upper16:W_Length.4101
+ 23142 039c 1A68     		ldr	r2, [r3, #0]
+ 23143 039e 40F20003 		movw	r3, #:lower16:Data_Len
+ 23144 03a2 C0F20003 		movt	r3, #:upper16:Data_Len
+ 23145 03a6 1B88     		ldrh	r3, [r3, #0]
+ 23146 03a8 D21A     		subs	r2, r2, r3
+ 23147 03aa 40F20003 		movw	r3, #:lower16:W_Length.4101
+ 23148 03ae C0F20003 		movt	r3, #:upper16:W_Length.4101
+ 23149 03b2 1A60     		str	r2, [r3, #0]
+ 147:Arch/Stm32/src/memory.c **** 
+ 148:Arch/Stm32/src/memory.c ****     if (!(W_Length % DRV_MS_MemDevice[lun].Block_Size))
+ 23150              		.loc 1 148 0
+ 23151 03b4 40F20003 		movw	r3, #:lower16:W_Length.4101
+ 23152 03b8 C0F20003 		movt	r3, #:upper16:W_Length.4101
+ 23153 03bc 1968     		ldr	r1, [r3, #0]
+ 23154 03be F87B     		ldrb	r0, [r7, #15]	@ zero_extendqisi2
+ 23155 03c0 40F20002 		movw	r2, #:lower16:DRV_MS_MemDevice
+ 23156 03c4 C0F20002 		movt	r2, #:upper16:DRV_MS_MemDevice
+ 23157 03c8 0346     		mov	r3, r0
+ 23158 03ca 4FEAC303 		lsl	r3, r3, #3
+ 23159 03ce 1B1A     		subs	r3, r3, r0
+ 23160 03d0 4FEA8303 		lsl	r3, r3, #2
+ 23161 03d4 D318     		adds	r3, r2, r3
+ 23162 03d6 03F11403 		add	r3, r3, #20
+ 23163 03da 1B68     		ldr	r3, [r3, #0]
+ 23164 03dc B1FBF3F2 		udiv	r2, r1, r3
+ 23165 03e0 03FB02F3 		mul	r3, r3, r2
+ 23166 03e4 CB1A     		subs	r3, r1, r3
+ 23167 03e6 002B     		cmp	r3, #0
+ 23168 03e8 42D1     		bne	.L12
+ 149:Arch/Stm32/src/memory.c ****     {
+ 150:Arch/Stm32/src/memory.c ****       Counter = 0;
+ 23169              		.loc 1 150 0
+ 23170 03ea 40F20003 		movw	r3, #:lower16:Counter
+ 23171 03ee C0F20003 		movt	r3, #:upper16:Counter
+ 23172 03f2 4FF00002 		mov	r2, #0
+ 23173 03f6 1A60     		str	r2, [r3, #0]
+ 151:Arch/Stm32/src/memory.c ****       /*MAL_Write(lun ,
+ 152:Arch/Stm32/src/memory.c ****                 W_Offset - DRV_MS_MemDevice[lun].Block_Size,
+ 153:Arch/Stm32/src/memory.c ****                 Data_Buffer,
+ 154:Arch/Stm32/src/memory.c ****                 DRV_MS_MemDevice[lun].Block_Size);*/
+ 155:Arch/Stm32/src/memory.c ****    	  DRV_MS_MemDevice[lun].tIOAccess.Write(lun ,
+ 23174              		.loc 1 155 0
+ 23175 03f8 F97B     		ldrb	r1, [r7, #15]	@ zero_extendqisi2
+ 23176 03fa 40F20002 		movw	r2, #:lower16:DRV_MS_MemDevice
+ 23177 03fe C0F20002 		movt	r2, #:upper16:DRV_MS_MemDevice
+ 23178 0402 0B46     		mov	r3, r1
+ 23179 0404 4FEAC303 		lsl	r3, r3, #3
+ 23180 0408 5B1A     		subs	r3, r3, r1
+ 23181 040a 4FEA8303 		lsl	r3, r3, #2
+ 23182 040e D318     		adds	r3, r2, r3
+ 23183 0410 03F10403 		add	r3, r3, #4
+ 23184 0414 1C68     		ldr	r4, [r3, #0]
+ 23185 0416 40F20003 		movw	r3, #:lower16:W_Offset.4100
+ 23186 041a C0F20003 		movt	r3, #:upper16:W_Offset.4100
+ 23187 041e 1868     		ldr	r0, [r3, #0]
+ 156:Arch/Stm32/src/memory.c ****                   W_Offset - DRV_MS_MemDevice[lun].Block_Size,
+ 23188              		.loc 1 156 0
+ 23189 0420 F97B     		ldrb	r1, [r7, #15]	@ zero_extendqisi2
+ 23190 0422 40F20002 		movw	r2, #:lower16:DRV_MS_MemDevice
+ 23191 0426 C0F20002 		movt	r2, #:upper16:DRV_MS_MemDevice
+ 23192 042a 0B46     		mov	r3, r1
+ 23193 042c 4FEAC303 		lsl	r3, r3, #3
+ 23194 0430 5B1A     		subs	r3, r3, r1
+ 23195 0432 4FEA8303 		lsl	r3, r3, #2
+ 23196 0436 D318     		adds	r3, r2, r3
+ 23197 0438 03F11403 		add	r3, r3, #20
+ 23198 043c 1B68     		ldr	r3, [r3, #0]
+ 155:Arch/Stm32/src/memory.c ****    	  DRV_MS_MemDevice[lun].tIOAccess.Write(lun ,
+ 23199              		.loc 1 155 0
+ 23200 043e C51A     		subs	r5, r0, r3
+ 157:Arch/Stm32/src/memory.c ****                   Data_Buffer,
+ 158:Arch/Stm32/src/memory.c ****                   DRV_MS_MemDevice[lun].Block_Size);
+ 23201              		.loc 1 158 0
+ 23202 0440 F97B     		ldrb	r1, [r7, #15]	@ zero_extendqisi2
+ 23203 0442 40F20002 		movw	r2, #:lower16:DRV_MS_MemDevice
+ 23204 0446 C0F20002 		movt	r2, #:upper16:DRV_MS_MemDevice
+ 23205 044a 0B46     		mov	r3, r1
+ 23206 044c 4FEAC303 		lsl	r3, r3, #3
+ 23207 0450 5B1A     		subs	r3, r3, r1
+ 23208 0452 4FEA8303 		lsl	r3, r3, #2
+ 23209 0456 D318     		adds	r3, r2, r3
+ 23210 0458 03F11403 		add	r3, r3, #20
+ 23211 045c 1B68     		ldr	r3, [r3, #0]
+ 155:Arch/Stm32/src/memory.c ****    	  DRV_MS_MemDevice[lun].tIOAccess.Write(lun ,
+ 23212              		.loc 1 155 0
+ 23213 045e 9BB2     		uxth	r3, r3
+ 23214 0460 FA7B     		ldrb	r2, [r7, #15]	@ zero_extendqisi2
+ 23215 0462 1046     		mov	r0, r2
+ 23216 0464 2946     		mov	r1, r5
+ 23217 0466 40F20002 		movw	r2, #:lower16:Data_Buffer
+ 23218 046a C0F20002 		movt	r2, #:upper16:Data_Buffer
+ 23219 046e A047     		blx	r4
+ 23220              	.L12:
+ 159:Arch/Stm32/src/memory.c ****     }
+ 160:Arch/Stm32/src/memory.c **** 
+ 161:Arch/Stm32/src/memory.c ****     CSW.dDataResidue -= Data_Len;
+ 23221              		.loc 1 161 0
+ 23222 0470 40F20003 		movw	r3, #:lower16:CSW
+ 23223 0474 C0F20003 		movt	r3, #:upper16:CSW
+ 23224 0478 9A68     		ldr	r2, [r3, #8]
+ 23225 047a 40F20003 		movw	r3, #:lower16:Data_Len
+ 23226 047e C0F20003 		movt	r3, #:upper16:Data_Len
+ 23227 0482 1B88     		ldrh	r3, [r3, #0]
+ 23228 0484 D21A     		subs	r2, r2, r3
+ 23229 0486 40F20003 		movw	r3, #:lower16:CSW
+ 23230 048a C0F20003 		movt	r3, #:upper16:CSW
+ 23231 048e 9A60     		str	r2, [r3, #8]
+ 162:Arch/Stm32/src/memory.c ****   #ifndef STM32F10X_CL
+ 163:Arch/Stm32/src/memory.c ****     SetEPRxStatus(ENDP2, EP_RX_VALID); /* enable the next transaction*/   
+ 23232              		.loc 1 163 0
+ 23233 0490 4FF00200 		mov	r0, #2
+ 23234 0494 4FF44051 		mov	r1, #12288
+ 23235 0498 FFF7FEFF 		bl	SetEPRxStatus
+ 23236              	.L9:
+ 164:Arch/Stm32/src/memory.c ****   #endif /* STM32F10X_CL */
+ 165:Arch/Stm32/src/memory.c **** 
+ 166:Arch/Stm32/src/memory.c ****     //Led_RW_ON();
+ 167:Arch/Stm32/src/memory.c ****   }
+ 168:Arch/Stm32/src/memory.c **** 
+ 169:Arch/Stm32/src/memory.c ****   if ((W_Length == 0) || (Bot_State == BOT_CSW_Send))
+ 23237              		.loc 1 169 0
+ 23238 049c 40F20003 		movw	r3, #:lower16:W_Length.4101
+ 23239 04a0 C0F20003 		movt	r3, #:upper16:W_Length.4101
+ 23240 04a4 1B68     		ldr	r3, [r3, #0]
+ 23241 04a6 002B     		cmp	r3, #0
+ 23242 04a8 06D0     		beq	.L13
+ 23243              		.loc 1 169 0 is_stmt 0 discriminator 1
+ 23244 04aa 40F20003 		movw	r3, #:lower16:Bot_State
+ 23245 04ae C0F20003 		movt	r3, #:upper16:Bot_State
+ 23246 04b2 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 23247 04b4 042B     		cmp	r3, #4
+ 23248 04b6 13D1     		bne	.L7
+ 23249              	.L13:
+ 170:Arch/Stm32/src/memory.c ****   {
+ 171:Arch/Stm32/src/memory.c ****     Counter = 0;
+ 23250              		.loc 1 171 0 is_stmt 1
+ 23251 04b8 40F20003 		movw	r3, #:lower16:Counter
+ 23252 04bc C0F20003 		movt	r3, #:upper16:Counter
+ 23253 04c0 4FF00002 		mov	r2, #0
+ 23254 04c4 1A60     		str	r2, [r3, #0]
+ 172:Arch/Stm32/src/memory.c ****     Set_CSW (CSW_CMD_PASSED, SEND_CSW_ENABLE);
+ 23255              		.loc 1 172 0
+ 23256 04c6 4FF00000 		mov	r0, #0
+ 23257 04ca 4FF00101 		mov	r1, #1
+ 23258 04ce FFF7FEFF 		bl	Set_CSW
+ 173:Arch/Stm32/src/memory.c ****     TransferState = TXFR_IDLE;
+ 23259              		.loc 1 173 0
+ 23260 04d2 40F20003 		movw	r3, #:lower16:TransferState
+ 23261 04d6 C0F20003 		movt	r3, #:upper16:TransferState
+ 23262 04da 4FF00002 		mov	r2, #0
+ 23263 04de 1A70     		strb	r2, [r3, #0]
+ 23264              	.L7:
+ 174:Arch/Stm32/src/memory.c ****    // Led_RW_OFF();
+ 175:Arch/Stm32/src/memory.c ****   }
+ 176:Arch/Stm32/src/memory.c **** }
+ 23265              		.loc 1 176 0
+ 23266 04e0 07F11807 		add	r7, r7, #24
+ 23267 04e4 BD46     		mov	sp, r7
+ 23268 04e6 B0BD     		pop	{r4, r5, r7, pc}
+ 23269              		.cfi_endproc
+ 23270              	.LFE30:
+ 23272              		.bss
+ 23273 0009 000000   		.align	2
+ 23274              	W_Offset.4100:
+ 23275 000c 00000000 		.space	4
+ 23276              		.align	2
+ 23277              	W_Length.4101:
+ 23278 0010 00000000 		.space	4
+ 23279              		.align	2
+ 23280              	Offset.4093:
+ 23281 0014 00000000 		.space	4
+ 23282              		.align	2
+ 23283              	Length.4094:
+ 23284 0018 00000000 		.space	4
+ 23285              		.text
+ 23286              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 memory.c
+     /tmp/ccOI1buu.s:22739  .bss:00000000 Block_Read_count
+     /tmp/ccOI1buu.s:22736  .bss:00000000 $d
+                            *COM*:00000004 Block_offset
+     /tmp/ccOI1buu.s:22746  .bss:00000004 Counter
+                            *COM*:00000004 Idx
+                            *COM*:00000200 Data_Buffer
+     /tmp/ccOI1buu.s:22753  .bss:00000008 TransferState
+     /tmp/ccOI1buu.s:22756  .text:00000000 $t
+     /tmp/ccOI1buu.s:22761  .text:00000000 Read_Memory
+     /tmp/ccOI1buu.s:23280  .bss:00000014 Offset.4093
+     /tmp/ccOI1buu.s:23283  .bss:00000018 Length.4094
+     /tmp/ccOI1buu.s:23007  .text:0000025c Write_Memory
+     /tmp/ccOI1buu.s:23274  .bss:0000000c W_Offset.4100
+     /tmp/ccOI1buu.s:23277  .bss:00000010 W_Length.4101
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+DRV_MS_MemDevice
+USB_SIL_Write
+SetEPTxCount
+SetEPTxStatus
+CSW
+Bot_State
+Bulk_Data_Buff
+Data_Len
+SetEPRxStatus
+Set_CSW
