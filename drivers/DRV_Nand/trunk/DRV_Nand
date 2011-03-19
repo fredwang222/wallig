@@ -1,0 +1,1430 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"DRV_Nand_Stm32.c"
+  23              	.Ltext0:
+  24              		.file 1 "Arch/Stm32/DRV_Nand_Stm32.c"
+ 22753              		.align	2
+ 22754              		.global	DRV_Nand_Init
+ 22755              		.thumb
+ 22756              		.thumb_func
+ 22758              	DRV_Nand_Init:
+ 22759              	.LFB29:
+   1:Arch/Stm32/DRV_Nand_Stm32.c **** #include <stdio.h>
+   2:Arch/Stm32/DRV_Nand_Stm32.c **** #include "stm32f10x.h"
+   3:Arch/Stm32/DRV_Nand_Stm32.c **** #include "DRV_Nand.h"
+   4:Arch/Stm32/DRV_Nand_Stm32.c **** #include "Inc/DRV_Nand_p.h"
+   5:Arch/Stm32/DRV_Nand_Stm32.c **** 
+   6:Arch/Stm32/DRV_Nand_Stm32.c **** #ifndef __IO
+   7:Arch/Stm32/DRV_Nand_Stm32.c **** #define __IO
+   8:Arch/Stm32/DRV_Nand_Stm32.c **** #endif
+   9:Arch/Stm32/DRV_Nand_Stm32.c **** #define FSMC_Bank_NAND         FSMC_Bank2_NAND
+  10:Arch/Stm32/DRV_Nand_Stm32.c **** #define Bank_NAND_ADDR         Bank2_NAND_ADDR
+  11:Arch/Stm32/DRV_Nand_Stm32.c **** #define Bank2_NAND_ADDR        ((uint32_t)0x70000000)
+  12:Arch/Stm32/DRV_Nand_Stm32.c **** #define NAND_Sector_Size       512
+  13:Arch/Stm32/DRV_Nand_Stm32.c **** #define NAND_PageDataSize      2048
+  14:Arch/Stm32/DRV_Nand_Stm32.c **** #define NAND_PageSpareAreaSize 64
+  15:Arch/Stm32/DRV_Nand_Stm32.c **** #define NAND_Page PerBlock     64
+  16:Arch/Stm32/DRV_Nand_Stm32.c **** #define NAND_BlockSize         ( NAND_Page PerBlock * NAND_PageSize )
+  17:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  18:Arch/Stm32/DRV_Nand_Stm32.c **** #define ADDR_1st_CYCLE(ADDR)       (uint8_t)((ADDR)& 0xFF)               /* 1st addressing cycle */
+  19:Arch/Stm32/DRV_Nand_Stm32.c **** #define ADDR_2nd_CYCLE(ADDR)       (uint8_t)(((ADDR)& 0xFF00) >> 8)      /* 2nd addressing cycle */
+  20:Arch/Stm32/DRV_Nand_Stm32.c **** #define ADDR_3rd_CYCLE(ADDR)       (uint8_t)(((ADDR)& 0xFF0000) >> 16)   /* 3rd addressing cycle */
+  21:Arch/Stm32/DRV_Nand_Stm32.c **** #define ADDR_4th_CYCLE(ADDR)       (uint8_t)(((ADDR)& 0xFF000000) >> 24) /* 4th addressing cycle */
+  22:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  23:Arch/Stm32/DRV_Nand_Stm32.c **** static uint32_t DRV_Nandi_ReadStatus(void);
+  24:Arch/Stm32/DRV_Nand_Stm32.c **** static uint32_t DRV_Nandi_GetStatus(void);
+  25:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  26:Arch/Stm32/DRV_Nand_Stm32.c **** void DRV_Nand_Init( void )
+  27:Arch/Stm32/DRV_Nand_Stm32.c **** {
+ 22760              		.loc 1 27 0
+ 22761              		.cfi_startproc
+ 22762              		@ args = 0, pretend = 0, frame = 56
+ 22763              		@ frame_needed = 1, uses_anonymous_args = 0
+ 22764 0000 80B5     		push	{r7, lr}
+ 22765              	.LCFI0:
+ 22766              		.cfi_def_cfa_offset 8
+ 22767 0002 8EB0     		sub	sp, sp, #56
+ 22768              	.LCFI1:
+ 22769              		.cfi_def_cfa_offset 64
+ 22770 0004 00AF     		add	r7, sp, #0
+ 22771              		.cfi_offset 14, -4
+ 22772              		.cfi_offset 7, -8
+ 22773              	.LCFI2:
+ 22774              		.cfi_def_cfa_register 7
+  28:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_InitTypeDef GPIO_InitStructure;
+  29:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDInitTypeDef FSMC_NANDInitStructure;
+  30:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NAND_PCCARDTimingInitTypeDef  p;
+  31:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  32:Arch/Stm32/DRV_Nand_Stm32.c **** 	  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_FSMC, ENABLE);
+ 22775              		.loc 1 32 0
+ 22776 0006 4FF48070 		mov	r0, #256
+ 22777 000a 4FF00101 		mov	r1, #1
+ 22778 000e FFF7FEFF 		bl	RCC_AHBPeriphClockCmd
+  33:Arch/Stm32/DRV_Nand_Stm32.c **** 	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD | RCC_APB2Periph_GPIOE |
+ 22779              		.loc 1 33 0
+ 22780 0012 4FF4F070 		mov	r0, #480
+ 22781 0016 4FF00101 		mov	r1, #1
+ 22782 001a FFF7FEFF 		bl	RCC_APB2PeriphClockCmd
+  34:Arch/Stm32/DRV_Nand_Stm32.c **** 	                         RCC_APB2Periph_GPIOF | RCC_APB2Periph_GPIOG, ENABLE);
+  35:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  36:Arch/Stm32/DRV_Nand_Stm32.c **** 	/*-- GPIO Configuration ------------------------------------------------------*/
+  37:Arch/Stm32/DRV_Nand_Stm32.c **** 	/* CLE, ALE, D0->D3, NOE, NWE and NCE2  NAND pin configuration  */
+  38:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_14 | GPIO_Pin_15 |
+ 22783              		.loc 1 38 0
+ 22784 001e 4DF6B303 		movw	r3, #55475
+ 22785 0022 BB86     		strh	r3, [r7, #52]	@ movhi
+  39:Arch/Stm32/DRV_Nand_Stm32.c **** 	                                 GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_4 | GPIO_Pin_5 |
+  40:Arch/Stm32/DRV_Nand_Stm32.c **** 	                                 GPIO_Pin_7;
+  41:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 22786              		.loc 1 41 0
+ 22787 0024 4FF00303 		mov	r3, #3
+ 22788 0028 87F83630 		strb	r3, [r7, #54]
+  42:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+ 22789              		.loc 1 42 0
+ 22790 002c 4FF01803 		mov	r3, #24
+ 22791 0030 87F83730 		strb	r3, [r7, #55]
+  43:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  44:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_Init(GPIOD, &GPIO_InitStructure);
+ 22792              		.loc 1 44 0
+ 22793 0034 07F13403 		add	r3, r7, #52
+ 22794 0038 4FF4A050 		mov	r0, #5120
+ 22795 003c C4F20100 		movt	r0, 16385
+ 22796 0040 1946     		mov	r1, r3
+ 22797 0042 FFF7FEFF 		bl	GPIO_Init
+  45:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  46:Arch/Stm32/DRV_Nand_Stm32.c **** 	/* D4->D7 NAND pin configuration  */
+  47:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10;
+ 22798              		.loc 1 47 0
+ 22799 0046 4FF4F063 		mov	r3, #1920
+ 22800 004a BB86     		strh	r3, [r7, #52]	@ movhi
+  48:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  49:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_Init(GPIOE, &GPIO_InitStructure);
+ 22801              		.loc 1 49 0
+ 22802 004c 07F13403 		add	r3, r7, #52
+ 22803 0050 4FF4C050 		mov	r0, #6144
+ 22804 0054 C4F20100 		movt	r0, 16385
+ 22805 0058 1946     		mov	r1, r3
+ 22806 005a FFF7FEFF 		bl	GPIO_Init
+  50:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  51:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  52:Arch/Stm32/DRV_Nand_Stm32.c **** 	/* NWAIT NAND pin configuration */
+  53:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+ 22807              		.loc 1 53 0
+ 22808 005e 4FF04003 		mov	r3, #64
+ 22809 0062 BB86     		strh	r3, [r7, #52]	@ movhi
+  54:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 22810              		.loc 1 54 0
+ 22811 0064 4FF00303 		mov	r3, #3
+ 22812 0068 87F83630 		strb	r3, [r7, #54]
+  55:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+ 22813              		.loc 1 55 0
+ 22814 006c 4FF04803 		mov	r3, #72
+ 22815 0070 87F83730 		strb	r3, [r7, #55]
+  56:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  57:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_Init(GPIOD, &GPIO_InitStructure);
+ 22816              		.loc 1 57 0
+ 22817 0074 07F13403 		add	r3, r7, #52
+ 22818 0078 4FF4A050 		mov	r0, #5120
+ 22819 007c C4F20100 		movt	r0, 16385
+ 22820 0080 1946     		mov	r1, r3
+ 22821 0082 FFF7FEFF 		bl	GPIO_Init
+  58:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  59:Arch/Stm32/DRV_Nand_Stm32.c **** 	/* INT2 NAND pin configuration */
+  60:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+ 22822              		.loc 1 60 0
+ 22823 0086 4FF04003 		mov	r3, #64
+ 22824 008a BB86     		strh	r3, [r7, #52]	@ movhi
+  61:Arch/Stm32/DRV_Nand_Stm32.c **** 	  GPIO_Init(GPIOG, &GPIO_InitStructure);
+ 22825              		.loc 1 61 0
+ 22826 008c 07F13403 		add	r3, r7, #52
+ 22827 0090 4FF40050 		mov	r0, #8192
+ 22828 0094 C4F20100 		movt	r0, 16385
+ 22829 0098 1946     		mov	r1, r3
+ 22830 009a FFF7FEFF 		bl	GPIO_Init
+  62:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  63:Arch/Stm32/DRV_Nand_Stm32.c **** 	  /*-- FSMC Configuration ------------------------------------------------------*/
+  64:Arch/Stm32/DRV_Nand_Stm32.c **** 	  p.FSMC_SetupTime = 0x1;
+ 22831              		.loc 1 64 0
+ 22832 009e 4FF00103 		mov	r3, #1
+ 22833 00a2 3B60     		str	r3, [r7, #0]
+  65:Arch/Stm32/DRV_Nand_Stm32.c **** 	  p.FSMC_WaitSetupTime = 0x3;
+ 22834              		.loc 1 65 0
+ 22835 00a4 4FF00303 		mov	r3, #3
+ 22836 00a8 7B60     		str	r3, [r7, #4]
+  66:Arch/Stm32/DRV_Nand_Stm32.c **** 	  p.FSMC_HoldSetupTime = 0x2;
+ 22837              		.loc 1 66 0
+ 22838 00aa 4FF00203 		mov	r3, #2
+ 22839 00ae BB60     		str	r3, [r7, #8]
+  67:Arch/Stm32/DRV_Nand_Stm32.c **** 	  p.FSMC_HiZSetupTime = 0x1;
+ 22840              		.loc 1 67 0
+ 22841 00b0 4FF00103 		mov	r3, #1
+ 22842 00b4 FB60     		str	r3, [r7, #12]
+  68:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  69:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDInitStructure.FSMC_Bank = FSMC_Bank2_NAND;
+ 22843              		.loc 1 69 0
+ 22844 00b6 4FF01003 		mov	r3, #16
+ 22845 00ba 3B61     		str	r3, [r7, #16]
+  70:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDInitStructure.FSMC_Waitfeature = FSMC_Waitfeature_Enable;
+ 22846              		.loc 1 70 0
+ 22847 00bc 4FF00203 		mov	r3, #2
+ 22848 00c0 7B61     		str	r3, [r7, #20]
+  71:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDInitStructure.FSMC_MemoryDataWidth = FSMC_MemoryDataWidth_8b;
+ 22849              		.loc 1 71 0
+ 22850 00c2 4FF00003 		mov	r3, #0
+ 22851 00c6 BB61     		str	r3, [r7, #24]
+  72:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDInitStructure.FSMC_ECC = FSMC_ECC_Enable;
+ 22852              		.loc 1 72 0
+ 22853 00c8 4FF04003 		mov	r3, #64
+ 22854 00cc FB61     		str	r3, [r7, #28]
+  73:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDInitStructure.FSMC_ECCPageSize = FSMC_ECCPageSize_512Bytes;
+ 22855              		.loc 1 73 0
+ 22856 00ce 4FF40033 		mov	r3, #131072
+ 22857 00d2 3B62     		str	r3, [r7, #32]
+  74:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDInitStructure.FSMC_TCLRSetupTime = 0x00;
+ 22858              		.loc 1 74 0
+ 22859 00d4 4FF00003 		mov	r3, #0
+ 22860 00d8 7B62     		str	r3, [r7, #36]
+  75:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDInitStructure.FSMC_TARSetupTime = 0x00;
+ 22861              		.loc 1 75 0
+ 22862 00da 4FF00003 		mov	r3, #0
+ 22863 00de BB62     		str	r3, [r7, #40]
+  76:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDInitStructure.FSMC_CommonSpaceTimingStruct = &p;
+ 22864              		.loc 1 76 0
+ 22865 00e0 3B46     		mov	r3, r7
+ 22866 00e2 FB62     		str	r3, [r7, #44]
+  77:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDInitStructure.FSMC_AttributeSpaceTimingStruct = &p;
+ 22867              		.loc 1 77 0
+ 22868 00e4 3B46     		mov	r3, r7
+ 22869 00e6 3B63     		str	r3, [r7, #48]
+  78:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  79:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDInit(&FSMC_NANDInitStructure);
+ 22870              		.loc 1 79 0
+ 22871 00e8 07F11003 		add	r3, r7, #16
+ 22872 00ec 1846     		mov	r0, r3
+ 22873 00ee FFF7FEFF 		bl	FSMC_NANDInit
+  80:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  81:Arch/Stm32/DRV_Nand_Stm32.c **** 	  /* FSMC NAND Bank Cmd Test */
+  82:Arch/Stm32/DRV_Nand_Stm32.c **** 	  FSMC_NANDCmd(FSMC_Bank2_NAND, ENABLE);
+ 22874              		.loc 1 82 0
+ 22875 00f2 4FF01000 		mov	r0, #16
+ 22876 00f6 4FF00101 		mov	r1, #1
+ 22877 00fa FFF7FEFF 		bl	FSMC_NANDCmd
+  83:Arch/Stm32/DRV_Nand_Stm32.c **** }
+ 22878              		.loc 1 83 0
+ 22879 00fe 07F13807 		add	r7, r7, #56
+ 22880 0102 BD46     		mov	sp, r7
+ 22881 0104 80BD     		pop	{r7, pc}
+ 22882              		.cfi_endproc
+ 22883              	.LFE29:
+ 22885 0106 00BF     		.align	2
+ 22886              		.global	DRV_Nand_PageRead
+ 22887              		.thumb
+ 22888              		.thumb_func
+ 22890              	DRV_Nand_PageRead:
+ 22891              	.LFB30:
+  84:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  85:Arch/Stm32/DRV_Nand_Stm32.c **** int DRV_Nand_PageRead( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , uint32_t uiPageIndex 
+  86:Arch/Stm32/DRV_Nand_Stm32.c **** {
+ 22892              		.loc 1 86 0
+ 22893              		.cfi_startproc
+ 22894              		@ args = 0, pretend = 0, frame = 16
+ 22895              		@ frame_needed = 1, uses_anonymous_args = 0
+ 22896              		@ link register save eliminated.
+ 22897 0108 80B4     		push	{r7}
+ 22898              	.LCFI3:
+ 22899              		.cfi_def_cfa_offset 4
+ 22900 010a 85B0     		sub	sp, sp, #20
+ 22901              	.LCFI4:
+ 22902              		.cfi_def_cfa_offset 24
+ 22903 010c 00AF     		add	r7, sp, #0
+ 22904              		.cfi_offset 7, -4
+ 22905              	.LCFI5:
+ 22906              		.cfi_def_cfa_register 7
+ 22907 010e F860     		str	r0, [r7, #12]
+ 22908 0110 B960     		str	r1, [r7, #8]
+ 22909 0112 7A60     		str	r2, [r7, #4]
+  87:Arch/Stm32/DRV_Nand_Stm32.c **** 	return 0;
+ 22910              		.loc 1 87 0
+ 22911 0114 4FF00003 		mov	r3, #0
+  88:Arch/Stm32/DRV_Nand_Stm32.c **** }
+ 22912              		.loc 1 88 0
+ 22913 0118 1846     		mov	r0, r3
+ 22914 011a 07F11407 		add	r7, r7, #20
+ 22915 011e BD46     		mov	sp, r7
+ 22916 0120 80BC     		pop	{r7}
+ 22917 0122 7047     		bx	lr
+ 22918              		.cfi_endproc
+ 22919              	.LFE30:
+ 22921              		.align	2
+ 22922              		.global	DRV_Nand_IdRead
+ 22923              		.thumb
+ 22924              		.thumb_func
+ 22926              	DRV_Nand_IdRead:
+ 22927              	.LFB31:
+  89:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  90:Arch/Stm32/DRV_Nand_Stm32.c **** int DRV_Nand_IdRead( DRV_Nand_Id *pId )
+  91:Arch/Stm32/DRV_Nand_Stm32.c **** {
+ 22928              		.loc 1 91 0
+ 22929              		.cfi_startproc
+ 22930              		@ args = 0, pretend = 0, frame = 16
+ 22931              		@ frame_needed = 1, uses_anonymous_args = 0
+ 22932              		@ link register save eliminated.
+ 22933 0124 80B4     		push	{r7}
+ 22934              	.LCFI6:
+ 22935              		.cfi_def_cfa_offset 4
+ 22936 0126 85B0     		sub	sp, sp, #20
+ 22937              	.LCFI7:
+ 22938              		.cfi_def_cfa_offset 24
+ 22939 0128 00AF     		add	r7, sp, #0
+ 22940              		.cfi_offset 7, -4
+ 22941              	.LCFI8:
+ 22942              		.cfi_def_cfa_register 7
+ 22943 012a 7860     		str	r0, [r7, #4]
+  92:Arch/Stm32/DRV_Nand_Stm32.c **** 	uint32_t data = 0;
+ 22944              		.loc 1 92 0
+ 22945 012c 4FF00003 		mov	r3, #0
+ 22946 0130 FB60     		str	r3, [r7, #12]
+  93:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  94:Arch/Stm32/DRV_Nand_Stm32.c **** 	/* Send Command to the command area */
+  95:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = 0x90;
+ 22947              		.loc 1 95 0
+ 22948 0132 4FF00003 		mov	r3, #0
+ 22949 0136 C7F20103 		movt	r3, 28673
+ 22950 013a 4FF09002 		mov	r2, #144
+ 22951 013e 1A70     		strb	r2, [r3, #0]
+  96:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = 0x00;
+ 22952              		.loc 1 96 0
+ 22953 0140 4FF00003 		mov	r3, #0
+ 22954 0144 C7F20203 		movt	r3, 28674
+ 22955 0148 4FF00002 		mov	r2, #0
+ 22956 014c 1A70     		strb	r2, [r3, #0]
+  97:Arch/Stm32/DRV_Nand_Stm32.c **** 
+  98:Arch/Stm32/DRV_Nand_Stm32.c **** 	/* Sequence to read ID from NAND flash */
+  99:Arch/Stm32/DRV_Nand_Stm32.c **** 	data = *(__IO uint32_t *)(Bank_NAND_ADDR | DATA_AREA);
+ 22957              		.loc 1 99 0
+ 22958 014e 4FF0E043 		mov	r3, #1879048192
+ 22959 0152 1B68     		ldr	r3, [r3, #0]
+ 22960 0154 FB60     		str	r3, [r7, #12]
+ 100:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 101:Arch/Stm32/DRV_Nand_Stm32.c **** 	pId->Maker_ID   = ADDR_1st_CYCLE (data);
+ 22961              		.loc 1 101 0
+ 22962 0156 FB68     		ldr	r3, [r7, #12]
+ 22963 0158 DAB2     		uxtb	r2, r3
+ 22964 015a 7B68     		ldr	r3, [r7, #4]
+ 22965 015c 1A70     		strb	r2, [r3, #0]
+ 102:Arch/Stm32/DRV_Nand_Stm32.c **** 	pId->Device_ID  = ADDR_2nd_CYCLE (data);
+ 22966              		.loc 1 102 0
+ 22967 015e FB68     		ldr	r3, [r7, #12]
+ 22968 0160 03F47F43 		and	r3, r3, #65280
+ 22969 0164 4FEA1323 		lsr	r3, r3, #8
+ 22970 0168 DAB2     		uxtb	r2, r3
+ 22971 016a 7B68     		ldr	r3, [r7, #4]
+ 22972 016c 5A70     		strb	r2, [r3, #1]
+ 103:Arch/Stm32/DRV_Nand_Stm32.c **** 	pId->Third_ID   = ADDR_3rd_CYCLE (data);
+ 22973              		.loc 1 103 0
+ 22974 016e FB68     		ldr	r3, [r7, #12]
+ 22975 0170 03F47F03 		and	r3, r3, #16711680
+ 22976 0174 4FEA1343 		lsr	r3, r3, #16
+ 22977 0178 DAB2     		uxtb	r2, r3
+ 22978 017a 7B68     		ldr	r3, [r7, #4]
+ 22979 017c 9A70     		strb	r2, [r3, #2]
+ 104:Arch/Stm32/DRV_Nand_Stm32.c **** 	pId->Fourth_ID  = ADDR_4th_CYCLE (data);
+ 22980              		.loc 1 104 0
+ 22981 017e FB68     		ldr	r3, [r7, #12]
+ 22982 0180 4FEA1363 		lsr	r3, r3, #24
+ 22983 0184 DAB2     		uxtb	r2, r3
+ 22984 0186 7B68     		ldr	r3, [r7, #4]
+ 22985 0188 DA70     		strb	r2, [r3, #3]
+ 105:Arch/Stm32/DRV_Nand_Stm32.c **** }
+ 22986              		.loc 1 105 0
+ 22987 018a 1846     		mov	r0, r3
+ 22988 018c 07F11407 		add	r7, r7, #20
+ 22989 0190 BD46     		mov	sp, r7
+ 22990 0192 80BC     		pop	{r7}
+ 22991 0194 7047     		bx	lr
+ 22992              		.cfi_endproc
+ 22993              	.LFE31:
+ 22995 0196 00BF     		.align	2
+ 22996              		.global	DRV_Nand_PageWrite
+ 22997              		.thumb
+ 22998              		.thumb_func
+ 23000              	DRV_Nand_PageWrite:
+ 23001              	.LFB32:
+ 106:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 107:Arch/Stm32/DRV_Nand_Stm32.c **** int DRV_Nand_PageWrite( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , uint32_t uiPageIndex
+ 108:Arch/Stm32/DRV_Nand_Stm32.c **** {
+ 23002              		.loc 1 108 0
+ 23003              		.cfi_startproc
+ 23004              		@ args = 0, pretend = 0, frame = 16
+ 23005              		@ frame_needed = 1, uses_anonymous_args = 0
+ 23006              		@ link register save eliminated.
+ 23007 0198 80B4     		push	{r7}
+ 23008              	.LCFI9:
+ 23009              		.cfi_def_cfa_offset 4
+ 23010 019a 85B0     		sub	sp, sp, #20
+ 23011              	.LCFI10:
+ 23012              		.cfi_def_cfa_offset 24
+ 23013 019c 00AF     		add	r7, sp, #0
+ 23014              		.cfi_offset 7, -4
+ 23015              	.LCFI11:
+ 23016              		.cfi_def_cfa_register 7
+ 23017 019e F860     		str	r0, [r7, #12]
+ 23018 01a0 B960     		str	r1, [r7, #8]
+ 23019 01a2 7A60     		str	r2, [r7, #4]
+ 109:Arch/Stm32/DRV_Nand_Stm32.c **** 	return 0;
+ 23020              		.loc 1 109 0
+ 23021 01a4 4FF00003 		mov	r3, #0
+ 110:Arch/Stm32/DRV_Nand_Stm32.c **** }
+ 23022              		.loc 1 110 0
+ 23023 01a8 1846     		mov	r0, r3
+ 23024 01aa 07F11407 		add	r7, r7, #20
+ 23025 01ae BD46     		mov	sp, r7
+ 23026 01b0 80BC     		pop	{r7}
+ 23027 01b2 7047     		bx	lr
+ 23028              		.cfi_endproc
+ 23029              	.LFE32:
+ 23031              		.align	2
+ 23032              		.global	DRV_Nand_PageCopy
+ 23033              		.thumb
+ 23034              		.thumb_func
+ 23036              	DRV_Nand_PageCopy:
+ 23037              	.LFB33:
+ 111:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 112:Arch/Stm32/DRV_Nand_Stm32.c **** int DRV_Nand_PageCopy( uint32_t uiSrcIndex , uint32_t uiDestIndex , DRV_Nand_SectorSpareData *pSpar
+ 113:Arch/Stm32/DRV_Nand_Stm32.c **** {
+ 23038              		.loc 1 113 0
+ 23039              		.cfi_startproc
+ 23040              		@ args = 0, pretend = 0, frame = 32
+ 23041              		@ frame_needed = 1, uses_anonymous_args = 0
+ 23042 01b4 80B5     		push	{r7, lr}
+ 23043              	.LCFI12:
+ 23044              		.cfi_def_cfa_offset 8
+ 23045 01b6 88B0     		sub	sp, sp, #32
+ 23046              	.LCFI13:
+ 23047              		.cfi_def_cfa_offset 40
+ 23048 01b8 00AF     		add	r7, sp, #0
+ 23049              		.cfi_offset 14, -4
+ 23050              		.cfi_offset 7, -8
+ 23051              	.LCFI14:
+ 23052              		.cfi_def_cfa_register 7
+ 23053 01ba F860     		str	r0, [r7, #12]
+ 23054 01bc B960     		str	r1, [r7, #8]
+ 23055 01be 7A60     		str	r2, [r7, #4]
+ 114:Arch/Stm32/DRV_Nand_Stm32.c **** 	uint32_t uiSectorIndex,uiIndex,status;
+ 115:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 116:Arch/Stm32/DRV_Nand_Stm32.c **** 	 /* Page write command and address */
+ 117:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_AREA_A;
+ 23056              		.loc 1 117 0
+ 23057 01c0 4FF00003 		mov	r3, #0
+ 23058 01c4 C7F20103 		movt	r3, 28673
+ 23059 01c8 4FF00002 		mov	r2, #0
+ 23060 01cc 1A70     		strb	r2, [r3, #0]
+ 118:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 119:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = 0x00; //Column address
+ 23061              		.loc 1 119 0
+ 23062 01ce 4FF00003 		mov	r3, #0
+ 23063 01d2 C7F20203 		movt	r3, 28674
+ 23064 01d6 4FF00002 		mov	r2, #0
+ 23065 01da 1A70     		strb	r2, [r3, #0]
+ 120:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = 0x00; //Column address
+ 23066              		.loc 1 120 0
+ 23067 01dc 4FF00003 		mov	r3, #0
+ 23068 01e0 C7F20203 		movt	r3, 28674
+ 23069 01e4 4FF00002 		mov	r2, #0
+ 23070 01e8 1A70     		strb	r2, [r3, #0]
+ 121:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)uiSrcIndex ); //Row address
+ 23071              		.loc 1 121 0
+ 23072 01ea 4FF00003 		mov	r3, #0
+ 23073 01ee C7F20203 		movt	r3, 28674
+ 23074 01f2 FA68     		ldr	r2, [r7, #12]
+ 23075 01f4 D2B2     		uxtb	r2, r2
+ 23076 01f6 1A70     		strb	r2, [r3, #0]
+ 122:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)uiSrcIndex )>>8; //Row address
+ 23077              		.loc 1 122 0
+ 23078 01f8 4FF00003 		mov	r3, #0
+ 23079 01fc C7F20203 		movt	r3, 28674
+ 23080 0200 FA68     		ldr	r2, [r7, #12]
+ 23081 0202 D2B2     		uxtb	r2, r2
+ 23082 0204 4FEA2222 		asr	r2, r2, #8
+ 23083 0208 D2B2     		uxtb	r2, r2
+ 23084 020a 1A70     		strb	r2, [r3, #0]
+ 123:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_READ_COPY_BACK ;
+ 23085              		.loc 1 123 0
+ 23086 020c 4FF00003 		mov	r3, #0
+ 23087 0210 C7F20103 		movt	r3, 28673
+ 23088 0214 4FF03502 		mov	r2, #53
+ 23089 0218 1A70     		strb	r2, [r3, #0]
+ 124:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 125:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_WRITE_RANDOM;
+ 23090              		.loc 1 125 0
+ 23091 021a 4FF00003 		mov	r3, #0
+ 23092 021e C7F20103 		movt	r3, 28673
+ 23093 0222 4FF08502 		mov	r2, #133
+ 23094 0226 1A70     		strb	r2, [r3, #0]
+ 126:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = 0x00; //Column address
+ 23095              		.loc 1 126 0
+ 23096 0228 4FF00003 		mov	r3, #0
+ 23097 022c C7F20203 		movt	r3, 28674
+ 23098 0230 4FF00002 		mov	r2, #0
+ 23099 0234 1A70     		strb	r2, [r3, #0]
+ 127:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = 0x00; //Column address
+ 23100              		.loc 1 127 0
+ 23101 0236 4FF00003 		mov	r3, #0
+ 23102 023a C7F20203 		movt	r3, 28674
+ 23103 023e 4FF00002 		mov	r2, #0
+ 23104 0242 1A70     		strb	r2, [r3, #0]
+ 128:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)uiDestIndex ); //Row address
+ 23105              		.loc 1 128 0
+ 23106 0244 4FF00003 		mov	r3, #0
+ 23107 0248 C7F20203 		movt	r3, 28674
+ 23108 024c BA68     		ldr	r2, [r7, #8]
+ 23109 024e D2B2     		uxtb	r2, r2
+ 23110 0250 1A70     		strb	r2, [r3, #0]
+ 129:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)uiDestIndex )>>8; //Row address
+ 23111              		.loc 1 129 0
+ 23112 0252 4FF00003 		mov	r3, #0
+ 23113 0256 C7F20203 		movt	r3, 28674
+ 23114 025a BA68     		ldr	r2, [r7, #8]
+ 23115 025c D2B2     		uxtb	r2, r2
+ 23116 025e 4FEA2222 		asr	r2, r2, #8
+ 23117 0262 D2B2     		uxtb	r2, r2
+ 23118 0264 1A70     		strb	r2, [r3, #0]
+ 130:Arch/Stm32/DRV_Nand_Stm32.c **** 	if( pSpareArea == NULL )
+ 23119              		.loc 1 130 0
+ 23120 0266 7B68     		ldr	r3, [r7, #4]
+ 23121 0268 002B     		cmp	r3, #0
+ 23122 026a 34D1     		bne	.L6
+ 131:Arch/Stm32/DRV_Nand_Stm32.c **** 	{
+ 132:Arch/Stm32/DRV_Nand_Stm32.c **** 		for(uiSectorIndex=0;uiSectorIndex<4;uiSectorIndex++)
+ 23123              		.loc 1 132 0
+ 23124 026c 4FF00003 		mov	r3, #0
+ 23125 0270 FB61     		str	r3, [r7, #28]
+ 23126 0272 2DE0     		b	.L7
+ 23127              	.L10:
+ 133:Arch/Stm32/DRV_Nand_Stm32.c **** 		{
+ 134:Arch/Stm32/DRV_Nand_Stm32.c **** 			*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_WRITE_RANDOM;
+ 23128              		.loc 1 134 0
+ 23129 0274 4FF00003 		mov	r3, #0
+ 23130 0278 C7F20103 		movt	r3, 28673
+ 23131 027c 4FF08502 		mov	r2, #133
+ 23132 0280 1A70     		strb	r2, [r3, #0]
+ 135:Arch/Stm32/DRV_Nand_Stm32.c **** 			*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = uiSectorIndex<<4; //Column address
+ 23133              		.loc 1 135 0
+ 23134 0282 4FF00003 		mov	r3, #0
+ 23135 0286 C7F20203 		movt	r3, 28674
+ 23136 028a FA69     		ldr	r2, [r7, #28]
+ 23137 028c D2B2     		uxtb	r2, r2
+ 23138 028e 4FEA0212 		lsl	r2, r2, #4
+ 23139 0292 D2B2     		uxtb	r2, r2
+ 23140 0294 1A70     		strb	r2, [r3, #0]
+ 136:Arch/Stm32/DRV_Nand_Stm32.c **** 			*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = 0x04; //Column address
+ 23141              		.loc 1 136 0
+ 23142 0296 4FF00003 		mov	r3, #0
+ 23143 029a C7F20203 		movt	r3, 28674
+ 23144 029e 4FF00402 		mov	r2, #4
+ 23145 02a2 1A70     		strb	r2, [r3, #0]
+ 137:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 138:Arch/Stm32/DRV_Nand_Stm32.c **** 			/* write Spare area data */
+ 139:Arch/Stm32/DRV_Nand_Stm32.c **** 			for( uiIndex=4 ; uiIndex < sizeof(DRV_Nand_SectorSpareData); uiIndex ++)
+ 23146              		.loc 1 139 0
+ 23147 02a4 4FF00403 		mov	r3, #4
+ 23148 02a8 BB61     		str	r3, [r7, #24]
+ 23149 02aa 0AE0     		b	.L8
+ 23150              	.L9:
+ 140:Arch/Stm32/DRV_Nand_Stm32.c **** 			{
+ 141:Arch/Stm32/DRV_Nand_Stm32.c **** 			  *(__IO uint8_t *)(Bank_NAND_ADDR | DATA_AREA) = ((uint8_t *)pSpareArea)[uiIndex];
+ 23151              		.loc 1 141 0 discriminator 2
+ 23152 02ac 4FF0E043 		mov	r3, #1879048192
+ 23153 02b0 7968     		ldr	r1, [r7, #4]
+ 23154 02b2 BA69     		ldr	r2, [r7, #24]
+ 23155 02b4 8A18     		adds	r2, r1, r2
+ 23156 02b6 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 23157 02b8 1A70     		strb	r2, [r3, #0]
+ 139:Arch/Stm32/DRV_Nand_Stm32.c **** 			for( uiIndex=4 ; uiIndex < sizeof(DRV_Nand_SectorSpareData); uiIndex ++)
+ 23158              		.loc 1 139 0 discriminator 2
+ 23159 02ba BB69     		ldr	r3, [r7, #24]
+ 23160 02bc 03F10103 		add	r3, r3, #1
+ 23161 02c0 BB61     		str	r3, [r7, #24]
+ 23162              	.L8:
+ 139:Arch/Stm32/DRV_Nand_Stm32.c **** 			for( uiIndex=4 ; uiIndex < sizeof(DRV_Nand_SectorSpareData); uiIndex ++)
+ 23163              		.loc 1 139 0 is_stmt 0 discriminator 1
+ 23164 02c2 BB69     		ldr	r3, [r7, #24]
+ 23165 02c4 0F2B     		cmp	r3, #15
+ 23166 02c6 F1D9     		bls	.L9
+ 132:Arch/Stm32/DRV_Nand_Stm32.c **** 		for(uiSectorIndex=0;uiSectorIndex<4;uiSectorIndex++)
+ 23167              		.loc 1 132 0 is_stmt 1
+ 23168 02c8 FB69     		ldr	r3, [r7, #28]
+ 23169 02ca 03F10103 		add	r3, r3, #1
+ 23170 02ce FB61     		str	r3, [r7, #28]
+ 23171              	.L7:
+ 132:Arch/Stm32/DRV_Nand_Stm32.c **** 		for(uiSectorIndex=0;uiSectorIndex<4;uiSectorIndex++)
+ 23172              		.loc 1 132 0 is_stmt 0 discriminator 1
+ 23173 02d0 FB69     		ldr	r3, [r7, #28]
+ 23174 02d2 032B     		cmp	r3, #3
+ 23175 02d4 CED9     		bls	.L10
+ 23176              	.L6:
+ 142:Arch/Stm32/DRV_Nand_Stm32.c **** 			}
+ 143:Arch/Stm32/DRV_Nand_Stm32.c **** 		}
+ 144:Arch/Stm32/DRV_Nand_Stm32.c **** 	}
+ 145:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_WRITE_TRUE1;
+ 23177              		.loc 1 145 0 is_stmt 1
+ 23178 02d6 4FF00003 		mov	r3, #0
+ 23179 02da C7F20103 		movt	r3, 28673
+ 23180 02de 4FF01002 		mov	r2, #16
+ 23181 02e2 1A70     		strb	r2, [r3, #0]
+ 146:Arch/Stm32/DRV_Nand_Stm32.c **** 	 /* Check status for successful operation */
+ 147:Arch/Stm32/DRV_Nand_Stm32.c **** 	status = DRV_Nandi_GetStatus();
+ 23182              		.loc 1 147 0
+ 23183 02e4 00F0C2F9 		bl	DRV_Nandi_GetStatus
+ 23184 02e8 7861     		str	r0, [r7, #20]
+ 148:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 149:Arch/Stm32/DRV_Nand_Stm32.c **** 	if( status == NAND_READY )
+ 23185              		.loc 1 149 0
+ 23186 02ea 7B69     		ldr	r3, [r7, #20]
+ 23187 02ec 402B     		cmp	r3, #64
+ 23188 02ee 02D1     		bne	.L11
+ 150:Arch/Stm32/DRV_Nand_Stm32.c **** 		return 0;
+ 23189              		.loc 1 150 0
+ 23190 02f0 4FF00003 		mov	r3, #0
+ 23191 02f4 01E0     		b	.L12
+ 23192              	.L11:
+ 151:Arch/Stm32/DRV_Nand_Stm32.c **** 	else
+ 152:Arch/Stm32/DRV_Nand_Stm32.c **** 		return 1;
+ 23193              		.loc 1 152 0
+ 23194 02f6 4FF00103 		mov	r3, #1
+ 23195              	.L12:
+ 153:Arch/Stm32/DRV_Nand_Stm32.c **** }
+ 23196              		.loc 1 153 0
+ 23197 02fa 1846     		mov	r0, r3
+ 23198 02fc 07F12007 		add	r7, r7, #32
+ 23199 0300 BD46     		mov	sp, r7
+ 23200 0302 80BD     		pop	{r7, pc}
+ 23201              		.cfi_endproc
+ 23202              	.LFE33:
+ 23204              		.align	2
+ 23205              		.global	DRV_Nand_BlockErase
+ 23206              		.thumb
+ 23207              		.thumb_func
+ 23209              	DRV_Nand_BlockErase:
+ 23210              	.LFB34:
+ 154:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 155:Arch/Stm32/DRV_Nand_Stm32.c **** int DRV_Nand_BlockErase( uint32_t uiBlockIndex )
+ 156:Arch/Stm32/DRV_Nand_Stm32.c **** {
+ 23211              		.loc 1 156 0
+ 23212              		.cfi_startproc
+ 23213              		@ args = 0, pretend = 0, frame = 16
+ 23214              		@ frame_needed = 1, uses_anonymous_args = 0
+ 23215 0304 80B5     		push	{r7, lr}
+ 23216              	.LCFI15:
+ 23217              		.cfi_def_cfa_offset 8
+ 23218 0306 84B0     		sub	sp, sp, #16
+ 23219              	.LCFI16:
+ 23220              		.cfi_def_cfa_offset 24
+ 23221 0308 00AF     		add	r7, sp, #0
+ 23222              		.cfi_offset 14, -4
+ 23223              		.cfi_offset 7, -8
+ 23224              	.LCFI17:
+ 23225              		.cfi_def_cfa_register 7
+ 23226 030a 7860     		str	r0, [r7, #4]
+ 157:Arch/Stm32/DRV_Nand_Stm32.c **** 	uint32_t status ;
+ 158:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 159:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_ERASE0;
+ 23227              		.loc 1 159 0
+ 23228 030c 4FF00003 		mov	r3, #0
+ 23229 0310 C7F20103 		movt	r3, 28673
+ 23230 0314 4FF06002 		mov	r2, #96
+ 23231 0318 1A70     		strb	r2, [r3, #0]
+ 160:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 161:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = (uint8_t)uiBlockIndex&0xff;
+ 23232              		.loc 1 161 0
+ 23233 031a 4FF00003 		mov	r3, #0
+ 23234 031e C7F20203 		movt	r3, 28674
+ 23235 0322 7A68     		ldr	r2, [r7, #4]
+ 23236 0324 D2B2     		uxtb	r2, r2
+ 23237 0326 1A70     		strb	r2, [r3, #0]
+ 162:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = (uint8_t)((uiBlockIndex>>8)&0xff);
+ 23238              		.loc 1 162 0
+ 23239 0328 4FF00003 		mov	r3, #0
+ 23240 032c C7F20203 		movt	r3, 28674
+ 23241 0330 7A68     		ldr	r2, [r7, #4]
+ 23242 0332 4FEA1222 		lsr	r2, r2, #8
+ 23243 0336 D2B2     		uxtb	r2, r2
+ 23244 0338 1A70     		strb	r2, [r3, #0]
+ 163:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = (uint8_t)((uiBlockIndex>>16)&0xff);
+ 23245              		.loc 1 163 0
+ 23246 033a 4FF00003 		mov	r3, #0
+ 23247 033e C7F20203 		movt	r3, 28674
+ 23248 0342 7A68     		ldr	r2, [r7, #4]
+ 23249 0344 4FEA1242 		lsr	r2, r2, #16
+ 23250 0348 D2B2     		uxtb	r2, r2
+ 23251 034a 1A70     		strb	r2, [r3, #0]
+ 164:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 165:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_ERASE1;
+ 23252              		.loc 1 165 0
+ 23253 034c 4FF00003 		mov	r3, #0
+ 23254 0350 C7F20103 		movt	r3, 28673
+ 23255 0354 4FF0D002 		mov	r2, #208
+ 23256 0358 1A70     		strb	r2, [r3, #0]
+ 166:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 167:Arch/Stm32/DRV_Nand_Stm32.c **** 	/* Check status for successful operation */
+ 168:Arch/Stm32/DRV_Nand_Stm32.c **** 	status = DRV_Nandi_GetStatus();
+ 23257              		.loc 1 168 0
+ 23258 035a 00F087F9 		bl	DRV_Nandi_GetStatus
+ 23259 035e F860     		str	r0, [r7, #12]
+ 169:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 170:Arch/Stm32/DRV_Nand_Stm32.c **** 	if( status == NAND_READY )
+ 23260              		.loc 1 170 0
+ 23261 0360 FB68     		ldr	r3, [r7, #12]
+ 23262 0362 402B     		cmp	r3, #64
+ 23263 0364 02D1     		bne	.L14
+ 171:Arch/Stm32/DRV_Nand_Stm32.c **** 		return 0;
+ 23264              		.loc 1 171 0
+ 23265 0366 4FF00003 		mov	r3, #0
+ 23266 036a 01E0     		b	.L15
+ 23267              	.L14:
+ 172:Arch/Stm32/DRV_Nand_Stm32.c **** 	else
+ 173:Arch/Stm32/DRV_Nand_Stm32.c **** 		return 1;
+ 23268              		.loc 1 173 0
+ 23269 036c 4FF00103 		mov	r3, #1
+ 23270              	.L15:
+ 174:Arch/Stm32/DRV_Nand_Stm32.c **** }
+ 23271              		.loc 1 174 0
+ 23272 0370 1846     		mov	r0, r3
+ 23273 0372 07F11007 		add	r7, r7, #16
+ 23274 0376 BD46     		mov	sp, r7
+ 23275 0378 80BD     		pop	{r7, pc}
+ 23276              		.cfi_endproc
+ 23277              	.LFE34:
+ 23279 037a 00BF     		.align	2
+ 23280              		.global	DRV_Nand_SectorRead
+ 23281              		.thumb
+ 23282              		.thumb_func
+ 23284              	DRV_Nand_SectorRead:
+ 23285              	.LFB35:
+ 175:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 176:Arch/Stm32/DRV_Nand_Stm32.c **** int DRV_Nand_SectorRead( uint8_t *pucDataBuffer , DRV_Nand_SectorSpareData *pSpareArea , uint32_t u
+ 177:Arch/Stm32/DRV_Nand_Stm32.c **** {
+ 23286              		.loc 1 177 0
+ 23287              		.cfi_startproc
+ 23288              		@ args = 0, pretend = 0, frame = 24
+ 23289              		@ frame_needed = 1, uses_anonymous_args = 0
+ 23290 037c 80B5     		push	{r7, lr}
+ 23291              	.LCFI18:
+ 23292              		.cfi_def_cfa_offset 8
+ 23293 037e 86B0     		sub	sp, sp, #24
+ 23294              	.LCFI19:
+ 23295              		.cfi_def_cfa_offset 32
+ 23296 0380 00AF     		add	r7, sp, #0
+ 23297              		.cfi_offset 14, -4
+ 23298              		.cfi_offset 7, -8
+ 23299              	.LCFI20:
+ 23300              		.cfi_def_cfa_register 7
+ 23301 0382 F860     		str	r0, [r7, #12]
+ 23302 0384 B960     		str	r1, [r7, #8]
+ 23303 0386 7A60     		str	r2, [r7, #4]
+ 178:Arch/Stm32/DRV_Nand_Stm32.c **** 	uint32_t uiIndex , uiEcc ;
+ 179:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 180:Arch/Stm32/DRV_Nand_Stm32.c ****     /* Page write command and address */
+ 181:Arch/Stm32/DRV_Nand_Stm32.c ****     *(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_AREA_A;
+ 23304              		.loc 1 181 0
+ 23305 0388 4FF00003 		mov	r3, #0
+ 23306 038c C7F20103 		movt	r3, 28673
+ 23307 0390 4FF00002 		mov	r2, #0
+ 23308 0394 1A70     		strb	r2, [r3, #0]
+ 182:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 183:Arch/Stm32/DRV_Nand_Stm32.c ****     *(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = 0x00; //Column address
+ 23309              		.loc 1 183 0
+ 23310 0396 4FF00003 		mov	r3, #0
+ 23311 039a C7F20203 		movt	r3, 28674
+ 23312 039e 4FF00002 		mov	r2, #0
+ 23313 03a2 1A70     		strb	r2, [r3, #0]
+ 184:Arch/Stm32/DRV_Nand_Stm32.c ****     *(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)(uiSectorIndex & 0x03))<<1; //Column 
+ 23314              		.loc 1 184 0
+ 23315 03a4 4FF00003 		mov	r3, #0
+ 23316 03a8 C7F20203 		movt	r3, 28674
+ 23317 03ac 7A68     		ldr	r2, [r7, #4]
+ 23318 03ae D2B2     		uxtb	r2, r2
+ 23319 03b0 02F00302 		and	r2, r2, #3
+ 23320 03b4 D2B2     		uxtb	r2, r2
+ 23321 03b6 4FEA4202 		lsl	r2, r2, #1
+ 23322 03ba D2B2     		uxtb	r2, r2
+ 23323 03bc 1A70     		strb	r2, [r3, #0]
+ 185:Arch/Stm32/DRV_Nand_Stm32.c ****     *(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)uiSectorIndex )>>2; //Row address
+ 23324              		.loc 1 185 0
+ 23325 03be 4FF00003 		mov	r3, #0
+ 23326 03c2 C7F20203 		movt	r3, 28674
+ 23327 03c6 7A68     		ldr	r2, [r7, #4]
+ 23328 03c8 D2B2     		uxtb	r2, r2
+ 23329 03ca 4FEA9202 		lsr	r2, r2, #2
+ 23330 03ce D2B2     		uxtb	r2, r2
+ 23331 03d0 1A70     		strb	r2, [r3, #0]
+ 186:Arch/Stm32/DRV_Nand_Stm32.c ****     *(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)uiSectorIndex )>>10; //Row address
+ 23332              		.loc 1 186 0
+ 23333 03d2 4FF00003 		mov	r3, #0
+ 23334 03d6 C7F20203 		movt	r3, 28674
+ 23335 03da 7A68     		ldr	r2, [r7, #4]
+ 23336 03dc D2B2     		uxtb	r2, r2
+ 23337 03de 4FEAA222 		asr	r2, r2, #10
+ 23338 03e2 D2B2     		uxtb	r2, r2
+ 23339 03e4 1A70     		strb	r2, [r3, #0]
+ 187:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 188:Arch/Stm32/DRV_Nand_Stm32.c ****     *(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_AREA_TRUE1;
+ 23340              		.loc 1 188 0
+ 23341 03e6 4FF00003 		mov	r3, #0
+ 23342 03ea C7F20103 		movt	r3, 28673
+ 23343 03ee 4FF03002 		mov	r2, #48
+ 23344 03f2 1A70     		strb	r2, [r3, #0]
+ 189:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 190:Arch/Stm32/DRV_Nand_Stm32.c ****     if( pucDataBuffer != NULL )
+ 23345              		.loc 1 190 0
+ 23346 03f4 FB68     		ldr	r3, [r7, #12]
+ 23347 03f6 002B     		cmp	r3, #0
+ 23348 03f8 20D0     		beq	.L17
+ 191:Arch/Stm32/DRV_Nand_Stm32.c ****     {
+ 192:Arch/Stm32/DRV_Nand_Stm32.c **** 		/*reset ECC */
+ 193:Arch/Stm32/DRV_Nand_Stm32.c **** 		FSMC_NANDECCCmd( FSMC_Bank_NAND , DISABLE );
+ 23349              		.loc 1 193 0
+ 23350 03fa 4FF01000 		mov	r0, #16
+ 23351 03fe 4FF00001 		mov	r1, #0
+ 23352 0402 FFF7FEFF 		bl	FSMC_NANDECCCmd
+ 194:Arch/Stm32/DRV_Nand_Stm32.c **** 		FSMC_NANDECCCmd( FSMC_Bank_NAND , ENABLE );
+ 23353              		.loc 1 194 0
+ 23354 0406 4FF01000 		mov	r0, #16
+ 23355 040a 4FF00101 		mov	r1, #1
+ 23356 040e FFF7FEFF 		bl	FSMC_NANDECCCmd
+ 195:Arch/Stm32/DRV_Nand_Stm32.c **** 		/* Get Data into Buffer */
+ 196:Arch/Stm32/DRV_Nand_Stm32.c **** 		for(uiIndex=0; uiIndex < NAND_Sector_Size; uiIndex++)
+ 23357              		.loc 1 196 0
+ 23358 0412 4FF00003 		mov	r3, #0
+ 23359 0416 7B61     		str	r3, [r7, #20]
+ 23360 0418 0BE0     		b	.L18
+ 23361              	.L19:
+ 197:Arch/Stm32/DRV_Nand_Stm32.c **** 		{
+ 198:Arch/Stm32/DRV_Nand_Stm32.c **** 			pucDataBuffer[uiIndex]= *(__IO uint8_t *)(Bank_NAND_ADDR | DATA_AREA);
+ 23362              		.loc 1 198 0 discriminator 2
+ 23363 041a FA68     		ldr	r2, [r7, #12]
+ 23364 041c 7B69     		ldr	r3, [r7, #20]
+ 23365 041e D318     		adds	r3, r2, r3
+ 23366 0420 4FF0E042 		mov	r2, #1879048192
+ 23367 0424 1278     		ldrb	r2, [r2, #0]
+ 23368 0426 D2B2     		uxtb	r2, r2
+ 23369 0428 1A70     		strb	r2, [r3, #0]
+ 196:Arch/Stm32/DRV_Nand_Stm32.c **** 		for(uiIndex=0; uiIndex < NAND_Sector_Size; uiIndex++)
+ 23370              		.loc 1 196 0 discriminator 2
+ 23371 042a 7B69     		ldr	r3, [r7, #20]
+ 23372 042c 03F10103 		add	r3, r3, #1
+ 23373 0430 7B61     		str	r3, [r7, #20]
+ 23374              	.L18:
+ 196:Arch/Stm32/DRV_Nand_Stm32.c **** 		for(uiIndex=0; uiIndex < NAND_Sector_Size; uiIndex++)
+ 23375              		.loc 1 196 0 is_stmt 0 discriminator 1
+ 23376 0432 7A69     		ldr	r2, [r7, #20]
+ 23377 0434 40F2FF13 		movw	r3, #511
+ 23378 0438 9A42     		cmp	r2, r3
+ 23379 043a EED9     		bls	.L19
+ 23380              	.L17:
+ 199:Arch/Stm32/DRV_Nand_Stm32.c **** 		}
+ 200:Arch/Stm32/DRV_Nand_Stm32.c ****     }
+ 201:Arch/Stm32/DRV_Nand_Stm32.c **** 	/* Get Spare Area */
+ 202:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_READ_RANDOM0;
+ 23381              		.loc 1 202 0 is_stmt 1
+ 23382 043c 4FF00003 		mov	r3, #0
+ 23383 0440 C7F20103 		movt	r3, 28673
+ 23384 0444 4FF00502 		mov	r2, #5
+ 23385 0448 1A70     		strb	r2, [r3, #0]
+ 203:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)(uiSectorIndex & 0x03))<<4; //Column add
+ 23386              		.loc 1 203 0
+ 23387 044a 4FF00003 		mov	r3, #0
+ 23388 044e C7F20203 		movt	r3, 28674
+ 23389 0452 7A68     		ldr	r2, [r7, #4]
+ 23390 0454 D2B2     		uxtb	r2, r2
+ 23391 0456 02F00302 		and	r2, r2, #3
+ 23392 045a D2B2     		uxtb	r2, r2
+ 23393 045c 4FEA0212 		lsl	r2, r2, #4
+ 23394 0460 D2B2     		uxtb	r2, r2
+ 23395 0462 1A70     		strb	r2, [r3, #0]
+ 204:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = 0x04; //Column address
+ 23396              		.loc 1 204 0
+ 23397 0464 4FF00003 		mov	r3, #0
+ 23398 0468 C7F20203 		movt	r3, 28674
+ 23399 046c 4FF00402 		mov	r2, #4
+ 23400 0470 1A70     		strb	r2, [r3, #0]
+ 205:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_READ_RANDOM1;
+ 23401              		.loc 1 205 0
+ 23402 0472 4FF00003 		mov	r3, #0
+ 23403 0476 C7F20103 		movt	r3, 28673
+ 23404 047a 4FF0E002 		mov	r2, #224
+ 23405 047e 1A70     		strb	r2, [r3, #0]
+ 206:Arch/Stm32/DRV_Nand_Stm32.c **** 	for(uiIndex=0; uiIndex < sizeof(DRV_Nand_SectorSpareData); uiIndex++)
+ 23406              		.loc 1 206 0
+ 23407 0480 4FF00003 		mov	r3, #0
+ 23408 0484 7B61     		str	r3, [r7, #20]
+ 23409 0486 0BE0     		b	.L20
+ 23410              	.L21:
+ 207:Arch/Stm32/DRV_Nand_Stm32.c **** 	{
+ 208:Arch/Stm32/DRV_Nand_Stm32.c **** 		((uint8_t *)pSpareArea)[uiIndex]= *(__IO uint8_t *)(Bank_NAND_ADDR | DATA_AREA);
+ 23411              		.loc 1 208 0 discriminator 2
+ 23412 0488 BA68     		ldr	r2, [r7, #8]
+ 23413 048a 7B69     		ldr	r3, [r7, #20]
+ 23414 048c D318     		adds	r3, r2, r3
+ 23415 048e 4FF0E042 		mov	r2, #1879048192
+ 23416 0492 1278     		ldrb	r2, [r2, #0]
+ 23417 0494 D2B2     		uxtb	r2, r2
+ 23418 0496 1A70     		strb	r2, [r3, #0]
+ 206:Arch/Stm32/DRV_Nand_Stm32.c **** 	for(uiIndex=0; uiIndex < sizeof(DRV_Nand_SectorSpareData); uiIndex++)
+ 23419              		.loc 1 206 0 discriminator 2
+ 23420 0498 7B69     		ldr	r3, [r7, #20]
+ 23421 049a 03F10103 		add	r3, r3, #1
+ 23422 049e 7B61     		str	r3, [r7, #20]
+ 23423              	.L20:
+ 206:Arch/Stm32/DRV_Nand_Stm32.c **** 	for(uiIndex=0; uiIndex < sizeof(DRV_Nand_SectorSpareData); uiIndex++)
+ 23424              		.loc 1 206 0 is_stmt 0 discriminator 1
+ 23425 04a0 7B69     		ldr	r3, [r7, #20]
+ 23426 04a2 0F2B     		cmp	r3, #15
+ 23427 04a4 F0D9     		bls	.L21
+ 209:Arch/Stm32/DRV_Nand_Stm32.c **** 	}
+ 210:Arch/Stm32/DRV_Nand_Stm32.c **** 	if( pucDataBuffer != NULL )
+ 23428              		.loc 1 210 0 is_stmt 1
+ 23429 04a6 FB68     		ldr	r3, [r7, #12]
+ 23430 04a8 002B     		cmp	r3, #0
+ 23431 04aa 1DD0     		beq	.L22
+ 211:Arch/Stm32/DRV_Nand_Stm32.c **** 	{
+ 212:Arch/Stm32/DRV_Nand_Stm32.c **** 		/* Get Computed ECC */
+ 213:Arch/Stm32/DRV_Nand_Stm32.c **** 		uiEcc = FSMC_GetECC(FSMC_Bank_NAND);
+ 23432              		.loc 1 213 0
+ 23433 04ac 4FF01000 		mov	r0, #16
+ 23434 04b0 FFF7FEFF 		bl	FSMC_GetECC
+ 23435 04b4 3861     		str	r0, [r7, #16]
+ 214:Arch/Stm32/DRV_Nand_Stm32.c **** 		/* compare computed and red ECC */
+ 215:Arch/Stm32/DRV_Nand_Stm32.c **** 	   if( (((uint8_t)uiEcc)&0xff)       != pSpareArea->tucEcc[0] ||
+ 23436              		.loc 1 215 0
+ 23437 04b6 3B69     		ldr	r3, [r7, #16]
+ 23438 04b8 DAB2     		uxtb	r2, r3
+ 23439 04ba BB68     		ldr	r3, [r7, #8]
+ 23440 04bc 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 23441 04be 9A42     		cmp	r2, r3
+ 23442 04c0 0FD1     		bne	.L23
+ 216:Arch/Stm32/DRV_Nand_Stm32.c **** 		   ((((uint8_t)uiEcc)&0xff)>>8)  != pSpareArea->tucEcc[1] ||
+ 23443              		.loc 1 216 0 discriminator 1
+ 23444 04c2 3B69     		ldr	r3, [r7, #16]
+ 23445 04c4 DBB2     		uxtb	r3, r3
+ 23446 04c6 4FEA2322 		asr	r2, r3, #8
+ 23447 04ca BB68     		ldr	r3, [r7, #8]
+ 23448 04cc 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+ 215:Arch/Stm32/DRV_Nand_Stm32.c **** 	   if( (((uint8_t)uiEcc)&0xff)       != pSpareArea->tucEcc[0] ||
+ 23449              		.loc 1 215 0 discriminator 1
+ 23450 04ce 9A42     		cmp	r2, r3
+ 23451 04d0 07D1     		bne	.L23
+ 217:Arch/Stm32/DRV_Nand_Stm32.c **** 		   ((((uint8_t)uiEcc)&0xff)>>16) != pSpareArea->tucEcc[2] )
+ 23452              		.loc 1 217 0
+ 23453 04d2 3B69     		ldr	r3, [r7, #16]
+ 23454 04d4 DBB2     		uxtb	r3, r3
+ 23455 04d6 4FEA2342 		asr	r2, r3, #16
+ 23456 04da BB68     		ldr	r3, [r7, #8]
+ 23457 04dc DB78     		ldrb	r3, [r3, #3]	@ zero_extendqisi2
+ 216:Arch/Stm32/DRV_Nand_Stm32.c **** 		   ((((uint8_t)uiEcc)&0xff)>>8)  != pSpareArea->tucEcc[1] ||
+ 23458              		.loc 1 216 0
+ 23459 04de 9A42     		cmp	r2, r3
+ 23460 04e0 02D0     		beq	.L22
+ 23461              	.L23:
+ 218:Arch/Stm32/DRV_Nand_Stm32.c **** 			   return -1;
+ 23462              		.loc 1 218 0
+ 23463 04e2 4FF0FF33 		mov	r3, #-1
+ 23464 04e6 01E0     		b	.L24
+ 23465              	.L22:
+ 219:Arch/Stm32/DRV_Nand_Stm32.c **** 	}
+ 220:Arch/Stm32/DRV_Nand_Stm32.c ****    return 0;
+ 23466              		.loc 1 220 0
+ 23467 04e8 4FF00003 		mov	r3, #0
+ 23468              	.L24:
+ 221:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 222:Arch/Stm32/DRV_Nand_Stm32.c **** }
+ 23469              		.loc 1 222 0
+ 23470 04ec 1846     		mov	r0, r3
+ 23471 04ee 07F11807 		add	r7, r7, #24
+ 23472 04f2 BD46     		mov	sp, r7
+ 23473 04f4 80BD     		pop	{r7, pc}
+ 23474              		.cfi_endproc
+ 23475              	.LFE35:
+ 23477 04f6 00BF     		.align	2
+ 23478              		.global	DRV_Nand_sectorWrite
+ 23479              		.thumb
+ 23480              		.thumb_func
+ 23482              	DRV_Nand_sectorWrite:
+ 23483              	.LFB36:
+ 223:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 224:Arch/Stm32/DRV_Nand_Stm32.c **** int DRV_Nand_sectorWrite( uint8_t *pucDataBuffer , DRV_Nand_SectorSpareData *pSpareArea , uint32_t 
+ 225:Arch/Stm32/DRV_Nand_Stm32.c **** {
+ 23484              		.loc 1 225 0
+ 23485              		.cfi_startproc
+ 23486              		@ args = 0, pretend = 0, frame = 32
+ 23487              		@ frame_needed = 1, uses_anonymous_args = 0
+ 23488 04f8 80B5     		push	{r7, lr}
+ 23489              	.LCFI21:
+ 23490              		.cfi_def_cfa_offset 8
+ 23491 04fa 88B0     		sub	sp, sp, #32
+ 23492              	.LCFI22:
+ 23493              		.cfi_def_cfa_offset 40
+ 23494 04fc 00AF     		add	r7, sp, #0
+ 23495              		.cfi_offset 14, -4
+ 23496              		.cfi_offset 7, -8
+ 23497              	.LCFI23:
+ 23498              		.cfi_def_cfa_register 7
+ 23499 04fe F860     		str	r0, [r7, #12]
+ 23500 0500 B960     		str	r1, [r7, #8]
+ 23501 0502 7A60     		str	r2, [r7, #4]
+ 226:Arch/Stm32/DRV_Nand_Stm32.c **** 	uint32_t uiIndex , uiEcc , status;
+ 227:Arch/Stm32/DRV_Nand_Stm32.c **** 	/* Page write command and address */
+ 228:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_AREA_A;
+ 23502              		.loc 1 228 0
+ 23503 0504 4FF00003 		mov	r3, #0
+ 23504 0508 C7F20103 		movt	r3, 28673
+ 23505 050c 4FF00002 		mov	r2, #0
+ 23506 0510 1A70     		strb	r2, [r3, #0]
+ 229:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_WRITE0;
+ 23507              		.loc 1 229 0
+ 23508 0512 4FF00003 		mov	r3, #0
+ 23509 0516 C7F20103 		movt	r3, 28673
+ 23510 051a 4FF08002 		mov	r2, #128
+ 23511 051e 1A70     		strb	r2, [r3, #0]
+ 230:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 231:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = 0x00;
+ 23512              		.loc 1 231 0
+ 23513 0520 4FF00003 		mov	r3, #0
+ 23514 0524 C7F20203 		movt	r3, 28674
+ 23515 0528 4FF00002 		mov	r2, #0
+ 23516 052c 1A70     		strb	r2, [r3, #0]
+ 232:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)(uiSectorIndex & 0x03))<<1;
+ 23517              		.loc 1 232 0
+ 23518 052e 4FF00003 		mov	r3, #0
+ 23519 0532 C7F20203 		movt	r3, 28674
+ 23520 0536 7A68     		ldr	r2, [r7, #4]
+ 23521 0538 D2B2     		uxtb	r2, r2
+ 23522 053a 02F00302 		and	r2, r2, #3
+ 23523 053e D2B2     		uxtb	r2, r2
+ 23524 0540 4FEA4202 		lsl	r2, r2, #1
+ 23525 0544 D2B2     		uxtb	r2, r2
+ 23526 0546 1A70     		strb	r2, [r3, #0]
+ 233:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)uiSectorIndex )>>2;
+ 23527              		.loc 1 233 0
+ 23528 0548 4FF00003 		mov	r3, #0
+ 23529 054c C7F20203 		movt	r3, 28674
+ 23530 0550 7A68     		ldr	r2, [r7, #4]
+ 23531 0552 D2B2     		uxtb	r2, r2
+ 23532 0554 4FEA9202 		lsr	r2, r2, #2
+ 23533 0558 D2B2     		uxtb	r2, r2
+ 23534 055a 1A70     		strb	r2, [r3, #0]
+ 234:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)uiSectorIndex )>>10;
+ 23535              		.loc 1 234 0
+ 23536 055c 4FF00003 		mov	r3, #0
+ 23537 0560 C7F20203 		movt	r3, 28674
+ 23538 0564 7A68     		ldr	r2, [r7, #4]
+ 23539 0566 D2B2     		uxtb	r2, r2
+ 23540 0568 4FEAA222 		asr	r2, r2, #10
+ 23541 056c D2B2     		uxtb	r2, r2
+ 23542 056e 1A70     		strb	r2, [r3, #0]
+ 235:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 236:Arch/Stm32/DRV_Nand_Stm32.c **** 	if( pucDataBuffer != NULL )
+ 23543              		.loc 1 236 0
+ 23544 0570 FB68     		ldr	r3, [r7, #12]
+ 23545 0572 002B     		cmp	r3, #0
+ 23546 0574 36D0     		beq	.L26
+ 237:Arch/Stm32/DRV_Nand_Stm32.c **** 	{
+ 238:Arch/Stm32/DRV_Nand_Stm32.c **** 		/*reset ECC */
+ 239:Arch/Stm32/DRV_Nand_Stm32.c **** 		FSMC_NANDECCCmd( FSMC_Bank_NAND , DISABLE );
+ 23547              		.loc 1 239 0
+ 23548 0576 4FF01000 		mov	r0, #16
+ 23549 057a 4FF00001 		mov	r1, #0
+ 23550 057e FFF7FEFF 		bl	FSMC_NANDECCCmd
+ 240:Arch/Stm32/DRV_Nand_Stm32.c **** 		FSMC_NANDECCCmd( FSMC_Bank_NAND , ENABLE );
+ 23551              		.loc 1 240 0
+ 23552 0582 4FF01000 		mov	r0, #16
+ 23553 0586 4FF00101 		mov	r1, #1
+ 23554 058a FFF7FEFF 		bl	FSMC_NANDECCCmd
+ 241:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 242:Arch/Stm32/DRV_Nand_Stm32.c **** 		 /* Write data */
+ 243:Arch/Stm32/DRV_Nand_Stm32.c **** 		for( uiIndex=0 ; uiIndex < NAND_Sector_Size; uiIndex ++)
+ 23555              		.loc 1 243 0
+ 23556 058e 4FF00003 		mov	r3, #0
+ 23557 0592 FB61     		str	r3, [r7, #28]
+ 23558 0594 0AE0     		b	.L27
+ 23559              	.L28:
+ 244:Arch/Stm32/DRV_Nand_Stm32.c **** 		{
+ 245:Arch/Stm32/DRV_Nand_Stm32.c **** 		  *(__IO uint8_t *)(Bank_NAND_ADDR | DATA_AREA) = pucDataBuffer[uiIndex];
+ 23560              		.loc 1 245 0 discriminator 2
+ 23561 0596 4FF0E043 		mov	r3, #1879048192
+ 23562 059a F968     		ldr	r1, [r7, #12]
+ 23563 059c FA69     		ldr	r2, [r7, #28]
+ 23564 059e 8A18     		adds	r2, r1, r2
+ 23565 05a0 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 23566 05a2 1A70     		strb	r2, [r3, #0]
+ 243:Arch/Stm32/DRV_Nand_Stm32.c **** 		for( uiIndex=0 ; uiIndex < NAND_Sector_Size; uiIndex ++)
+ 23567              		.loc 1 243 0 discriminator 2
+ 23568 05a4 FB69     		ldr	r3, [r7, #28]
+ 23569 05a6 03F10103 		add	r3, r3, #1
+ 23570 05aa FB61     		str	r3, [r7, #28]
+ 23571              	.L27:
+ 243:Arch/Stm32/DRV_Nand_Stm32.c **** 		for( uiIndex=0 ; uiIndex < NAND_Sector_Size; uiIndex ++)
+ 23572              		.loc 1 243 0 is_stmt 0 discriminator 1
+ 23573 05ac FA69     		ldr	r2, [r7, #28]
+ 23574 05ae 40F2FF13 		movw	r3, #511
+ 23575 05b2 9A42     		cmp	r2, r3
+ 23576 05b4 EFD9     		bls	.L28
+ 246:Arch/Stm32/DRV_Nand_Stm32.c **** 		}
+ 247:Arch/Stm32/DRV_Nand_Stm32.c **** 		/* Get Computed ECC */
+ 248:Arch/Stm32/DRV_Nand_Stm32.c **** 		uiEcc = FSMC_GetECC(FSMC_Bank_NAND);
+ 23577              		.loc 1 248 0 is_stmt 1
+ 23578 05b6 4FF01000 		mov	r0, #16
+ 23579 05ba FFF7FEFF 		bl	FSMC_GetECC
+ 23580 05be B861     		str	r0, [r7, #24]
+ 249:Arch/Stm32/DRV_Nand_Stm32.c **** 		pSpareArea->tucEcc[0] = (((uint8_t)uiEcc)&0xff);
+ 23581              		.loc 1 249 0
+ 23582 05c0 BB69     		ldr	r3, [r7, #24]
+ 23583 05c2 DAB2     		uxtb	r2, r3
+ 23584 05c4 BB68     		ldr	r3, [r7, #8]
+ 23585 05c6 5A70     		strb	r2, [r3, #1]
+ 250:Arch/Stm32/DRV_Nand_Stm32.c **** 		pSpareArea->tucEcc[1] = ((((uint8_t)uiEcc)&0xff)>>8);
+ 23586              		.loc 1 250 0
+ 23587 05c8 BB69     		ldr	r3, [r7, #24]
+ 23588 05ca DBB2     		uxtb	r3, r3
+ 23589 05cc 4FEA2323 		asr	r3, r3, #8
+ 23590 05d0 DAB2     		uxtb	r2, r3
+ 23591 05d2 BB68     		ldr	r3, [r7, #8]
+ 23592 05d4 9A70     		strb	r2, [r3, #2]
+ 251:Arch/Stm32/DRV_Nand_Stm32.c **** 		pSpareArea->tucEcc[2] = ((((uint8_t)uiEcc)&0xff)>>16);
+ 23593              		.loc 1 251 0
+ 23594 05d6 BB69     		ldr	r3, [r7, #24]
+ 23595 05d8 DBB2     		uxtb	r3, r3
+ 23596 05da 4FEA2343 		asr	r3, r3, #16
+ 23597 05de DAB2     		uxtb	r2, r3
+ 23598 05e0 BB68     		ldr	r3, [r7, #8]
+ 23599 05e2 DA70     		strb	r2, [r3, #3]
+ 23600              	.L26:
+ 252:Arch/Stm32/DRV_Nand_Stm32.c **** 	}
+ 253:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 254:Arch/Stm32/DRV_Nand_Stm32.c **** 	/* Set Spare Area Address*/
+ 255:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_WRITE_RANDOM;
+ 23601              		.loc 1 255 0
+ 23602 05e4 4FF00003 		mov	r3, #0
+ 23603 05e8 C7F20103 		movt	r3, 28673
+ 23604 05ec 4FF08502 		mov	r2, #133
+ 23605 05f0 1A70     		strb	r2, [r3, #0]
+ 256:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = ((uint8_t)(uiSectorIndex & 0x03))<<4; //Column add
+ 23606              		.loc 1 256 0
+ 23607 05f2 4FF00003 		mov	r3, #0
+ 23608 05f6 C7F20203 		movt	r3, 28674
+ 23609 05fa 7A68     		ldr	r2, [r7, #4]
+ 23610 05fc D2B2     		uxtb	r2, r2
+ 23611 05fe 02F00302 		and	r2, r2, #3
+ 23612 0602 D2B2     		uxtb	r2, r2
+ 23613 0604 4FEA0212 		lsl	r2, r2, #4
+ 23614 0608 D2B2     		uxtb	r2, r2
+ 23615 060a 1A70     		strb	r2, [r3, #0]
+ 257:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | ADDR_AREA) = 0x04; //Column address
+ 23616              		.loc 1 257 0
+ 23617 060c 4FF00003 		mov	r3, #0
+ 23618 0610 C7F20203 		movt	r3, 28674
+ 23619 0614 4FF00402 		mov	r2, #4
+ 23620 0618 1A70     		strb	r2, [r3, #0]
+ 258:Arch/Stm32/DRV_Nand_Stm32.c **** 	/* write Spare area*/
+ 259:Arch/Stm32/DRV_Nand_Stm32.c **** 	for( uiIndex=0 ; uiIndex < sizeof(DRV_Nand_SectorSpareData); uiIndex ++)
+ 23621              		.loc 1 259 0
+ 23622 061a 4FF00003 		mov	r3, #0
+ 23623 061e FB61     		str	r3, [r7, #28]
+ 23624 0620 0AE0     		b	.L29
+ 23625              	.L30:
+ 260:Arch/Stm32/DRV_Nand_Stm32.c **** 	{
+ 261:Arch/Stm32/DRV_Nand_Stm32.c **** 	  *(__IO uint8_t *)(Bank_NAND_ADDR | DATA_AREA) = ((uint8_t *)pSpareArea)[uiIndex];
+ 23626              		.loc 1 261 0 discriminator 2
+ 23627 0622 4FF0E043 		mov	r3, #1879048192
+ 23628 0626 B968     		ldr	r1, [r7, #8]
+ 23629 0628 FA69     		ldr	r2, [r7, #28]
+ 23630 062a 8A18     		adds	r2, r1, r2
+ 23631 062c 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 23632 062e 1A70     		strb	r2, [r3, #0]
+ 259:Arch/Stm32/DRV_Nand_Stm32.c **** 	for( uiIndex=0 ; uiIndex < sizeof(DRV_Nand_SectorSpareData); uiIndex ++)
+ 23633              		.loc 1 259 0 discriminator 2
+ 23634 0630 FB69     		ldr	r3, [r7, #28]
+ 23635 0632 03F10103 		add	r3, r3, #1
+ 23636 0636 FB61     		str	r3, [r7, #28]
+ 23637              	.L29:
+ 259:Arch/Stm32/DRV_Nand_Stm32.c **** 	for( uiIndex=0 ; uiIndex < sizeof(DRV_Nand_SectorSpareData); uiIndex ++)
+ 23638              		.loc 1 259 0 is_stmt 0 discriminator 1
+ 23639 0638 FB69     		ldr	r3, [r7, #28]
+ 23640 063a 0F2B     		cmp	r3, #15
+ 23641 063c F1D9     		bls	.L30
+ 262:Arch/Stm32/DRV_Nand_Stm32.c **** 	}
+ 263:Arch/Stm32/DRV_Nand_Stm32.c **** 	*(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_WRITE_TRUE1;
+ 23642              		.loc 1 263 0 is_stmt 1
+ 23643 063e 4FF00003 		mov	r3, #0
+ 23644 0642 C7F20103 		movt	r3, 28673
+ 23645 0646 4FF01002 		mov	r2, #16
+ 23646 064a 1A70     		strb	r2, [r3, #0]
+ 264:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 265:Arch/Stm32/DRV_Nand_Stm32.c **** 	 /* Check status for successful operation */
+ 266:Arch/Stm32/DRV_Nand_Stm32.c **** 	status = DRV_Nandi_GetStatus();
+ 23647              		.loc 1 266 0
+ 23648 064c 00F00EF8 		bl	DRV_Nandi_GetStatus
+ 23649 0650 7861     		str	r0, [r7, #20]
+ 267:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 268:Arch/Stm32/DRV_Nand_Stm32.c **** 	if( status == NAND_READY )
+ 23650              		.loc 1 268 0
+ 23651 0652 7B69     		ldr	r3, [r7, #20]
+ 23652 0654 402B     		cmp	r3, #64
+ 23653 0656 02D1     		bne	.L31
+ 269:Arch/Stm32/DRV_Nand_Stm32.c **** 		return 0;
+ 23654              		.loc 1 269 0
+ 23655 0658 4FF00003 		mov	r3, #0
+ 23656 065c 01E0     		b	.L32
+ 23657              	.L31:
+ 270:Arch/Stm32/DRV_Nand_Stm32.c **** 	else
+ 271:Arch/Stm32/DRV_Nand_Stm32.c **** 		return 1;
+ 23658              		.loc 1 271 0
+ 23659 065e 4FF00103 		mov	r3, #1
+ 23660              	.L32:
+ 272:Arch/Stm32/DRV_Nand_Stm32.c **** }
+ 23661              		.loc 1 272 0
+ 23662 0662 1846     		mov	r0, r3
+ 23663 0664 07F12007 		add	r7, r7, #32
+ 23664 0668 BD46     		mov	sp, r7
+ 23665 066a 80BD     		pop	{r7, pc}
+ 23666              		.cfi_endproc
+ 23667              	.LFE36:
+ 23669              		.align	2
+ 23670              		.thumb
+ 23671              		.thumb_func
+ 23673              	DRV_Nandi_GetStatus:
+ 23674              	.LFB37:
+ 273:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 274:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 275:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 276:Arch/Stm32/DRV_Nand_Stm32.c **** /******************************************************************************
+ 277:Arch/Stm32/DRV_Nand_Stm32.c **** * Function Name  : FSMC_NAND_GetStatus
+ 278:Arch/Stm32/DRV_Nand_Stm32.c **** * Description    : Get the NAND operation status
+ 279:Arch/Stm32/DRV_Nand_Stm32.c **** * Input          : None
+ 280:Arch/Stm32/DRV_Nand_Stm32.c **** * Output         : None
+ 281:Arch/Stm32/DRV_Nand_Stm32.c **** * Return         : New status of the NAND operation. This parameter can be:
+ 282:Arch/Stm32/DRV_Nand_Stm32.c **** *                   - NAND_TIMEOUT_ERROR: when the previous operation generate
+ 283:Arch/Stm32/DRV_Nand_Stm32.c **** *                     a Timeout error
+ 284:Arch/Stm32/DRV_Nand_Stm32.c **** *                   - NAND_READY: when memory is ready for the next operation
+ 285:Arch/Stm32/DRV_Nand_Stm32.c **** *******************************************************************************/
+ 286:Arch/Stm32/DRV_Nand_Stm32.c **** static uint32_t DRV_Nandi_GetStatus(void)
+ 287:Arch/Stm32/DRV_Nand_Stm32.c **** {
+ 23675              		.loc 1 287 0
+ 23676              		.cfi_startproc
+ 23677              		@ args = 0, pretend = 0, frame = 8
+ 23678              		@ frame_needed = 1, uses_anonymous_args = 0
+ 23679 066c 80B5     		push	{r7, lr}
+ 23680              	.LCFI24:
+ 23681              		.cfi_def_cfa_offset 8
+ 23682 066e 82B0     		sub	sp, sp, #8
+ 23683              	.LCFI25:
+ 23684              		.cfi_def_cfa_offset 16
+ 23685 0670 00AF     		add	r7, sp, #0
+ 23686              		.cfi_offset 14, -4
+ 23687              		.cfi_offset 7, -8
+ 23688              	.LCFI26:
+ 23689              		.cfi_def_cfa_register 7
+ 288:Arch/Stm32/DRV_Nand_Stm32.c ****   uint32_t timeout = 0x1000000, status = NAND_READY;
+ 23690              		.loc 1 288 0
+ 23691 0672 4FF08073 		mov	r3, #16777216
+ 23692 0676 7B60     		str	r3, [r7, #4]
+ 23693 0678 4FF04003 		mov	r3, #64
+ 23694 067c 3B60     		str	r3, [r7, #0]
+ 289:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 290:Arch/Stm32/DRV_Nand_Stm32.c ****   status = DRV_Nandi_ReadStatus();
+ 23695              		.loc 1 290 0
+ 23696 067e 00F01BF8 		bl	DRV_Nandi_ReadStatus
+ 23697 0682 3860     		str	r0, [r7, #0]
+ 291:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 292:Arch/Stm32/DRV_Nand_Stm32.c ****   /* Wait for a NAND operation to complete or a TIMEOUT to occur */
+ 293:Arch/Stm32/DRV_Nand_Stm32.c ****   while ((status != NAND_READY) &&( timeout != 0x00))
+ 23698              		.loc 1 293 0
+ 23699 0684 06E0     		b	.L34
+ 23700              	.L36:
+ 294:Arch/Stm32/DRV_Nand_Stm32.c ****   {
+ 295:Arch/Stm32/DRV_Nand_Stm32.c ****      status = DRV_Nandi_ReadStatus();
+ 23701              		.loc 1 295 0
+ 23702 0686 00F017F8 		bl	DRV_Nandi_ReadStatus
+ 23703 068a 3860     		str	r0, [r7, #0]
+ 296:Arch/Stm32/DRV_Nand_Stm32.c ****      timeout --;
+ 23704              		.loc 1 296 0
+ 23705 068c 7B68     		ldr	r3, [r7, #4]
+ 23706 068e 03F1FF33 		add	r3, r3, #-1
+ 23707 0692 7B60     		str	r3, [r7, #4]
+ 23708              	.L34:
+ 293:Arch/Stm32/DRV_Nand_Stm32.c ****   while ((status != NAND_READY) &&( timeout != 0x00))
+ 23709              		.loc 1 293 0 discriminator 1
+ 23710 0694 3B68     		ldr	r3, [r7, #0]
+ 23711 0696 402B     		cmp	r3, #64
+ 23712 0698 02D0     		beq	.L35
+ 293:Arch/Stm32/DRV_Nand_Stm32.c ****   while ((status != NAND_READY) &&( timeout != 0x00))
+ 23713              		.loc 1 293 0 is_stmt 0 discriminator 2
+ 23714 069a 7B68     		ldr	r3, [r7, #4]
+ 23715 069c 002B     		cmp	r3, #0
+ 23716 069e F2D1     		bne	.L36
+ 23717              	.L35:
+ 297:Arch/Stm32/DRV_Nand_Stm32.c ****   }
+ 298:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 299:Arch/Stm32/DRV_Nand_Stm32.c ****   if(timeout == 0x00)
+ 23718              		.loc 1 299 0 is_stmt 1
+ 23719 06a0 7B68     		ldr	r3, [r7, #4]
+ 23720 06a2 002B     		cmp	r3, #0
+ 23721 06a4 02D1     		bne	.L37
+ 300:Arch/Stm32/DRV_Nand_Stm32.c ****   {
+ 301:Arch/Stm32/DRV_Nand_Stm32.c ****     status =  NAND_TIMEOUT_ERROR;
+ 23722              		.loc 1 301 0
+ 23723 06a6 4FF48063 		mov	r3, #1024
+ 23724 06aa 3B60     		str	r3, [r7, #0]
+ 23725              	.L37:
+ 302:Arch/Stm32/DRV_Nand_Stm32.c ****   }
+ 303:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 304:Arch/Stm32/DRV_Nand_Stm32.c ****   /* Return the operation status */
+ 305:Arch/Stm32/DRV_Nand_Stm32.c ****   return (status);
+ 23726              		.loc 1 305 0
+ 23727 06ac 3B68     		ldr	r3, [r7, #0]
+ 306:Arch/Stm32/DRV_Nand_Stm32.c **** }
+ 23728              		.loc 1 306 0
+ 23729 06ae 1846     		mov	r0, r3
+ 23730 06b0 07F10807 		add	r7, r7, #8
+ 23731 06b4 BD46     		mov	sp, r7
+ 23732 06b6 80BD     		pop	{r7, pc}
+ 23733              		.cfi_endproc
+ 23734              	.LFE37:
+ 23736              		.align	2
+ 23737              		.thumb
+ 23738              		.thumb_func
+ 23740              	DRV_Nandi_ReadStatus:
+ 23741              	.LFB38:
+ 307:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 308:Arch/Stm32/DRV_Nand_Stm32.c **** /******************************************************************************
+ 309:Arch/Stm32/DRV_Nand_Stm32.c **** * Function Name  : FSMC_NAND_ReadStatus
+ 310:Arch/Stm32/DRV_Nand_Stm32.c **** * Description    : Reads the NAND memory status using the Read status command
+ 311:Arch/Stm32/DRV_Nand_Stm32.c **** * Input          : None
+ 312:Arch/Stm32/DRV_Nand_Stm32.c **** * Output         : None
+ 313:Arch/Stm32/DRV_Nand_Stm32.c **** * Return         : The status of the NAND memory. This parameter can be:
+ 314:Arch/Stm32/DRV_Nand_Stm32.c **** *                   - NAND_BUSY: when memory is busy
+ 315:Arch/Stm32/DRV_Nand_Stm32.c **** *                   - NAND_READY: when memory is ready for the next operation
+ 316:Arch/Stm32/DRV_Nand_Stm32.c **** *                   - NAND_ERROR: when the previous operation gererates error
+ 317:Arch/Stm32/DRV_Nand_Stm32.c **** *******************************************************************************/
+ 318:Arch/Stm32/DRV_Nand_Stm32.c **** static uint32_t DRV_Nandi_ReadStatus(void)
+ 319:Arch/Stm32/DRV_Nand_Stm32.c **** {
+ 23742              		.loc 1 319 0
+ 23743              		.cfi_startproc
+ 23744              		@ args = 0, pretend = 0, frame = 8
+ 23745              		@ frame_needed = 1, uses_anonymous_args = 0
+ 23746              		@ link register save eliminated.
+ 23747 06b8 80B4     		push	{r7}
+ 23748              	.LCFI27:
+ 23749              		.cfi_def_cfa_offset 4
+ 23750 06ba 83B0     		sub	sp, sp, #12
+ 23751              	.LCFI28:
+ 23752              		.cfi_def_cfa_offset 16
+ 23753 06bc 00AF     		add	r7, sp, #0
+ 23754              		.cfi_offset 7, -4
+ 23755              	.LCFI29:
+ 23756              		.cfi_def_cfa_register 7
+ 320:Arch/Stm32/DRV_Nand_Stm32.c ****   uint32_t data = 0x00, status = NAND_BUSY;
+ 23757              		.loc 1 320 0
+ 23758 06be 4FF00003 		mov	r3, #0
+ 23759 06c2 3B60     		str	r3, [r7, #0]
+ 23760 06c4 4FF00003 		mov	r3, #0
+ 23761 06c8 7B60     		str	r3, [r7, #4]
+ 321:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 322:Arch/Stm32/DRV_Nand_Stm32.c ****   /* Read status operation ------------------------------------ */
+ 323:Arch/Stm32/DRV_Nand_Stm32.c ****   *(__IO uint8_t *)(Bank_NAND_ADDR | CMD_AREA) = NAND_CMD_STATUS;
+ 23762              		.loc 1 323 0
+ 23763 06ca 4FF00003 		mov	r3, #0
+ 23764 06ce C7F20103 		movt	r3, 28673
+ 23765 06d2 4FF07002 		mov	r2, #112
+ 23766 06d6 1A70     		strb	r2, [r3, #0]
+ 324:Arch/Stm32/DRV_Nand_Stm32.c ****   data = *(__IO uint8_t *)(Bank_NAND_ADDR);
+ 23767              		.loc 1 324 0
+ 23768 06d8 4FF0E043 		mov	r3, #1879048192
+ 23769 06dc 1B78     		ldrb	r3, [r3, #0]
+ 23770 06de DBB2     		uxtb	r3, r3
+ 23771 06e0 3B60     		str	r3, [r7, #0]
+ 325:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 326:Arch/Stm32/DRV_Nand_Stm32.c ****   if((data & NAND_ERROR) == NAND_ERROR)
+ 23772              		.loc 1 326 0
+ 23773 06e2 3B68     		ldr	r3, [r7, #0]
+ 23774 06e4 03F00103 		and	r3, r3, #1
+ 23775 06e8 DBB2     		uxtb	r3, r3
+ 23776 06ea 002B     		cmp	r3, #0
+ 23777 06ec 03D0     		beq	.L39
+ 327:Arch/Stm32/DRV_Nand_Stm32.c ****   {
+ 328:Arch/Stm32/DRV_Nand_Stm32.c ****     status = NAND_ERROR;
+ 23778              		.loc 1 328 0
+ 23779 06ee 4FF00103 		mov	r3, #1
+ 23780 06f2 7B60     		str	r3, [r7, #4]
+ 23781 06f4 0BE0     		b	.L40
+ 23782              	.L39:
+ 329:Arch/Stm32/DRV_Nand_Stm32.c ****   }
+ 330:Arch/Stm32/DRV_Nand_Stm32.c ****   else if((data & NAND_READY) == NAND_READY)
+ 23783              		.loc 1 330 0
+ 23784 06f6 3B68     		ldr	r3, [r7, #0]
+ 23785 06f8 03F04003 		and	r3, r3, #64
+ 23786 06fc 002B     		cmp	r3, #0
+ 23787 06fe 03D0     		beq	.L41
+ 331:Arch/Stm32/DRV_Nand_Stm32.c ****   {
+ 332:Arch/Stm32/DRV_Nand_Stm32.c ****     status = NAND_READY;
+ 23788              		.loc 1 332 0
+ 23789 0700 4FF04003 		mov	r3, #64
+ 23790 0704 7B60     		str	r3, [r7, #4]
+ 23791 0706 02E0     		b	.L40
+ 23792              	.L41:
+ 333:Arch/Stm32/DRV_Nand_Stm32.c ****   }
+ 334:Arch/Stm32/DRV_Nand_Stm32.c ****   else
+ 335:Arch/Stm32/DRV_Nand_Stm32.c ****   {
+ 336:Arch/Stm32/DRV_Nand_Stm32.c ****     status = NAND_BUSY;
+ 23793              		.loc 1 336 0
+ 23794 0708 4FF00003 		mov	r3, #0
+ 23795 070c 7B60     		str	r3, [r7, #4]
+ 23796              	.L40:
+ 337:Arch/Stm32/DRV_Nand_Stm32.c ****   }
+ 338:Arch/Stm32/DRV_Nand_Stm32.c **** 
+ 339:Arch/Stm32/DRV_Nand_Stm32.c ****   return (status);
+ 23797              		.loc 1 339 0
+ 23798 070e 7B68     		ldr	r3, [r7, #4]
+ 340:Arch/Stm32/DRV_Nand_Stm32.c **** }
+ 23799              		.loc 1 340 0
+ 23800 0710 1846     		mov	r0, r3
+ 23801 0712 07F10C07 		add	r7, r7, #12
+ 23802 0716 BD46     		mov	sp, r7
+ 23803 0718 80BC     		pop	{r7}
+ 23804 071a 7047     		bx	lr
+ 23805              		.cfi_endproc
+ 23806              	.LFE38:
+ 23808              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 DRV_Nand_Stm32.c
+     /tmp/ccfvlIJq.s:22753  .text:00000000 $t
+     /tmp/ccfvlIJq.s:22758  .text:00000000 DRV_Nand_Init
+     /tmp/ccfvlIJq.s:22890  .text:00000108 DRV_Nand_PageRead
+     /tmp/ccfvlIJq.s:22926  .text:00000124 DRV_Nand_IdRead
+     /tmp/ccfvlIJq.s:23000  .text:00000198 DRV_Nand_PageWrite
+     /tmp/ccfvlIJq.s:23036  .text:000001b4 DRV_Nand_PageCopy
+     /tmp/ccfvlIJq.s:23673  .text:0000066c DRV_Nandi_GetStatus
+     /tmp/ccfvlIJq.s:23209  .text:00000304 DRV_Nand_BlockErase
+     /tmp/ccfvlIJq.s:23284  .text:0000037c DRV_Nand_SectorRead
+     /tmp/ccfvlIJq.s:23482  .text:000004f8 DRV_Nand_sectorWrite
+     /tmp/ccfvlIJq.s:23740  .text:000006b8 DRV_Nandi_ReadStatus
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+RCC_AHBPeriphClockCmd
+RCC_APB2PeriphClockCmd
+GPIO_Init
+FSMC_NANDInit
+FSMC_NANDCmd
+FSMC_NANDECCCmd
+FSMC_GetECC
