@@ -11,13 +11,17 @@
 #include "Inc/LIB_Ntl_BBM.h"
 
 
-#define kSectorSize             512 /* size in Byte */
-#define kSectorPageCount        4    /* sector / page */
-#define kPageBlockCount         64    /* page / block */
-#define kBlockSize              (kSectorSize*kSectorPageCount*kPageBlockCount)
-#define kPhysicalBlockcount     512
-#define kLogicalPageCount       (((kPhysicalBlockcount-4)*kBlockSize)/(kPageBlockCount*kSectorPageCount*kSectorSize))
-#define kPhysicalPageCount      ((kPhysicalBlockcount*kBlockSize)/(kPageBlockCount*kSectorPageCount*kSectorSize))
+#define kSectorSize                   512 /* size in Byte */
+#define kSectorPageCount              4    /* sector / page */
+#define kPageBlockCount               64    /* page / block */
+#define kBlockSize                    (kSectorSize*kSectorPageCount*kPageBlockCount)
+#define kPhysicalBlockcount           512
+#define kLogicalPageCount             (((kPhysicalBlockcount-4)*kBlockSize)/(kPageBlockCount*kSectorPageCount*kSectorSize))
+#define kPhysicalPageCount            ((kPhysicalBlockcount*kBlockSize)/(kPageBlockCount*kSectorPageCount*kSectorSize))
+#define kLogicalSecteurCount	      (kLogicalPageCount*kSectorPageCount)
+#define kPageFromSector(Sector)       (Sector/kSectorPageCount)
+#define kSectorOffsetValue( sector ) (sector%kSectorPageCount)
+#define kSectorOffsetMask( sector )   ( 0x01<<kSectorOffsetValue( sector ))
 #define kNTL_DefaultPageIndex   UINT32_MAX
 #define kNTL_DefaultBlockIndex   UINT32_MAX
 
@@ -31,6 +35,7 @@ typedef struct
 typedef struct
 {
 	uint8_t tucPageBlankStatus[kPageBlockCount/8];
+	uint8_t tucPageFreeStatus[kPageBlockCount/8];
 } tPhysicalBlockInfo;
 
 typedef struct
@@ -45,13 +50,13 @@ struct
 {
 	tLogicalPageInfo tPageInfo[kLogicalPageCount];
 	tPhysicalBlockInfo tPhysicalBlockInfo[kPhysicalBlockcount];
-	uint32_t uiNextFreePageAddress;
+	uint32_t uiNextBlankPageAddress;
 	uint32_t uiSpareBlockAddress;
 	uint32_t uiGlobalOperationCount;
 } tLIB_Ntl_InternalData;
 
 static int LIB_Ntli_BlockErase( uint32_t uiBlockAddress );
-static int LIB_Ntli_FindFreePage( uint32_t uiBlockAddress );
+static int LIB_Ntli_FindBlankPage( uint32_t uiBlockAddress );
 
 void LIB_Ntl_init( void )
 {
@@ -116,6 +121,11 @@ void LIB_Ntl_init( void )
 						if ( pNtlSpareData->uiAge > tLIB_Ntl_InternalData.uiGlobalOperationCount )
 							tLIB_Ntl_InternalData.uiGlobalOperationCount=pNtlSpareData->uiAge;
 					}
+					else
+					{   /* The older page is free */
+						tLIB_Ntl_InternalData.tPhysicalBlockInfo[ uiPhysicalPageAdress/kPageBlockCount].tucPageFreeStatus[(uiPhysicalPageAdress%kPageBlockCount)/8] &= ~(0x01 << ((uiPhysicalPageAdress%kPageBlockCount)%8));
+					}
+
 				}
 				else
 					return -1;
@@ -129,27 +139,131 @@ void LIB_Ntl_init( void )
 
 	}
 	/* find first blank page*/
-	for( uiBlockAddress=0;uiBlockAddress < kPhysicalBlockcount && tLIB_Ntl_InternalData.uiNextFreePageAddress == kNTL_DefaultPageIndex ;uiBlockAddress++)
+	for( uiBlockAddress=0;uiBlockAddress < kPhysicalBlockcount && tLIB_Ntl_InternalData.uiNextBlankPageAddress == kNTL_DefaultPageIndex ;uiBlockAddress++)
 	{
-		uiPhysicalPageAdresse = LIB_Ntli_FindFreePage(kPhysicalBlockcount);
+		uiPhysicalPageAdresse = LIB_Ntli_FindBlankPage(kPhysicalBlockcount);
 		if( kNTL_DefaultPageIndex != uiPhysicalPageAdresse )
 		{
 			uiPhysicalPageAdresse += (uiBlockAddress * kPageBlockCount);
-			tLIB_Ntl_InternalData.uiNextFreePageAddress=uiPhysicalPageAdresse;
+			tLIB_Ntl_InternalData.uiNextBlankPageAddress=uiPhysicalPageAdresse;
 		}
 	}
-	if( tLIB_Ntl_InternalData.uiNextFreePageAddress == kNTL_DefaultPageIndex  || tLIB_Ntl_InternalData.uiSpareBlockAddress == kNTL_DefaultBlockIndex )
+	if( tLIB_Ntl_InternalData.uiNextBlankPageAddress == kNTL_DefaultPageIndex  || tLIB_Ntl_InternalData.uiSpareBlockAddress == kNTL_DefaultBlockIndex )
 		return -2;
 }
 
 int LIB_Ntl_SectorWrite( uint8_t *pucData , uint32_t uiSectorAddress)
 {
+	uint32_t uiPhysicalPageAdress;
+	uint32_t uiNewPageAdress;
+	uint32_t LogicalPageAdress = kPageFromSector(uiSectorAddress);
+	int iReturn=0;
 
+	if( uiSectorAddress >= kLogicalSecteurCount )
+		return -1;
+
+	if (InternalData.tPageInfo[ LogicalPageAdress ].ucStatus & kSectorOffsetMask(uiSectorAddress))
+	{
+		/* The Sector is blank*/
+		uiPhysicalPageAdress = tLIB_Ntl_InternalData.tPageInfo[ LogicalPageAdress ].uiPhysicalPageAdresse;
+		if( uiPhysicalPageAdress != kNTL_DefaultPageIndex )
+		{
+			/* The page is allocated write into the blank sector*/
+			LIb_Ntli_WritePhysicalSector( pucData , uiPhysicalPageAdress*kSectorPageCount + kSectorOffsetValue(uiSectorAddress) , LogicalPageAdress );
+		}
+		else
+		{
+			/* The logical page is not allocated */
+			uiNewPageAdress = LIB_Ntli_GetFreePage();
+			if( uiNewPageAdress != kNTL_DefaultPageIndex )
+			{
+				iReturn = LIb_Ntli_WritePhysicalSector( pucData , uiNewPageAdress *kSectorPageCount + kSectorOffsetValue(uiSectorAddress) , LogicalPageAdress );
+			}
+			else
+				iReturn=-1;
+		}
+
+	}
+	else
+	{
+		uint8_t ucSectorIndex;
+		uint8_t tucPageReadBuffer[kSectorSize];
+
+		/* The physical sector is not blank, move to a new physical page */
+		uiNewPageAdress = LIB_Ntli_GetFreePage();
+		if( uiNewPageAdress != kNTL_DefaultPageIndex )
+		{
+			/* The new page is valid*/
+			for (ucSectorIndex = 0; ucSectorIndex < kSectorPageCount && iReturn == 0x00 ; ++ucSectorIndex)
+			{
+				/* Copy other sector or write current sector ? */
+				if( ucSectorIndex != kSectorOffsetValue(uiSectorAddress) )
+				{
+					/*copy other sector only if it's not blank */
+					if( !( InternalData.tPageInfo[ LogicalPageAdress ].ucStatus & kSectorOffsetMask(ucSectorIndex) ) )
+					{
+						/* Read Sector in old place */
+						BBM_SectorRead( tucPageReadBuffer , NULL , uiPhysicalPageAdress * kSectorPageCount + ucSectorIndex );
+						/* Write sector in new place */
+						iReturn = LIb_Ntli_WritePhysicalSector( tucPageReadBuffer , uiNewPageAdress *kSectorPageCount + ucSectorIndex , LogicalPageAdress );
+					}
+				}
+				else /* Write current sector in new place */
+					iReturn = LIb_Ntli_WritePhysicalSector( pucData , uiNewPageAdress *kSectorPageCount + ucSectorIndex , LogicalPageAdress );
+
+			}
+			/* The old page is now free */
+			tLIB_Ntl_InternalData.tPhysicalBlockInfo[ uiPhysicalPageAdress/kPageBlockCount].tucPageFreeStatus[(uiPhysicalPageAdress%kPageBlockCount)/8] &= ~(0x01 << ((uiPhysicalPageAdress%kPageBlockCount)%8));
+		}
+	}
+
+	return iReturn;
+}
+
+int LIb_Ntli_WritePhysicalSector(  uint8_t *pucData , uint32_t uiPhysicalSectorAddress , uint32_t uiLogicalPageAdress )
+{
+	DRV_Nand_SectorSpareData NandSpareArea;
+	tNtl_SpareAreData *pNtlSpareData = &(NandSpareArea.tucData[0]);
+	uint32_t uiPhysicalPageAdress = uiPhysicalSectorAddress/kSectorPageCount;
+
+	/* Sector in use*/
+	tLIB_Ntl_InternalData.tPageInfo[ uiLogicalPageAdress ].ucStatus&=~( kSectorOffsetMask(uiPhysicalSectorAddress));
+	/* Set physical address of the page*/
+	tLIB_Ntl_InternalData.tPageInfo[ uiLogicalPageAdress ].uiPhysicalPageAdresse = uiPhysicalPageAdress;
+	/* Set age of the page */
+	tLIB_Ntl_InternalData.tPageInfo[ uiLogicalPageAdress ].uiAge = tLIB_Ntl_InternalData.uiGlobalOperationCount++;
+	/* Update page blank satuts */
+	tLIB_Ntl_InternalData.tPhysicalBlockInfo[ uiPhysicalPageAdress/kPageBlockCount].tucPageBlankStatus[(uiPhysicalPageAdress%kPageBlockCount)/8] &= ~(0x01 << ((uiPhysicalPageAdress%kPageBlockCount)%8));
+	/* Set Spare area data */
+	pNtlSpareData->ucStatus=0x00;
+	pNtlSpareData->uiAge=tLIB_Ntl_InternalData.uiGlobalOperationCount++;
+	pNtlSpareData->uiLogicalIndex=kPageFromSector(uiLogicalPageAdress);
+
+	return BBM_sectorWrite( pucData , &NandSpareArea ,uiPhysicalSectorAddress  );
 }
 
 int LIB_Ntl_SectorRead( uint8_t *pucData , uint32_t uiSectorAddress)
 {
+	uint32_t uiPhysicalPageAdress;
+	uint32_t LogicalPageAdress = kPageFromSector(uiSectorAddress);
+	int iReturn=0;
 
+	if( uiSectorAddress >= kLogicalSecteurCount )
+		return -1;
+
+	if (InternalData.tPageInfo[ LogicalPageAdress ].ucStatus == OxFF & kSectorOffsetMask(uiSectorAddress))
+		memset(pucData,0xff,kSectorSize); /* Sector is blank */
+	else
+	{
+		/* Sector is not blank */
+		uiPhysicalPageIndex = tLIB_Ntl_InternalData.tPageInfo[ LogicalPageAdress ].uiPhysicalPageAdresse;
+		if( uiPhysicalPageIndex < kPhysicalPageCount )
+			iReturn=BBM_SectorRead( pucData , NULL , uiPhysicalPageIndex * kSectorPageCount + kSectorOffsetValue(uiSectorAddress));
+		else
+			iReturn=-1;
+	}
+
+	return iReturn;
 }
 
 static int LIB_Ntli_BlockErase( uint32_t uiBlockAddress )
@@ -165,9 +279,13 @@ static int LIB_Ntli_BlockErase( uint32_t uiBlockAddress )
 
 }
 
-static int LIB_Ntli_FindFreePage( uint32_t uiBlockAddress )
+static int LIB_Ntli_FindBlankPage( uint32_t uiBlockAddress )
 {
 	uint8_t ucIndex,ucPageindex,ucData , ucMask=0x1;
+
+	if (uiBlockAddress == tLIB_Ntl_InternalData.uiSpareBlockAddress )
+		return kNTL_DefaultPageIndex;
+
 	for (ucIndex = 0; ucIndex < kPageBlockCount/8; ++ucIndex)
 	{
 		ucData = tLIB_Ntl_InternalData.tPhysicalBlockInfo[uiBlockAddress].tucPageBlankStatus[ucIndex];
