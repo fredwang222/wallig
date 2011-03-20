@@ -45,9 +45,15 @@ struct
 	uint16_t uiFreeSpareBlockIndex;
 } BBM_InternalData;
 
+/**************************************************************
+				Local Private functions prototypes
+***************************************************************/
 static void BBMi_BadBlockMark( uint32_t uiBlockIndex );
 static uint32_t BBMi_GetNewBlock( void );
 
+/**************************************************************
+				public functions
+***************************************************************/
 int BBM_Init( void )
 {
 	uint32_t uiPhysicalBlockIndex;
@@ -198,6 +204,10 @@ int BBM_PageCopy( uint32_t uiSrcLogicalPageIndex , uint32_t uiDestLogicalPageInd
 
 	return 0;
 }
+
+/**************************************************************
+				Local Private functions
+***************************************************************/
 
 static uint32_t BBMi_GetNewBlock( void )
 {
