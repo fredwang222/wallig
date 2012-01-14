@@ -1,0 +1,19 @@
+$(SYSTEM_LIB_OBJ): $(OBJLIB) obj/system_stm32f2xx.o obj/core_cm3.o
+	arm-none-eabi-ar -cr $(SYSTEM_LIB_OBJ) $(OBJLIB)  obj/system_stm32f2xx.o obj/core_cm3.o
+
+obj/%.o: $(STM32LIB_PATH)/src/%.c
+	$(CC) -o $@ -c $< $(CFLAGS)  $(SYS_INCLUDE) 
+
+obj/core_cm3.o:$(CMSIS_PATH)/CoreSupport/core_cm3.c
+	$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE) 
+
+obj/stm32f2xx_it.o:src_f2/stm32f2xx_it.c
+	$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE)
+
+obj/stm32f2xx_Vector.o:src_f2/stm32f2xx_Vector.c
+	$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE)  
+
+obj/system_stm32f2xx.o:$(CMSIS_PATH)/DeviceSupport/ST/STM32F2xx/system_stm32f2xx.c
+	$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE) 
+
+

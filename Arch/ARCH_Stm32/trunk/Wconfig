@@ -1,23 +1,29 @@
-   
-choice 
-   prompt "choose CPU"
-   default STM32F103RBT6 if LCD_STM32 
-   default STM32F207ZGT6 if BOARD_CUSTOM
-
+menu "choose CPU"
    config STM32F102
       bool STM32F102
 
    config STM32F103RBT6
+ 	select SUB_STM32F1XX
       bool STM32F103RBT6
 
    config STM32F207ZGT6
+ 	select SUB_STM32F2XX
       bool STM32F207ZGT6
 
    config STM32F103ZET6
+ 	select SUB_STM32F1XX
       bool STM32F103ZET6
-   
-endchoice
 
+endmenu
+
+menu "sub arch"
+  config SUB_STM32F1XX
+	bool SUB_STM32F1XX
+  config SUB_STM32F2XX
+	bool SUB_STM32F2XX
+endmenu
+
+menu "memory"
 menuconfig INTERNAL_RAM
    int "Internal RAM size in KB"
    default 32 if STM32F103RBT6
@@ -46,7 +52,9 @@ config EXTERNAL_RAM_SIZE
    int "external ROM size in kb"
    default 1024
    
+endmenu
 
+menu "arch lib"
 config LIB_SOURCE_ARCHIVE_NAME
    default "stm32f2xx_stdperiph_lib.zip" if STM32F207ZGT6 
    default "stm32f10x_stdperiph_lib.zip" if STM32F103ZET6 ||STM32F103RBT6 
@@ -56,3 +64,4 @@ config LIB_SOURCE_PATH
    string "STM 32 source address"
    depends on ARCH_STM32
    default "http://www.st.com/internet/com/SOFTWARE_RESOURCES/SW_COMPONENT/FIRMWARE/"
+endmenu
