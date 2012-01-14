@@ -1,0 +1,14 @@
+mainmenu "Wallig configuration tool"
+
+config PRJ_NAME
+	string "Project Name"
+   default "Tempalte"
+
+menu "Device Drivers"
+ source Drv/Gpio/Wconfig
+ source Drv/Uart/Wconfig
+endmenu
+
+menu "System"
+ source System/Wconfig
+endmenu
