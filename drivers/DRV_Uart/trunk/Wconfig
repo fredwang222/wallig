@@ -1,0 +1,111 @@
+menuconfig UART
+	boolean "Uart driver support"
+   
+menuconfig UART1  
+   boolean "enable UART 1"
+   depends on UART
+choice 
+   prompt "UART1 Baudrate"
+   default UART1_115200
+   depends on UART1
+
+   config UART1_4800
+      bool "4800 bauds"
+   config UART1_9600
+      bool "9600 bauds"
+   config UART1_115200
+      bool "15200 bauds"
+endchoice
+
+choice 
+   prompt "UART1 Parity"
+   default UART1_NONE
+   depends on UART1
+
+   config UART1_PARITY_NONE
+      bool "Parity NONE"
+   config UART1_PARITY_EVEN
+      bool "Parity EVEN"
+   config UART1_PARITY_ODD
+      bool "Parity ODD"
+endchoice
+
+menu "Uart Pio config"
+depends on UART1
+choice 
+   prompt "UART1 IO Port"
+   default UART1_PORTA
+   depends on UART1
+
+   config UART1_PORTA
+      bool "PORTA"
+   config UART1_PORTB
+      bool "PORTB"
+   config UART1_PORTC
+      bool "PORTC"
+endchoice   
+
+config UART1_RXPIO
+   int "RX pio index"
+   default 9
+   depends on UART1
+config UART1_TXPIO
+   int "TX pio index"
+   default 10
+   depends on UART1
+endmenu
+
+menuconfig UART2
+   boolean "enable UART 2"
+   default n
+   depends on UART
+   choice 
+   prompt "UART2 Baudrate"
+   default UART2_115200
+   depends on UART2
+
+   config UART2_4800
+      bool "4800 bauds"
+   config UART2_9600
+      bool "9600 bauds"
+   config UART2_115200
+      bool "15200 bauds"
+endchoice
+
+choice 
+   prompt "UART2 Parity"
+   default UART2_NONE
+   depends on UART2
+
+   config UART2_PARITY_NONE
+      bool "Parity NONE"
+   config UART2_PARITY_EVEN
+      bool "Parity EVEN"
+   config UART2_PARITY_ODD
+      bool "Parity ODD"
+endchoice
+
+menu "Uart Pio config"
+depends on UART2
+choice 
+   prompt "UART2 IO Port"
+   default UART2_PORTA
+   depends on UART2
+
+   config UART2_PORTA
+      bool "PORTA"
+   config UART2_PORTB
+      bool "PORTB"
+   config UART2_PORTC
+      bool "PORTC"
+endchoice   
+
+config UART2_RXPIO
+   int "RX pio index"
+   default 9
+   depends on UART2
+config UART2_TXPIO
+   int "TX pio index"
+   default 10
+   depends on UART2
+endmenu
