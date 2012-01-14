@@ -133,13 +133,23 @@ DRV_Uart_Error DRV_Uart_Open( const char * pcDeviceName , DRV_Uart_Handle *phDev
 	USART_Cmd( pUart->pCfg->Handle , ENABLE);
 
 	/* Configure USARTx Rx  as input floating */
+#ifndef SUB_STM32F2XX
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+#else
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+#endif
 	GPIO_InitStructure.GPIO_Pin = pUart->pCfg->uiRxPio ;
 	GPIO_Init(pUart->pCfg->tPort, &GPIO_InitStructure);
 
 	/* Configure  Tx  as push-pull */
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+#ifndef SUB_STM32F2XX
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+#else
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+#endif
 	GPIO_InitStructure.GPIO_Pin = pUart->pCfg->uiTxPio;
 	GPIO_Init(pUart->pCfg->tPort, &GPIO_InitStructure);
 
