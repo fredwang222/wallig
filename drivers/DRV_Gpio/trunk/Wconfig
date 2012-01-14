@@ -1,0 +1,9 @@
+menuconfig GPIO
+	tristate "Gpio driver support"
+   
+if GPIO
+config GPIO_TEST
+	boolean
+	default y
+   
+endif
