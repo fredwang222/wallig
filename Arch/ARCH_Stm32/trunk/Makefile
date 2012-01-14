@@ -34,6 +34,7 @@ include Makefile.f2
 endif
 
 $(ODIR):
+	@echo $(STM32LIB_PATH)
 	mkdir $@
 
 
