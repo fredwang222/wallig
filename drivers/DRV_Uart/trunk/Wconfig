@@ -1,111 +1,113 @@
-menuconfig UART
+menuconfig DRV_UART
 	boolean "Uart driver support"
    
-menuconfig UART1  
+menuconfig DRV_UART1  
    boolean "enable UART 1"
-   depends on UART
-choice 
-   prompt "UART1 Baudrate"
-   default UART1_115200
-   depends on UART1
+   depends on DRV_UART
 
-   config UART1_4800
-      bool "4800 bauds"
-   config UART1_9600
-      bool "9600 bauds"
-   config UART1_115200
-      bool "15200 bauds"
-endchoice
+config DRV_UART1_BAUDRATE
+   int "Uart1 Baudrate"
+   depends on DRV_UART1
+   default "115200"
 
-choice 
-   prompt "UART1 Parity"
-   default UART1_NONE
-   depends on UART1
+config DRV_UART1_PARITY
+	string "Uart1 Parity"
+	depends on DRV_UART1
+	default "USART_Parity_No"
+	---help--- 
+		Possible value:
+		- USART_Parity_No
+		- USART_Parity_Even
+		- USART_Parity_Odd
 
-   config UART1_PARITY_NONE
-      bool "Parity NONE"
-   config UART1_PARITY_EVEN
-      bool "Parity EVEN"
-   config UART1_PARITY_ODD
-      bool "Parity ODD"
-endchoice
+config DRV_UART1_WORDLENGTH
+	string "Uart1 Word length"
+	depends on DRV_UART1
+	default "USART_WordLength_8b"
+	---help--- 
+		Possible value:
+		- USART_WordLength_8b
+		- USART_WordLength_9b
+
+config DRV_UART1_STOPBITS
+	string "Uart1 Stop Bits"
+	depends on DRV_UART1
+	default "USART_StopBits_1"
+	---help--- 
+		Possible value:
+		- USART_StopBits_1
+		- USART_StopBits_0_5
+		- USART_StopBits_2
+		- USART_StopBits_1_5 
 
 menu "Uart Pio config"
-depends on UART1
-choice 
-   prompt "UART1 IO Port"
-   default UART1_PORTA
-   depends on UART1
+depends on DRV_UART1
+config DRV_UART1_GPIO
+   string "UART1 IO Port"
+   default "GPIOA"
+	---help--- 
+		Possible value:
+		- GPIOA
 
-   config UART1_PORTA
-      bool "PORTA"
-   config UART1_PORTB
-      bool "PORTB"
-   config UART1_PORTC
-      bool "PORTC"
-endchoice   
-
-config UART1_RXPIO
-   int "RX pio index"
-   default 9
-   depends on UART1
-config UART1_TXPIO
-   int "TX pio index"
-   default 10
-   depends on UART1
+config DRV_UART1_RXPIO
+	string  "RX pio index"
+	default "GPIO_Pin_9"
+config DRV_UART1_TXPIO
+	string "TX pio index"
+	default "GPIO_Pin_10"
 endmenu
 
-menuconfig UART2
+menuconfig DRV_UART2
    boolean "enable UART 2"
    default n
-   depends on UART
+   depends on DRV_UART
    choice 
    prompt "UART2 Baudrate"
-   default UART2_115200
-   depends on UART2
+   default DRV_UART2_115200
+   depends on DRV_UART2
 
-   config UART2_4800
+   config DRV_UART2_4800
       bool "4800 bauds"
-   config UART2_9600
+   config DRV_UART2_9600
       bool "9600 bauds"
-   config UART2_115200
+   config DRV_UART2_115200
       bool "15200 bauds"
 endchoice
 
 choice 
    prompt "UART2 Parity"
-   default UART2_NONE
-   depends on UART2
+   default DRV_UART2_NONE
+   depends on DRV_UART2
 
-   config UART2_PARITY_NONE
+   config DRV_UART2_PARITY_NONE
       bool "Parity NONE"
-   config UART2_PARITY_EVEN
+   config DRV_UART2_PARITY_EVEN
       bool "Parity EVEN"
-   config UART2_PARITY_ODD
+   config DRV_UART2_PARITY_ODD
       bool "Parity ODD"
 endchoice
 
 menu "Uart Pio config"
-depends on UART2
+depends on DRV_UART2
 choice 
    prompt "UART2 IO Port"
-   default UART2_PORTA
-   depends on UART2
+   default DRV_UART2_PORTA
+   depends on DRV_UART2
 
-   config UART2_PORTA
+   config DRV_UART2_PORTA
       bool "PORTA"
-   config UART2_PORTB
+   config DRV_UART2_PORTB
       bool "PORTB"
-   config UART2_PORTC
+   config DRV_UART2_PORTC
       bool "PORTC"
 endchoice   
 
-config UART2_RXPIO
+config DRV_UART2_RXPIO
    int "RX pio index"
    default 9
-   depends on UART2
-config UART2_TXPIO
+   depends on DRV_UART2
+config DRV_UART2_TXPIO
    int "TX pio index"
    default 10
-   depends on UART2
+   depends on DRV_UART2
 endmenu

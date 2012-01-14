@@ -12,8 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "DRV_Uart_CFG.h"
-#include "stm32f10x.h"
-#include "stm32f10x_usart.h"
+#include "System.h"
 #include "../../DRV_Uart.h"
 
 /**************************************************************
