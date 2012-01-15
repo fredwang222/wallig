@@ -1,3 +1,4 @@
+END_OF_STAK :=  `echo 'obase=16;$(INTERNAL_RAM)*1024+536870912' | bc`
 $(SYSTEM_LIB_OBJ): $(OBJLIB) obj/system_stm32f2xx.o obj/core_cm3.o
 	arm-none-eabi-ar -cr $(SYSTEM_LIB_OBJ) $(OBJLIB)  obj/system_stm32f2xx.o obj/core_cm3.o
 
@@ -15,5 +16,14 @@ obj/stm32f2xx_Vector.o:src_f2/stm32f2xx_Vector.c
 
 obj/system_stm32f2xx.o:$(CMSIS_PATH)/DeviceSupport/ST/STM32F2xx/system_stm32f2xx.c
 	$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE) 
+
+stm32.ld: 
+	@echo generate $@
+	@cp stm32f2xx.ld stm32.ld
+	@sed -i s/INTERNAL_RAM/$(INTERNAL_RAM)k/ stm32.ld
+	@sed -i s/INTERNAL_ROM/$(INTERNAL_ROM)k/ stm32.ld
+	@sed -i s/HIGH_STACK_ADR/0x$(END_OF_STAK)/ stm32.ld
+	
+	
 
 

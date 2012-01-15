@@ -24,15 +24,15 @@ menu "sub arch"
 endmenu
 
 menu "memory"
-menuconfig INTERNAL_RAM
+config INTERNAL_RAM
    int "Internal RAM size in KB"
-   default 32 if STM32F103RBT6
-   default 64 if STM32F207ZGT6
-   
-menuconfig INTERNAL_ROM
-   int "Internal Flash size in KB"
-   default 64 if STM32F103RBT6
    default 128 if STM32F207ZGT6
+   default 32 if STM32F103RBT6
+   
+config INTERNAL_ROM
+   int "Internal Flash size in KB"
+   default 1024 if STM32F207ZGT6
+   default 64 if STM32F103RBT6
 
 menuconfig EXTERNAL_RAM
    bool "External SRAM on board"

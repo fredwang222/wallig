@@ -28,8 +28,8 @@ Linker subscript for STM32F2xx definitions with 1024K Flash and 96K RAM */
 
 MEMORY
 {
-  RAM (xrw) : ORIGIN = 0x20000000, LENGTH = 128K
-  FLASH (rx) : ORIGIN = 0x8000000, LENGTH = 1024K
+  RAM (xrw) : ORIGIN = 0x20000000, LENGTH = INTERNAL_RAM
+  FLASH (rx) : ORIGIN = 0x8000000, LENGTH = INTERNAL_ROM
   FLASHB1 (rx) : ORIGIN = 0x00000000, LENGTH = 0
   EXTMEMB0 (rx) : ORIGIN = 0x00000000, LENGTH = 0
   EXTMEMB1 (rx) : ORIGIN = 0x00000000, LENGTH = 0
@@ -38,7 +38,7 @@ MEMORY
 }
 
 /* higher address of the user mode stack */
-_estack = 0x20020000;
+_estack = HIGH_STACK_ADR;
 
 
 

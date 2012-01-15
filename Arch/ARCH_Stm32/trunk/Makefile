@@ -15,7 +15,7 @@ endif
 all: .system  $(ODIR) $(SYSTEM_LIB_OBJ)
 
 
-.system: lib 
+.system: lib stm32.ld
 
 Archive/$(LIB_SOURCE_ARCHIVE_NAME):
 	#@echo Archive/$(LIB_SOURCE_ARCHIVE_NAME)
