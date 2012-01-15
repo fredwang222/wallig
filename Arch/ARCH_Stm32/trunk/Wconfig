@@ -55,10 +55,15 @@ config EXTERNAL_RAM_SIZE
 endmenu
 
 menu "arch lib"
-config LIB_SOURCE_ARCHIVE_NAME
-   default "stm32f2xx_stdperiph_lib.zip" if STM32F207ZGT6 
-   default "stm32f10x_stdperiph_lib.zip" if STM32F103ZET6 ||STM32F103RBT6 
-	string "Archive name"
+config LIB_SOURCE_ARCHIVE_NAME_F1
+	depends on SUB_STM32F1XX
+	default "stm32f10x_stdperiph_lib.zip"
+	string "Archive name for stm32f1xx"
+
+config LIB_SOURCE_ARCHIVE_NAME_F2
+	depends on SUB_STM32F2XX
+	default "stm32f2xx_stdperiph_lib.zip"
+	string "Archive name for stm32f2xx"
 
 config LIB_SOURCE_PATH
    string "STM 32 source address"
