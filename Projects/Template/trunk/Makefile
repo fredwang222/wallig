@@ -29,6 +29,8 @@ Config/config.mk: .config
 	@echo SUB_ARCH := `grep SUB_ conf.txt | sed s/"=y"//`>>$@
 	@grep LIB_SOURCE_ARCHIVE_NAME conf.txt | sed s/"="/" := "/ | sed s/\"//g>>$@
 	@grep LIB_SOURCE_PATH conf.txt | sed s/"="/" := "/ | sed s/\"//g>>$@
+	@grep INTERNAL_RAM conf.txt | sed s/"="/" := "/ | sed s/\"//g>>$@
+	@grep INTERNAL_ROM conf.txt | sed s/"="/" := "/ | sed s/\"//g>>$@
 	@sed -i s/^/"export "/ $@
 	#@rm conf.txt
 
@@ -43,10 +45,10 @@ System/$(ARCH)/.system:
 	@(cd System/$(ARCH) && $(MAKE))
 
 src/main.o: src/main.c 
-	$(CC) -o $@ -c $< $(CFLAGS)  
+	$(CC) -o $@ -c $< $(CFLAGS)  $(DRV_INC)
 
-$(PROJECT_EXE): src/main.o  $(SYSTEM_LIB_OBJ) 
-	$(CC) -o $@  src/main.o   $(SYSTEM_LIB_OBJ)   $(LDFLAGS) 
+$(PROJECT_EXE): src/main.o  $(DRV_OBJ) $(SYSTEM_LIB_OBJ) 
+	$(CC) -o $@  $<  $(LDFLAGS) 
 	@echo Creat binary file:
 	arm-none-eabi-objcopy -O binary $@ $(patsubst %.elf,%.bin,$@) 
 	@echo Creat disassembly file:
