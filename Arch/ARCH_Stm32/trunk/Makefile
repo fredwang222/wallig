@@ -4,10 +4,8 @@ ifeq ($(SUB_ARCH),SUB_STM32F2XX)
 include arch_f2.mk
 endif
 
-all: .system  $(ODIR) $(SYSTEM_LIB_OBJ)
+all: arch.mk lib stm32.ld patch $(ODIR) $(SYSTEM_LIB_OBJ)
 
-
-.system: lib stm32.ld
 
 Archive/$(LIB_SOURCE_ARCHIVE_NAME):
 	#@echo Archive/$(LIB_SOURCE_ARCHIVE_NAME)

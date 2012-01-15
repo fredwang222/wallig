@@ -9,22 +9,28 @@ OBJLIB = $(patsubst %,$(ODIR)/%,$(_OBJLIB))
 END_OF_STAK :=  `echo 'obase=16;$(INTERNAL_RAM)*1024+536870912' | bc`
 
 $(SYSTEM_LIB_OBJ): $(OBJLIB) obj/system_stm32f2xx.o obj/core_cm3.o
-	arm-none-eabi-ar -cr $(SYSTEM_LIB_OBJ) $(OBJLIB)  obj/system_stm32f2xx.o obj/core_cm3.o
+	@arm-none-eabi-ar -cr $(SYSTEM_LIB_OBJ) $(OBJLIB)  obj/system_stm32f2xx.o obj/core_cm3.o
+	@echo "make $(SYSTEM_LIB_OBJ)"
 
 obj/%.o: $(STM32LIB_PATH)/src/%.c
-	$(CC) -o $@ -c $< $(CFLAGS)  $(SYS_INCLUDE) 
+	@$(CC) -o $@ -c $< $(CFLAGS)  $(SYS_INCLUDE) 
+	@echo "compiling $@" 
 
 obj/core_cm3.o:$(CMSIS_PATH)/CoreSupport/core_cm3.c
-	$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE) 
+	@$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE) 
+	@echo "compiling $@" 
 
 obj/stm32f2xx_it.o:src_f2/stm32f2xx_it.c
-	$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE)
+	@$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE)
+	@echo "compiling $@" 
 
 obj/stm32f2xx_Vector.o:src_f2/stm32f2xx_Vector.c
-	$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE)  
+	@$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE)  
+	@echo "compiling $@" 
 
 obj/system_stm32f2xx.o:$(CMSIS_PATH)/DeviceSupport/ST/STM32F2xx/system_stm32f2xx.c
-	$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE) 
+	@$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE) 
+	@echo "compiling $@" 
 
 stm32.ld: 
 	@echo generate $@
@@ -34,6 +40,9 @@ stm32.ld:
 	@sed -i s/HIGH_STACK_ADR/0x$(END_OF_STAK)/ stm32.ld
 	
 	
+patch:
+	@echo "patch lib"
+	-@ln -s inc_f2/stm32f2xx_conf.h "inc_f2/stm32f2xx_conf.h "
 
 clean:
 	@rm -rf $(OBJLIB) obj/system_stm32f2xx.o obj/core_cm3.o $(SYSTEM_LIB_OBJ)
