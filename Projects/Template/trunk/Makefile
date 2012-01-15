@@ -48,12 +48,15 @@ src/main.o: src/main.c
 	$(CC) -o $@ -c $< $(CFLAGS)  $(DRV_INC)
 
 $(PROJECT_EXE): src/main.o  $(DRV_OBJ) $(SYSTEM_LIB_OBJ) 
-	$(CC) -o $@  $<  $(LDFLAGS) 
+	$(CC) -o $@  $^  $(LDFLAGS) 
 	@echo Creat binary file:
 	arm-none-eabi-objcopy -O binary $@ $(patsubst %.elf,%.bin,$@) 
 	@echo Creat disassembly file:
 	arm-none-eabi-objdump -h -S -C -r $@  > $(patsubst %.elf,%.lss,$@)
-	
+
+clean:
+	@(cd System/$(ARCH) && $(MAKE) clean)
+	@(cd Drv && $(MAKE) clean)	
 
 test:
 	@echo $(DRV_OBJ)
