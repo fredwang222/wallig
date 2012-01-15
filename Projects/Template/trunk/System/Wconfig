@@ -7,6 +7,8 @@ config BOARD_CUSTOM
  
 config LCD_STM32
    bool "STM32 LCD baord"
+   select STM32F103RBT6
+   select ARCH_STM32
 	help
 	  STM32 arch
 
@@ -16,26 +18,23 @@ config SIMU_LINUX
 	  simulation on desktop linux
 endchoice 
 
-menu "Detailled configuration"
-choice
-	prompt "ARCH"
-	default ARCH_STM32 if BOARD_CUSTOM || LCD_STM32
-   default ARCH_LINUX if SIMU_LINUX
+if BOARD_CUSTOM
+menu "Choose arch"
   
  config ARCH_STM32
       bool "STM32 arch"
       
  config ARCH_LINUX
       bool "LINUX arch, simu"
-      
-endchoice  
+endmenu
+endif
 if ARCH_STM32
 source System/ARCH_STM32/Wconfig
 endif
 
 
 
-endmenu
+
 
 
 
