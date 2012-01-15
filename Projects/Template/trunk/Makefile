@@ -27,10 +27,6 @@ Config/config.mk: .config
 	@grep PRJ_NAME conf.txt | sed s/"="/":="/ >$@
 	@echo ARCH := `grep ARCH_ conf.txt | sed s/"=y"//`>>$@
 	@echo SUB_ARCH := `grep SUB_ conf.txt | sed s/"=y"//`>>$@
-	@grep LIB_SOURCE_ARCHIVE_NAME conf.txt | sed s/"="/" := "/ | sed s/\"//g>>$@
-	@grep LIB_SOURCE_PATH conf.txt | sed s/"="/" := "/ | sed s/\"//g>>$@
-	@grep INTERNAL_RAM conf.txt | sed s/"="/" := "/ | sed s/\"//g>>$@
-	@grep INTERNAL_ROM conf.txt | sed s/"="/" := "/ | sed s/\"//g>>$@
 	@sed -i s/^/"export "/ $@
 	#@rm conf.txt
 
@@ -42,10 +38,11 @@ Drvivers:
 	@(cd Drv && $(MAKE) )	
 
 System/$(ARCH)/.system:
-	@(cd System/$(ARCH) && $(MAKE))
+	@(cd System/$(ARCH) && ./SetConfig.sh && $(MAKE))
 
 src/main.o: src/main.c 
-	$(CC) -o $@ -c $< $(CFLAGS)  $(DRV_INC)
+	@$(CC) -o $@ -c $< $(CFLAGS)  $(DRV_INC)
+	@echo "compiling $@ "
 
 $(PROJECT_EXE): src/main.o  $(DRV_OBJ) $(SYSTEM_LIB_OBJ) 
 	$(CC) -o $@  $^  $(LDFLAGS) 
@@ -57,6 +54,7 @@ $(PROJECT_EXE): src/main.o  $(DRV_OBJ) $(SYSTEM_LIB_OBJ)
 clean:
 	@(cd System/$(ARCH) && $(MAKE) clean)
 	@(cd Drv && $(MAKE) clean)	
+	@rm -rf src/*.o
 
 test:
 	@echo $(DRV_OBJ)
