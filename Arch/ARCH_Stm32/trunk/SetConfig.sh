@@ -12,6 +12,9 @@ if [ $SUB_ARCH != "SUB_STM32F2XX" ]
 then
 echo -n "LIB_SOURCE_ARCHIVE_NAME :=" >arch.mk
 grep LIB_SOURCE_ARCHIVE_NAME_F1 conf.txt | sed s/LIB_SOURCE_ARCHIVE_NAME_F1=// | sed s/\"//g >>arch.mk
+#Get Density level
+CPU_DENSITY=`grep $CPU_ID cpu.list | grep DENSITY | sed s/.*"="' '*//`
+echo "CPU_DENSITY := "$CPU_DENSITY>>arch.mk
 else
 #echo LIB_SOURCE_ARCHIVE_NAME_F2
 echo -n "LIB_SOURCE_ARCHIVE_NAME :=" >arch.mk
@@ -24,5 +27,9 @@ echo "INTERNAL_ROM := "$INTERNAL_ROM_SIZE>>arch.mk
 sed -i s/^/"export "/ arch.mk
 echo 'ifeq ($(SUB_ARCH),SUB_STM32F2XX)' >>arch.mk
 echo 'include $(PROJECT_PATH)/System/$(ARCH)/arch_f2.mk' >>arch.mk
+echo 'endif' >>arch.mk
+echo "" >>arch.mk
+echo 'ifeq ($(SUB_ARCH),SUB_STM32F1XX)' >>arch.mk
+echo 'include $(PROJECT_PATH)/System/$(ARCH)/arch_f1.mk' >>arch.mk
 echo 'endif' >>arch.mk
 echo "" >>arch.mk

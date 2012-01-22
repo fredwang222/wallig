@@ -19,7 +19,9 @@ lib: Archive/$(LIB_SOURCE_ARCHIVE_NAME)
 ifeq ($(SUB_ARCH),SUB_STM32F2XX)
 include Makefile.f2
 endif
-
+ifeq ($(SUB_ARCH),SUB_STM32F1XX)
+include Makefile.f1
+endif
 
 $(ODIR):
 	@echo $(STM32LIB_PATH)
