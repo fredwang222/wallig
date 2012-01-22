@@ -1,16 +1,16 @@
 menu "choose CPU"
-   config STM32F102
+   config CPU_STM32F102
       bool STM32F102
 
-   config STM32F103RBT6
+   config CPU_STM32F103RBT6
  	select SUB_STM32F1XX
       bool STM32F103RBT6
 
-   config STM32F207ZGT6
+   config CPU_STM32F207ZGT6
  	select SUB_STM32F2XX
       bool STM32F207ZGT6
 
-   config STM32F103ZET6
+   config CPU_STM32F103ZET6
  	select SUB_STM32F1XX
       bool STM32F103ZET6
 
@@ -24,16 +24,6 @@ menu "sub arch"
 endmenu
 
 menu "memory"
-config INTERNAL_RAM
-   int "Internal RAM size in KB"
-   default 128 if STM32F207ZGT6
-   default 32 if STM32F103RBT6
-   
-config INTERNAL_ROM
-   int "Internal Flash size in KB"
-   default 1024 if STM32F207ZGT6
-   default 64 if STM32F103RBT6
-
 menuconfig EXTERNAL_RAM
    bool "External SRAM on board"
    default n

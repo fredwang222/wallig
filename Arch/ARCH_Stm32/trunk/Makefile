@@ -1,8 +1,5 @@
 ODIR=obj
-
-ifeq ($(SUB_ARCH),SUB_STM32F2XX)
-include arch_f2.mk
-endif
+include arch.mk
 
 all: arch.mk lib stm32.ld patch $(ODIR) $(SYSTEM_LIB_OBJ)
 
