@@ -17,7 +17,7 @@ echo '#define kUART1_CLK_DEV_PARAM { RCC_APB2PeriphClockCmd , RCC_APB2Periph_USA
 echo '#define kUART1_CLK_PIO_PARAM { RCC_APB2PeriphClockCmd , RCC_APB2Periph_GPIOA  | RCC_APB2Periph_AFIO  }' >> $CONFIG_PATH/DRV_Uart_CFG.h
 else
 echo '#define kUART1_CLK_DEV_PARAM { RCC_APB2PeriphClockCmd , RCC_APB2Periph_USART1 }' >> $CONFIG_PATH/DRV_Uart_CFG.h
-echo '#define kUART1_CLK_PIO_PARAM { RCC_AHB1PeriphClockCmd , RCC_AHB1Periph_GPIOA  }' >> $CONFIG_PATH/DRV_Uart_CFG.h
+echo '#define kUART1_CLK_PIO_PARAM { RCC_AHB2PeriphClockCmd , RCC_AHB2Periph_GPIOA  }' >> $CONFIG_PATH/DRV_Uart_CFG.h
 fi
 echo '#define kUART1_PIO_PARAM { GPIOA , GPIO_Pin_9 , GPIO_Pin_10 }' >> $CONFIG_PATH/DRV_Uart_CFG.h
 echo '#define kUART1_CONF { "UART1" , USART1,  kUART1_COM_PARAM , kUART1_CLK_DEV_PARAM , kUART1_CLK_PIO_PARAM , kUART1_PIO_PARAM , USART1_IRQn }' >> $CONFIG_PATH/DRV_Uart_CFG.h
