@@ -8,6 +8,12 @@ INTERNAL_RAM_SIZE=`grep $CPU_ID cpu.list | grep RAM | sed s/.*"="' '*//`
 #echo  INTERNAL_RAM_SIZE = $INTERNAL_RAM_SIZE
 INTERNAL_ROM_SIZE=`grep $CPU_ID cpu.list | grep ROM | sed s/.*"="' '*//`
 #echo  INTERNAL_ROM_SIZE = $INTERNAL_ROM_SIZE
+if grep -q EXTERNAL_RAM_SIZE conf.txt
+then 
+EXTERNAL_RAM_SIZE=`grep EXTERNAL_RAM_SIZE conf.txt | sed s/EXTERNAL_RAM_SIZE=// `
+else
+EXTERNAL_RAM_SIZE=0
+fi
 if [ $SUB_ARCH != "SUB_STM32F2XX" ]
 then
 echo -n "LIB_SOURCE_ARCHIVE_NAME :=" >arch.mk
@@ -24,6 +30,7 @@ fi
 grep LIB_SOURCE_PATH conf.txt | sed s/"="/" := "/ | sed s/\"//g>>arch.mk
 echo "INTERNAL_RAM := "$INTERNAL_RAM_SIZE>>arch.mk
 echo "INTERNAL_ROM := "$INTERNAL_ROM_SIZE>>arch.mk
+echo "EXTERNAL_RAM := "$EXTERNAL_RAM_SIZE>>arch.mk
 sed -i s/^/"export "/ arch.mk
 echo 'ifeq ($(SUB_ARCH),SUB_STM32F2XX)' >>arch.mk
 echo 'include $(PROJECT_PATH)/System/$(ARCH)/arch_f2.mk' >>arch.mk

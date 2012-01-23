@@ -36,6 +36,7 @@ stm32.ld:
 	@cp stm32f10x.ld stm32.ld
 	@sed -i s/INTERNAL_RAM/$(INTERNAL_RAM)k/ stm32.ld
 	@sed -i s/INTERNAL_ROM/$(INTERNAL_ROM)k/ stm32.ld
+	@sed -i s/EXTERNAL_RAM/$(EXTERNAL_RAM)k/ stm32.ld
 	@sed -i s/HIGH_STACK_ADR/0x$(END_OF_STAK)/ stm32.ld
 	
 	

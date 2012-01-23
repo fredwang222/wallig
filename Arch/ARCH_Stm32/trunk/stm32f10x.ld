@@ -30,7 +30,7 @@ MEMORY
 {
   RAM (xrw) : ORIGIN = 0x20000000, LENGTH = INTERNAL_RAM
   FLASH (rx) : ORIGIN = 0x8000000, LENGTH = INTERNAL_ROM
-  FLASHB1 (rx) : ORIGIN = 0x00000000, LENGTH = 0
+  FLASHB1 (rx) : ORIGIN = 0x68000000, LENGTH = EXTERNAL_RAM
   EXTMEMB0 (rx) : ORIGIN = 0x00000000, LENGTH = 0
   EXTMEMB1 (rx) : ORIGIN = 0x00000000, LENGTH = 0
   EXTMEMB2 (rx) : ORIGIN = 0x00000000, LENGTH = 0
@@ -165,10 +165,17 @@ SECTIONS
     /* EXTMEM Bank0 */
     .eb0text :
     {
+	    . = ALIGN(4);
+	   	 _sextmemb0 = . ;	    
         *(.eb0text)                   /* remaining code */
         *(.eb0rodata)                 /* read-only data (constants) */
         *(.eb0rodata*)
+	    . = ALIGN(4);
+	    /* This is used by the startup in order to initialize the .data secion */
+	   	 _eextmemb0 = . ;
     } >EXTMEMB0
+
+    PROVIDE ( StartExtRam = _sextmemb0 );    
     
     /* EXTMEM Bank1 */
     .eb1text :
