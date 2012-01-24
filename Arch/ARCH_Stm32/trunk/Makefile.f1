@@ -2,14 +2,18 @@ _OBJLIB = misc.o
 _OBJLIB += stm32f10x_adc.o stm32f10x_bkp.o stm32f10x_can.o stm32f10x_cec.o stm32f10x_crc.o stm32f10x_dac.o stm32f10x_dbgmcu.o stm32f10x_dma.o stm32f10x_exti.o
 _OBJLIB += stm32f10x_flash.o stm32f10x_fsmc.o stm32f10x_gpio.o stm32f10x_i2c.o stm32f10x_iwdg.o stm32f10x_pwr.o stm32f10x_rcc.o stm32f10x_rtc.o stm32f10x_sdio.o
 _OBJLIB += stm32f10x_spi.o stm32f10x_tim.o stm32f10x_usart.o stm32f10x_wwdg.o
-_OBJLIB += stm32f10x_Vector.o stm32f10x_it.o system_stm32f10x.o
+_OBJLIB += stm32f10x_Vector.o stm32f10x_it.o system_stm32f10x.o System.o core_cm3.o
 
 OBJLIB = $(patsubst %,$(ODIR)/%,$(_OBJLIB))
 END_OF_STAK :=  `echo 'obase=16;$(INTERNAL_RAM)*1024+536870912' | bc`
 
-$(SYSTEM_LIB_OBJ): $(OBJLIB)  obj/core_cm3.o
+$(SYSTEM_LIB_OBJ): $(OBJLIB) 
 	@arm-none-eabi-ar -cr $(SYSTEM_LIB_OBJ) $(OBJLIB)   obj/core_cm3.o
 	@echo "make $(SYSTEM_LIB_OBJ)"
+
+obj/System.o:System.c 
+	@$(CC) -o $@ -c $< $(CFLAGS) $(SYS_INCLUDE) 
+	@echo "compiling $@" 
 
 obj/%.o: $(STM32LIB_PATH)/src/%.c
 	@$(CC) -o $@ -c $< $(CFLAGS)  $(SYS_INCLUDE) 
