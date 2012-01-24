@@ -32,7 +32,11 @@ void* _sbrk (int incr)
     char *prev_heap_end;
 
   prev_heap_end = heap_end;
+#ifdef DATA_IN_ExtSRAM
+	if ( incr >= (EXTERNAL_RAM_SIZE*1024))
+#else
   if (heap_end + incr > __get_MSP())
+#endif
     {
       assert_failed(__FILE__,__LINE__);
     }
