@@ -43,16 +43,17 @@ echo "" >>arch.mk
 #create System.h
 echo "#ifndef SYSTEM_H">System.h
 echo "#define SYSTEM_H">>System.h
-echo "#include "stdint.h"">>System.h
-echo "#include "config.h"">>System.h
+echo "#include \"stdint.h\"">>System.h
+echo "#include \"config.h\"">>System.h
 echo "">>System.h
 echo "#ifdef SUB_STM32F2XX">>System.h
-echo "#include "stm32f2xx_conf.h"">>System.h
+echo "#include \"stm32f2xx_conf.h\"">>System.h
 echo "#endif">>System.h
 echo "">>System.h
 echo "#ifdef SUB_STM32F1XX">>System.h
-echo "#include "stm32f10x_conf.h"">>System.h
+echo "#include \"stm32f10x_conf.h\"">>System.h
 echo "#endif">>System.h
 echo "">>System.h
 echo "#define EXTERNAL_RAM_SIZE "$EXTERNAL_RAM_SIZE>>System.h
 echo "#endif">>System.h
+touch .System
