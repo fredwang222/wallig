@@ -9,6 +9,10 @@ menu "Device Drivers"
  source Drv/Uart/Wconfig
 endmenu
 
+menu "Library"
+ source Lib/Fifo/Wconfig
+endmenu
+
 menu "System"
  source System/Wconfig
 endmenu
