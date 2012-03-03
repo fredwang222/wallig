@@ -1,0 +1,8 @@
+menuconfig LIB_FIFO
+	tristate "Gpio driver support"
+   
+if LIB_FIFO
+config FIFO_TEST
+	boolean
+	default y
+endif
