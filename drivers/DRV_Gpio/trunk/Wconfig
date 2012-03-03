@@ -1,7 +1,7 @@
-menuconfig GPIO
+menuconfig DRV_GPIO
 	tristate "Gpio driver support"
    
-if GPIO
+if DRV_GPIO
 config GPIO_TEST
 	boolean
 	default y
