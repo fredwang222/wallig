@@ -9,7 +9,7 @@ then
 	LIB_DIR_NAME=`echo $LIB_ARCHIVE_NAME| sed s/\.tar\.gz//`
 	echo  "LIB_SOURCE_PATH :="$LIB_PATH >Makefile
 	echo  "LIB_SOURCE_ARCHIVE_NAME :="$LIB_ARCHIVE_NAME >>Makefile
-	echo  "LIB_SOURCE_DIRECTORY_NAME :="$LIb_DIR_NAME >>Makefile
+	echo  "LIB_SOURCE_DIRECTORY_NAME :="$LIB_DIR_NAME >>Makefile
 	echo "" >>Makefile
 	echo 'include libmad.mk' >>Makefile
 	if [ ! -e Archive/$LIB_ARCHIVE_NAME ] ; then
