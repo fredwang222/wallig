@@ -9,7 +9,7 @@ PROJECT_EXE = $(PRJ_NAME).elf
 
 
 
-all: Config/config.h System/$(ARCH)/.System Drv/Drv.mk  Lib/Lib.mk Drvivers Library $(PROJECT_EXE) 
+all: Config/config.h System/$(ARCH)/.System $(SYSTEM_LIB_OBJ) Drv/Drv.mk  Lib/Lib.mk Drvivers Library $(PROJECT_EXE) 
 
 config:
 .config: 
