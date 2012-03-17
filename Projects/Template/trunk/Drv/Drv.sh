@@ -17,6 +17,14 @@ echo "DRV_INC += -I Drv/Gpio/" >> Drv.mk
 echo '	@(cd Gpio && $(MAKE))' >> Makefile
 fi
 
+if grep -q "DRV_NAND=y" $PRJ_CONFIG_FILE
+then
+echo "DRV_OBJ += Drv/Nand/obj/DRV_Nand.o" >> Drv.mk
+echo "DRV_INC += -I Drv/Nand/" >> Drv.mk
+echo '	@(cd Nand && $(MAKE))' >> Makefile
+fi
+
+
 echo "" >> Makefile
 echo "clean:" >> Makefile
 if grep -q "DRV_UART=y" $PRJ_CONFIG_FILE
@@ -27,9 +35,20 @@ if grep -q "DRV_GPIO=y" $PRJ_CONFIG_FILE
 then
 echo '	@(cd Gpio && $(MAKE) clean)' >> Makefile
 fi
+if grep -q "DRV_NAND=y" $PRJ_CONFIG_FILE
+then
+echo '	@(cd Nand && $(MAKE) clean)' >> Makefile
+fi
+
 
 if grep -q "DRV_UART=y" $PRJ_CONFIG_FILE
 then
 cd Uart
+./SetConfig.sh
+fi
+
+if grep -q "DRV_NAND=y" $PRJ_CONFIG_FILE
+then
+cd Nand
 ./SetConfig.sh
 fi
