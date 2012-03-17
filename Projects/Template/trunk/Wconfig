@@ -13,6 +13,7 @@ endmenu
 menu "Library"
  source Lib/Fifo/Wconfig
  source Lib/Mp3/Wconfig
+ source Lib/Ntl/Wconfig
 endmenu
 
 menu "System"
