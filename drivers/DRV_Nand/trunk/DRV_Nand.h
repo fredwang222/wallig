@@ -43,6 +43,7 @@ typedef struct
 					Functions
 ***************************************************************/
 void DRV_Nand_Init( void );
+void DRV_Nand_Terminate( void );
 int DRV_Nand_IdRead( DRV_Nand_Id *pId );
 int DRV_Nand_PageRead( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , uint32_t uiPageIndex );
 int DRV_Nand_PageWrite( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , uint32_t uiPageIndex );

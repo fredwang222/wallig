@@ -2,13 +2,21 @@ menuconfig DRV_NAND
 	bool "Nand driver support"
    
 menu "Nand"
-if SIMU_LINUX
-config DRV_NAND_SIZE
   depends on DRV_NAND
-   int "Nand size in MB"
-   default 16
+if SIMU_LINUX
+config DRV_NAND_PAGE_SIZE
+   int "Nand page size in byte"
+   default 2048
+config DRV_NAND_OOB_SIZE
+   int "Nand out of band size in byte"
+   default 64
+config DRV_NAND_PAGE_IN_BLOCK
+   int "Number of page per block"
+   default 64
+config DRV_NAND_BLOCK_COUNT
+   int "Number of block"
+   default 32
 config DRV_NAND_FILE
-	depends on DRV_NAND
 	string "Nand file name"
     default "nand.bin"
 endif
