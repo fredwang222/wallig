@@ -1,0 +1,13 @@
+menuconfig LIB_NTL
+	bool "Nand Translation Layer support"
+
+menu "NTL config"
+  depends on LIB_NTL
+config LIB_NTL_BBM_OPR
+   int "Bad Block Management Over Provisionning rate in percent"
+   default 10
+config LIB_NTL_WL_OPR
+   int "Wear Leveling Over Provisionning rate in percent"
+   default 10
+endmenu  
+

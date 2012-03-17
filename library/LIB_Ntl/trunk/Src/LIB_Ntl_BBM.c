@@ -23,89 +23,177 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "DRV_Nand.h"
+#include "LIB_Ntl_CFG.h"
 /**************************************************************
 						define
 ***************************************************************/
-#define kBBM_LogicalBlockCount 512
+
 /**************************************************************
 						Macros
 ***************************************************************/
 #define BBM_BlockIndexFromSectorGet( sector ) (sector>>8)
 #define BBM_BlockIndexFromSectorSet( sector , block ) ((sector & 0xFF) | ((((uint32_t)block)<<8)&0xFFFFFF00))
-#define BBM_BlockIndexFromPageGet( page ) (page>>6)
+#define BBM_BlockIndexFromPage( page ) (page/kBBM_PPB())
 #define BBM_BlockIndexFromPageSet( page , block ) page = ( (sector & 0x3F) | ((((uint32_t)block)<<6)&0xFFFFFFC0))
+
+#define kBBM_PPB() (BBM_InternalData.PhysicalSizeInfo.uiPagePerBlock) /* number of page per block */
+#define kBBM_PBC() (BBM_InternalData.PhysicalSizeInfo.uiBlockCount) /* Physical Block count */
+#define kBBM_LBC() (BBM_InternalData.usLogicalBlockCount )/* Logical  Block count */
+#define kBBM_UOOB_SIZE() (BBM_InternalData.PhysicalSizeInfo.uiOobSize  - sizeof(BBM_OobData) )
 /**************************************************************
 						Typedef
 ***************************************************************/
 struct
 {
-	uint16_t usBBM_Lut[kBBM_LogicalBlockCount];
-	uint16_t uiFreeSpareBlockIndex;
+	DRV_Nand_Size_Info PhysicalSizeInfo;
+	uint16_t *pusBBM_Lut;
+	uint8_t *pucPageBuffer;
+	uint8_t *pucOobBuffer;
+	uint16_t usFreeSpareBlockIndex;
+	uint16_t usLogicalBlockCount;
+	uint16_t usBadBlockCount;
 } BBM_InternalData;
+
+typedef struct
+{
+	uint16_t usLogicalBlockIndex;
+} BBM_OobData;
 
 /**************************************************************
 				Local Private functions prototypes
 ***************************************************************/
-static void BBMi_BadBlockMark( uint32_t uiBlockIndex );
-static uint32_t BBMi_GetNewBlock( void );
-
+static uint16_t BBMi_GetNewBlock( void );
+static void BBMi_UpdateOobBuffer( uint16_t usLogicalBlockIndex , uint8_t  *pucUserOobBuffer);
 /**************************************************************
 				public functions
 ***************************************************************/
 int BBM_Init( void )
 {
-	uint32_t uiPhysicalBlockIndex;
-	uint32_t uiLogicalBlockIndex;
-	DRV_Nand_SectorSpareData SpareArea;
+	uint16_t usPhysicalBlockIndex;
+	uint16_t usLogicalBlockIndex;
+	DRV_Nand_Id NandId;
+	int iErrorCode=0;
+	BBM_OobData BbmOobData;
 
-	/* Create look up table */
-	for ( uiLogicalBlockIndex=0,uiPhysicalBlockIndex=0;uiLogicalBlockIndex < kBBM_LogicalBlockCount &&  uiPhysicalBlockIndex < NAND_BlockCount ; uiPhysicalBlockIndex++,uiLogicalBlockIndex++)
+	/* Get physical nand info */
+	if(	DRV_Nand_InfoRead( &NandId , &(BBM_InternalData.PhysicalSizeInfo) ) )
+		return 1; /* Nand info read error */
+	
+	/* Set the logical block count, using the over provisioning rate form the config file */
+	BBM_InternalData.usLogicalBlockCount=(kBBM_LBC()*( 100 - kNTL_BBM_OPR ))/100 + 1;
+	BBM_InternalData.usBadBlockCount=0;
+	/* Allocate structure */	
+	BBM_InternalData.pusBBM_Lut = (uint16_t*) malloc( kBBM_LBC() * sizeof(uint16_t));	
+	if( BBM_InternalData.pusBBM_Lut == NULL )
+		return 2; /* malloc error */
+	memset(BBM_InternalData.pusBBM_Lut,0xff,kBBM_LBC() * sizeof(uint16_t));
+	/* Allocate Page data buffer */
+	BBM_InternalData.pucPageBuffer = (uint8_t*) malloc( BBM_InternalData.PhysicalSizeInfo.uiPageSize );
+	if( BBM_InternalData.pucPageBuffer == NULL )
 	{
-		DRV_Nand_SectorRead( NULL , &SpareArea , uiPhysicalBlockIndex*NAND_PagePerBlock*NAND_SectorPerPage);
-		if( SpareArea.ucBadBlockMarker != 0xFF)
-			continue;
-		DRV_Nand_SectorRead( NULL , &SpareArea , uiPhysicalBlockIndex*NAND_PagePerBlock*NAND_SectorPerPage+1);
-		if( SpareArea.ucBadBlockMarker == 0xFF)
-		{
+		free(BBM_InternalData.pusBBM_Lut);
+		return 3; /* malloc error */
+	}
 
-			BBM_InternalData.usBBM_Lut[uiLogicalBlockIndex++]=uiPhysicalBlockIndex;
+	/* Allocate OOB data buffer */
+	BBM_InternalData.pucOobBuffer = (uint8_t*) malloc( BBM_InternalData.PhysicalSizeInfo.uiOobSize );
+	if( BBM_InternalData.pucOobBuffer == NULL )
+	{
+		free(BBM_InternalData.pucPageBuffer);
+		free(BBM_InternalData.pusBBM_Lut);
+		return 3; /* malloc error */
+	}
+	/* Create look up table */
+	for ( usLogicalBlockIndex=0,usPhysicalBlockIndex=0; usPhysicalBlockIndex < kBBM_PBC() && usLogicalBlockIndex < kBBM_LBC() ; usPhysicalBlockIndex++)
+	{
+		iErrorCode = DRV_Nand_PageRead( NULL , BBM_InternalData.pucOobBuffer , usPhysicalBlockIndex*kBBM_PPB());
+		memcpy( &BbmOobData , BBM_InternalData.pucOobBuffer ,  sizeof(BBM_OobData) );
+		switch( iErrorCode )
+		{
+			case NAND_ERR_BAD_BL: /* This is a bad block*/
+				BBM_InternalData.usBadBlockCount++;
+				break;
+			case NAND_OK: /* This is a good block*/
+				if( BbmOobData.usLogicalBlockIndex == 0xFFFF  )
+					BBM_InternalData.pusBBM_Lut[usLogicalBlockIndex]=usPhysicalBlockIndex;
+				else
+				{
+					if(BbmOobData.usLogicalBlockIndex > kBBM_LBC())
+					{
+						free(BBM_InternalData.pucOobBuffer);
+						free(BBM_InternalData.pusBBM_Lut);
+						free(BBM_InternalData.pucPageBuffer);
+						return 4; /* wrong value */
+					}
+					else 
+					{
+						if( BBM_InternalData.pusBBM_Lut[BbmOobData.usLogicalBlockIndex] == 0xFFFF )
+							BBM_InternalData.pusBBM_Lut[BbmOobData.usLogicalBlockIndex]=usPhysicalBlockIndex;
+						else
+						{
+							free(BBM_InternalData.pucOobBuffer);
+							free(BBM_InternalData.pusBBM_Lut);
+							free(BBM_InternalData.pucPageBuffer);
+							return 5; /* wrong value */
+						}
+					}
+				}
+				usLogicalBlockIndex++;
+				break;
+			default:
+				free(BBM_InternalData.pucOobBuffer);
+				free(BBM_InternalData.pusBBM_Lut);
+				free(BBM_InternalData.pucPageBuffer);
+				return 6;
+
 		}
 	}
 	/* Set spare block index */
-	BBM_InternalData.uiFreeSpareBlockIndex=uiPhysicalBlockIndex;
+	BBM_InternalData.usFreeSpareBlockIndex=usPhysicalBlockIndex;
 
 	return 0;
 }
 
-int BBM_SectorRead( uint8_t *pucDataBuffer , DRV_Nand_SectorSpareData *pSpareArea , uint32_t uiLogicalSectorIndex )
+int BBM_PageRead( uint8_t *pucDataBuffer , uint8_t *pucUserOobBuffer ,   uint16_t usLogicalPageIndex )
 {
-	uint32_t uiLogicalBlockIndex = BBM_BlockIndexFromSectorGet(uiLogicalSectorIndex);
-	uint32_t uiPhysicalBlockIndex;
+	uint16_t usLogicalBlockIndex = BlockIndexFromPage(usLogicalPageIndex);
+	uint16_t usPhysicalBlockIndex;
+	int ErrorCode=0;
 
-	if( uiLogicalBlockIndex > kBBM_LogicalBlockCount)
+	if( usLogicalBlockIndex > kBBM_LBC())
 		return -1;
 
-	uiPhysicalBlockIndex = BBM_InternalData.usBBM_Lut[ uiLogicalBlockIndex ];
+	usPhysicalBlockIndex = BBM_InternalData.pusBBM_Lut[ usLogicalBlockIndex ];
 
-	return BBM_SectorRead( pucDataBuffer , pSpareArea , BBM_BlockIndexFromSectorSet( uiLogicalSectorIndex , uiPhysicalBlockIndex ));
+	ErrorCode = DRV_Nand_PageRead( pucDataBuffer ,BBM_InternalData.pucOobBuffer , usPhysicalBlockIndex*kBBM_PPB() + usLogicalPageIndex%kBBM_PPB() );
+
+	/* Copy Oob data */
+	memcpy( pucUserOobBuffer , BBM_InternalData.pucOobBuffer+sizeof(BBM_OobData),kBBM_UOOB_SIZE() );
+
+	return ErrorCode;
 }
 
-int BBM_sectorWrite( uint8_t *pucDataBuffer , DRV_Nand_SectorSpareData *pSpareArea , uint32_t uiLogicalSectorIndex )
+
+int BBM_PageWrite( uint8_t *pucDataBuffer , uint8_t *pucUserOobBuffer ,uint16_t usLogicalPageIndex )
 {
-	uint32_t uiLogicalBlockIndex = BBM_BlockIndexFromSectorGet(uiLogicalSectorIndex);
-	uint32_t uiPhysicalBlockIndex;
+	uint16_t usLogicalBlockIndex = BlockIndexFromPage(usLogicalPageIndex);
+	uint16_t usPhysicalBlockIndex;
 	uint32_t uiNewBlockIndex;
 	uint32_t uiPageIndex;
 	int iOperationResult;
 
-	if( uiLogicalBlockIndex > kBBM_LogicalBlockCount)
+	if( usLogicalBlockIndex > kBBM_LBC())
 		return -1;
 
-	uiPhysicalBlockIndex = BBM_InternalData.usBBM_Lut[ uiLogicalBlockIndex ];
+	usPhysicalBlockIndex = BBM_InternalData.pusBBM_Lut[ usLogicalBlockIndex ];
 
-	iOperationResult = DRV_Nand_sectorWrite( pucDataBuffer , pSpareArea , BBM_BlockIndexFromSectorSet( uiLogicalSectorIndex , uiPhysicalBlockIndex ) );
+	BBMi_UpdateOobBuffer( usLogicalBlockIndex , pucUserOobBuffer );
+
+	iOperationResult = DRV_Nand_PageWrite( pucDataBuffer , BBM_InternalData.pucOobBuffer , usPhysicalBlockIndex*kBBM_PPB() + usLogicalPageIndex%kBBM_PPB() );
 
 	if( !iOperationResult )
 		return 0;
@@ -117,28 +205,35 @@ int BBM_sectorWrite( uint8_t *pucDataBuffer , DRV_Nand_SectorSpareData *pSpareAr
 	uiNewBlockIndex = BBMi_GetNewBlock() ;
 	if (  uiNewBlockIndex != 0xFFFF )
 			return -1; /* no more spare block on device*/
-	BBM_InternalData.usBBM_Lut[ uiLogicalBlockIndex ] = uiNewBlockIndex;
+	BBM_InternalData.pusBBM_Lut[ usLogicalBlockIndex ] = uiNewBlockIndex;
 	/* copy data from old to new block*/
-	for( uiPageIndex= 0; uiPageIndex<NAND_PagePerBlock ; uiPageIndex++)
-		DRV_Nand_PageCopy( BBM_BlockIndexFromSectorSet( uiPageIndex , uiPhysicalBlockIndex ) , BBM_BlockIndexFromSectorSet( uiPageIndex , uiNewBlockIndex ) , NULL );
-
-	BBMi_BadBlockMark( uiPhysicalBlockIndex);
+	for( uiPageIndex= 0; uiPageIndex<kBBM_PPB() ; uiPageIndex++)
+	{
+		/* copy old pages */
+		if( uiPageIndex != usLogicalPageIndex%kBBM_PPB() )
+			DRV_Nand_PageCopy( usPhysicalBlockIndex*kBBM_PPB() + uiPageIndex , uiNewBlockIndex*kBBM_PPB() + uiPageIndex );
+		else /* write new page */
+		{
+			BBMi_UpdateOobBuffer( usLogicalBlockIndex , pucUserOobBuffer );
+			DRV_Nand_PageWrite( pucDataBuffer , BBM_InternalData.pucOobBuffer, uiNewBlockIndex*kBBM_PPB() + uiPageIndex  );
+		}
+	}
 
 	return 0;
 }
 
-int BBM_BlockErase( uint32_t uiLogicalBlockIndex )
+int BBM_BlockErase( uint16_t usLogicalBlockIndex )
 {
-	uint32_t uiPhysicalBlockIndex;
-	uint32_t uiNewBlockIndex;
+	uint16_t usPhysicalBlockIndex;
+	uint16_t usNewBlockIndex;
 	int iOperationResult;
 
-	if( uiLogicalBlockIndex > kBBM_LogicalBlockCount)
+	if( usLogicalBlockIndex > kBBM_LBC())
 		return -1;
 
-	uiPhysicalBlockIndex = BBM_InternalData.usBBM_Lut[ uiLogicalBlockIndex ];
+	usPhysicalBlockIndex = BBM_InternalData.pusBBM_Lut[ usLogicalBlockIndex ];
 
-	iOperationResult = DRV_Nand_BlockErase(uiPhysicalBlockIndex);
+	iOperationResult = DRV_Nand_BlockErase(usPhysicalBlockIndex);
 
 	if( !iOperationResult )
 		return 0;
@@ -147,38 +242,38 @@ int BBM_BlockErase( uint32_t uiLogicalBlockIndex )
 	/* Erase Error -> bad block */
 	/****************************/
 	/* Get next free spare block */
-	uiNewBlockIndex = BBMi_GetNewBlock() ;
-	if (  uiNewBlockIndex != 0xFFFF )
+	usNewBlockIndex = BBMi_GetNewBlock() ;
+	if (  usNewBlockIndex != 0xFFFF )
 			return -1; /* no more spare block on device*/
-	BBM_InternalData.usBBM_Lut[ uiLogicalBlockIndex ] = uiNewBlockIndex;
+	BBM_InternalData.pusBBM_Lut[ usLogicalBlockIndex ] = usNewBlockIndex;
 
-	BBMi_BadBlockMark( uiPhysicalBlockIndex);
-
-	DRV_Nand_BlockErase( uiNewBlockIndex );
+	DRV_Nand_BlockErase( usNewBlockIndex );
 
 	return  0;
 
 }
 
-int BBM_PageCopy( uint32_t uiSrcLogicalPageIndex , uint32_t uiDestLogicalPageIndex , DRV_Nand_SectorSpareData *pSpareArea)
+int BBM_PageCopy( uint16_t usSrcLogicalPageIndex , uint16_t usDestLogicalPageIndex )
 {
-	uint32_t uiSrcLogicalBlockIndex = BBM_BlockIndexFromSectorGet(uiSrcLogicalPageIndex);
-	uint32_t uiDestLogicalBlockIndex = BBM_BlockIndexFromSectorGet(uiDestLogicalPageIndex);
-	uint32_t uiSrcPhysicalBlockIndex , uiDestPhysicalBlockIndex;
-	uint32_t uiNewBlockIndex;
-	uint32_t uiPageIndex;
+	uint16_t usSrcLogicalBlockIndex = usSrcLogicalPageIndex/kBBM_PPB();
+	uint16_t usDestLogicalBlockIndex = usDestLogicalPageIndex/kBBM_PPB();
+	uint16_t usSrcPhysicalBlockIndex , usDestPhysicalBlockIndex;
+	uint16_t usNewBlockIndex;
+	uint16_t usPageIndex;
 	int iOperationResult;
 
-	if( uiSrcLogicalBlockIndex > kBBM_LogicalBlockCount)
+	if( usSrcLogicalBlockIndex > kBBM_LBC())
 		return -1;
-	if( uiDestLogicalBlockIndex > kBBM_LogicalBlockCount)
+	if( usDestLogicalBlockIndex > kBBM_LBC())
 		return -1;
 
-	uiSrcPhysicalBlockIndex = BBM_InternalData.usBBM_Lut[ uiSrcLogicalBlockIndex ];
-	uiDestPhysicalBlockIndex = BBM_InternalData.usBBM_Lut[ uiDestLogicalBlockIndex ];
+	usSrcPhysicalBlockIndex = BBM_InternalData.pusBBM_Lut[ usSrcLogicalBlockIndex ];
+	usDestPhysicalBlockIndex = BBM_InternalData.pusBBM_Lut[ usDestLogicalBlockIndex ];
+	
 
-	iOperationResult = DRV_Nand_PageCopy( BBM_BlockIndexFromSectorSet( uiSrcLogicalPageIndex , uiSrcPhysicalBlockIndex ) ,
-			                              BBM_BlockIndexFromSectorSet( uiDestLogicalPageIndex , uiDestPhysicalBlockIndex ) , pSpareArea );
+	DRV_Nand_PageRead( BBM_InternalData.pucPageBuffer ,BBM_InternalData.pucOobBuffer , usSrcPhysicalBlockIndex*kBBM_PPB() + usSrcLogicalPageIndex%kBBM_PPB() );
+	BBMi_UpdateOobBuffer( usDestLogicalBlockIndex , BBM_InternalData.pucOobBuffer );
+	iOperationResult = DRV_Nand_PageWrite( BBM_InternalData.pucPageBuffer , BBM_InternalData.pucOobBuffer , usDestPhysicalBlockIndex*kBBM_PPB() + usDestLogicalPageIndex%kBBM_PPB()  );
 
 	if( !iOperationResult )
 		return 0;
@@ -187,20 +282,17 @@ int BBM_PageCopy( uint32_t uiSrcLogicalPageIndex , uint32_t uiDestLogicalPageInd
 	/* write Error -> bad block */
 	/****************************/
 	/* Get next free spare block */
-	uiNewBlockIndex = BBMi_GetNewBlock() ;
-	if (  uiNewBlockIndex != 0xFFFF )
+	usNewBlockIndex = BBMi_GetNewBlock() ;
+	if (  usNewBlockIndex != 0xFFFF )
 			return -1; /* no more spare block on device*/
-	BBM_InternalData.usBBM_Lut[ uiDestLogicalBlockIndex ] = uiNewBlockIndex;
+	BBM_InternalData.pusBBM_Lut[ usDestLogicalBlockIndex ] = usNewBlockIndex;
 	/* copy data from old to new block*/
-	for( uiPageIndex= 0; uiPageIndex<NAND_PagePerBlock ; uiPageIndex++)
+	for( usPageIndex= 0; usPageIndex<kBBM_PPB() ; usPageIndex++)
 	{
-		if( uiPageIndex == (uiSrcLogicalPageIndex&0x3F) )
-			DRV_Nand_PageCopy( BBM_BlockIndexFromSectorSet( uiPageIndex , uiSrcLogicalBlockIndex ) , BBM_BlockIndexFromSectorSet( uiPageIndex , uiNewBlockIndex ) , pSpareArea );
-		else
-			DRV_Nand_PageCopy( BBM_BlockIndexFromSectorSet( uiPageIndex , uiDestLogicalBlockIndex ) , BBM_BlockIndexFromSectorSet( uiPageIndex , uiNewBlockIndex ) , NULL );
+		DRV_Nand_PageRead( BBM_InternalData.pucPageBuffer ,BBM_InternalData.pucOobBuffer , usSrcPhysicalBlockIndex*kBBM_PPB() + usSrcLogicalPageIndex%kBBM_PPB() );
+		BBMi_UpdateOobBuffer( usDestLogicalBlockIndex , BBM_InternalData.pucOobBuffer );
+		iOperationResult = DRV_Nand_PageWrite( BBM_InternalData.pucPageBuffer , BBM_InternalData.pucOobBuffer , usNewBlockIndex*kBBM_PPB() + usDestLogicalPageIndex%kBBM_PPB()  );
 	}
-
-	BBMi_BadBlockMark( uiDestLogicalBlockIndex );
 
 	return 0;
 }
@@ -209,27 +301,27 @@ int BBM_PageCopy( uint32_t uiSrcLogicalPageIndex , uint32_t uiDestLogicalPageInd
 				Local Private functions
 ***************************************************************/
 
-static uint32_t BBMi_GetNewBlock( void )
+static uint16_t BBMi_GetNewBlock( void )
 {
-	uint32_t uiNewBlockIndex = BBM_InternalData.uiFreeSpareBlockIndex;
+	uint16_t usNewBlockIndex = BBM_InternalData.usFreeSpareBlockIndex;
 
-	if (  uiNewBlockIndex != 0xFFFF )
+	if (  usNewBlockIndex != 0xFFFF )
 	{
-		/* update uiFreeSpareBlockIndex */
-		BBM_InternalData.uiFreeSpareBlockIndex++;
-		if( BBM_InternalData.uiFreeSpareBlockIndex >= kBBM_LogicalBlockCount  )
-			BBM_InternalData.uiFreeSpareBlockIndex = 0xFFFF; /* The last spare block was used */
+		/* update usFreeSpareBlockIndex */
+		BBM_InternalData.usFreeSpareBlockIndex++;
+		if( BBM_InternalData.usFreeSpareBlockIndex >= kBBM_LBC()  )
+			BBM_InternalData.usFreeSpareBlockIndex = 0xFFFF; /* The last spare block was used */
 	}
-	return uiNewBlockIndex ;
+	return usNewBlockIndex ;
 }
 
-static void BBMi_BadBlockMark( uint32_t uiBlockIndex )
+static void BBMi_UpdateOobBuffer( uint16_t usLogicalBlockIndex , uint8_t  *pucUserOobBuffer)
 {
-	DRV_Nand_SectorSpareData SpareData;
+	BBM_OobData BbmOobData;
 
-	/*Mark old block as bad in first 2 pages */
-	SpareData.ucBadBlockMarker=0;
-	DRV_Nand_sectorWrite( NULL , &SpareData , BBM_BlockIndexFromSectorSet( 0 , uiBlockIndex ) );
-	DRV_Nand_sectorWrite( NULL , &SpareData , BBM_BlockIndexFromSectorSet( 4 , uiBlockIndex ) );
-
+	BbmOobData.usLogicalBlockIndex = usLogicalBlockIndex;
+	memcpy( BBM_InternalData.pucOobBuffer ,  &BbmOobData ,sizeof(BBM_OobData) );
+	memcpy( BBM_InternalData.pucOobBuffer + sizeof(BBM_OobData) ,  pucUserOobBuffer ,kBBM_UOOB_SIZE() );
 }
+
+
