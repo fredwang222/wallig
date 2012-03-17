@@ -7,6 +7,7 @@ config PRJ_NAME
 menu "Device Drivers"
  source Drv/Gpio/Wconfig
  source Drv/Uart/Wconfig
+ source Drv/Nand/Wconfig
 endmenu
 
 menu "Library"
