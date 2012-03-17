@@ -41,6 +41,11 @@
 #define NAND_BLOCK_SIZE ((kNAND_PAGE_SIZE+kNAND_OOB_SIZE)*kNAND_PAGE_COUNT)
 #define NAND_TOTAL_SIZE (NAND_BLOCK_SIZE*kNAND_BLOCK_COUNT)
 
+typedef struct
+{
+	uint8_t ucBadBlockMarker;
+	uint8_t tucEcc[12];
+} DRV_Nand_OobData;
 
 uint8_t *pucSimuNandBuffer=NULL;
 
@@ -97,16 +102,22 @@ void DRV_Nand_Terminate( void )
 		free(pucSimuNandBuffer);
 }
 
-int DRV_Nand_IdRead( DRV_Nand_Id *pId )
+int DRV_Nand_InfoRead( DRV_Nand_Id *pId , DRV_Nand_Size_Info *pSizeInfo)
 {
-return 0;
+	pSizeInfo->uiPageSize = kNAND_PAGE_SIZE;
+	pSizeInfo->uiPagePerBlock = kNAND_PAGE_COUNT;
+	pSizeInfo->uiBlockCount = kNAND_BLOCK_COUNT;
+	pSizeInfo->uiOobSize = kNAND_OOB_SIZE-sizeof(DRV_Nand_OobData);
+	return 0;
 }
 
 
 int DRV_Nand_PageRead( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , uint32_t uiPageIndex )
 {
-	memcpy( pucDataBuffer, pucSimuNandBuffer+uiPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE),kNAND_PAGE_SIZE);
-	memcpy( pucSpareAreaBuffer, pucSimuNandBuffer+uiPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE)+kNAND_PAGE_SIZE,kNAND_OOB_SIZE);
+	if( pucDataBuffer )
+		memcpy( pucDataBuffer, pucSimuNandBuffer+uiPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE),kNAND_PAGE_SIZE);
+	if( pucSpareAreaBuffer )
+		memcpy( pucSpareAreaBuffer, pucSimuNandBuffer+uiPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE)+kNAND_PAGE_SIZE,kNAND_OOB_SIZE);
 	return 0;
 }
 
@@ -118,18 +129,20 @@ int DRV_Nand_PageWrite( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , u
 
 	for( uiByteIndex=0 ; uiByteIndex<kNAND_PAGE_SIZE ; uiByteIndex++)
 	{
-		(*pucNandBuffer) &= pucDataBuffer[uiByteIndex];
+		if( pucDataBuffer )
+			(*pucNandBuffer) &= pucDataBuffer[uiByteIndex];
 		pucNandBuffer++;
 	}
 	for( uiByteIndex=0 ; uiByteIndex<kNAND_OOB_SIZE ; uiByteIndex++)
 	{
-		(*pucNandBuffer) &= pucSpareAreaBuffer[uiByteIndex];
+		if( pucSpareAreaBuffer )
+			(*pucNandBuffer) &= pucSpareAreaBuffer[uiByteIndex];
 		pucNandBuffer++;
 	}
 	return 0;
 }
 
-int DRV_Nand_PageCopy( uint32_t uiSrcPageIndex , uint32_t uiDestPageIndex , DRV_Nand_SectorSpareData *pSpareArea)
+int DRV_Nand_PageCopy( uint32_t uiSrcPageIndex , uint32_t uiDestPageIndex )
 {
 }
 
@@ -138,13 +151,13 @@ int DRV_Nand_BlockErase( uint32_t uiBlockIndex )
 	memset( pucSimuNandBuffer+ NAND_BLOCK_SIZE*uiBlockIndex,0xff,NAND_BLOCK_SIZE);
 }
 
-int DRV_Nand_SectorRead( uint8_t *pucDataBuffer , DRV_Nand_SectorSpareData *pSpareArea , uint32_t uiSectorIndex )
+int DRV_Nand_SectorRead( uint8_t *pucDataBuffer , DRV_Nand_OobData *pSpareArea , uint32_t uiSectorIndex )
 {
    return 0;
 
 }
 
-int DRV_Nand_sectorWrite( uint8_t *pucDataBuffer , DRV_Nand_SectorSpareData *pSpareArea , uint32_t uiSectorIndex )
+int DRV_Nand_sectorWrite( uint8_t *pucDataBuffer , DRV_Nand_OobData *pSpareArea , uint32_t uiSectorIndex )
 {
 	return 0;
 }

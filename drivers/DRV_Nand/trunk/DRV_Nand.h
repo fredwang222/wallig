@@ -22,6 +22,12 @@
  *
  */
 /**************************************************************
+					Defines
+***************************************************************/
+#define NAND_OK         0
+#define NAND_ERR_ACCESS 1
+#define NAND_ERR_BAD_BL 2
+/**************************************************************
 						Typedef
 ***************************************************************/
 typedef struct
@@ -34,21 +40,21 @@ typedef struct
 
 typedef struct
 {
-	uint8_t ucBadBlockMarker;
-	uint8_t tucEcc[3];
-	uint8_t tucData[12];
-} DRV_Nand_SectorSpareData;
+	uint32_t uiPageSize;    /* Page size in byte */
+	uint32_t uiPagePerBlock; /* Number of page per block */
+	uint32_t uiBlockCount;   /* total count of block */
+	uint32_t uiOobSize;  /* out of band area size in byte*/
+}DRV_Nand_Size_Info;
+
 
 /**************************************************************
 					Functions
 ***************************************************************/
 void DRV_Nand_Init( void );
 void DRV_Nand_Terminate( void );
-int DRV_Nand_IdRead( DRV_Nand_Id *pId );
+int DRV_Nand_InfoRead( DRV_Nand_Id *pId , DRV_Nand_Size_Info *SizeInfo);
 int DRV_Nand_PageRead( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , uint32_t uiPageIndex );
 int DRV_Nand_PageWrite( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , uint32_t uiPageIndex );
-int DRV_Nand_PageCopy( uint32_t uiSrcIndex , uint32_t uiDestIndex , DRV_Nand_SectorSpareData *pSpareArea);
-int DRV_Nand_SectorRead( uint8_t *pucDataBuffer , DRV_Nand_SectorSpareData *pSpareArea , uint32_t uiPageIndex );
-int DRV_Nand_sectorWrite( uint8_t *pucDataBuffer , DRV_Nand_SectorSpareData *pSpareArea , uint32_t uiPageIndex );
+int DRV_Nand_PageCopy( uint32_t uiSrcIndex , uint32_t uiDestIndex );
 int DRV_Nand_BlockErase( uint32_t uiBlockIndex );
 
