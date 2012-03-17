@@ -1,0 +1,15 @@
+menuconfig DRV_NAND
+	bool "Nand driver support"
+   
+menu "Nand"
+if SIMU_LINUX
+config DRV_NAND_SIZE
+  depends on DRV_NAND
+   int "Nand size in MB"
+   default 16
+config DRV_NAND_FILE
+	depends on DRV_NAND
+	string "Nand file name"
+    default "nand.bin"
+endif
+endmenu

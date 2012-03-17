@@ -1,0 +1,2 @@
+Arch/$ARCH/SetConfig.sh
+
