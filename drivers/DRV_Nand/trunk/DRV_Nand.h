@@ -57,4 +57,5 @@ int DRV_Nand_PageRead( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , ui
 int DRV_Nand_PageWrite( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , uint32_t uiPageIndex );
 int DRV_Nand_PageCopy( uint32_t uiSrcIndex , uint32_t uiDestIndex );
 int DRV_Nand_BlockErase( uint32_t uiBlockIndex );
+void  DRV_Nand_BadBlockSet( uint32_t uiBlockIndex );
 

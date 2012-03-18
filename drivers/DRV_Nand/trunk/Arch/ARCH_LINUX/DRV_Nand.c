@@ -33,14 +33,10 @@
 #include "Inc/DRV_Nand_p.h"
 #include "DRV_Nand_CFG.h"
 
-#define kNAND_PAGE_SIZE   2048
-#define kNAND_OOB_SIZE    64
-#define kNAND_PAGE_COUNT  64
-#define kNAND_BLOCK_COUNT 32
-
-#define NAND_BLOCK_SIZE ((kNAND_PAGE_SIZE+kNAND_OOB_SIZE)*kNAND_PAGE_COUNT)
-#define NAND_TOTAL_SIZE (NAND_BLOCK_SIZE*kNAND_BLOCK_COUNT)
-
+#define kNAND_BLOCK_SIZE ((kNAND_PAGE_SIZE+kNAND_OOB_SIZE)*kNAND_PAGE_COUNT)
+#define kNAND_TOTAL_SIZE (kNAND_BLOCK_SIZE*kNAND_BLOCK_COUNT)
+#define kNAND_UOOB_SIZE  ( kNAND_OOB_SIZE - sizeof(DRV_Nand_OobData) )
+#define kNANd_FIRST_PAGE( uiPageIndex )  (uiPageIndex-uiPageIndex%kNAND_PAGE_COUNT )*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE)
 typedef struct
 {
 	uint8_t ucBadBlockMarker;
@@ -63,17 +59,17 @@ void DRV_Nand_Init( void )
 			printf("Enable to create file, exit\n");	
 			exit(1);
 		}
-		printf("Allocate Nand simulation buffer, size=%dkB\n",NAND_TOTAL_SIZE/1024);
-		pucSimuNandBuffer = malloc(NAND_TOTAL_SIZE);
-		memset(pucSimuNandBuffer,0xff,NAND_TOTAL_SIZE);
-		write(NandFileDesc, pucSimuNandBuffer,NAND_TOTAL_SIZE);
+		printf("Allocate Nand simulation buffer, size=%dkB\n",kNAND_TOTAL_SIZE/1024);
+		pucSimuNandBuffer = malloc(kNAND_TOTAL_SIZE);
+		memset(pucSimuNandBuffer,0xff,kNAND_TOTAL_SIZE);
+		write(NandFileDesc, pucSimuNandBuffer,kNAND_TOTAL_SIZE);
 	}
 	else
 	{
-		printf("Allocate Nand simulation buffer, size=%dkB\n",NAND_TOTAL_SIZE/1024);
-		pucSimuNandBuffer = malloc(NAND_TOTAL_SIZE);
+		printf("Allocate Nand simulation buffer, size=%dkB\n",kNAND_TOTAL_SIZE/1024);
+		pucSimuNandBuffer = malloc(kNAND_TOTAL_SIZE);
 		printf("File found, copy it to buffer\n");
-		read(NandFileDesc,pucSimuNandBuffer,NAND_TOTAL_SIZE);
+		read(NandFileDesc,pucSimuNandBuffer,kNAND_TOTAL_SIZE);
 	}
 	printf("Close simulation file\n");
 	close(NandFileDesc);
@@ -88,7 +84,7 @@ void DRV_Nand_Terminate( void )
 	if(  NandFileDesc != -1 )
 	{
 		printf("Save Nand simulation file:%s\n",kNAND_FILE_NAME);
-		write(NandFileDesc, pucSimuNandBuffer,NAND_TOTAL_SIZE);
+		write(NandFileDesc, pucSimuNandBuffer,kNAND_TOTAL_SIZE);
 		close(NandFileDesc);
 		
 	}
@@ -108,59 +104,86 @@ int DRV_Nand_InfoRead( DRV_Nand_Id *pId , DRV_Nand_Size_Info *pSizeInfo)
 	pSizeInfo->uiPagePerBlock = kNAND_PAGE_COUNT;
 	pSizeInfo->uiBlockCount = kNAND_BLOCK_COUNT;
 	pSizeInfo->uiOobSize = kNAND_OOB_SIZE-sizeof(DRV_Nand_OobData);
-	return 0;
+	return NAND_OK;
 }
 
 
-int DRV_Nand_PageRead( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , uint32_t uiPageIndex )
+int DRV_Nand_PageRead( uint8_t *pucDataBuffer , uint8_t *pucUserOobBuffer , uint32_t uiPageIndex )
 {
+	uint8_t *pucNandBuffer=pucSimuNandBuffer+kNANd_FIRST_PAGE(uiPageIndex); /* first page of the block */
+	/* Read bad block marker */
+	if( pucNandBuffer[kNAND_PAGE_SIZE] != 0xff  ) 
+		return NAND_ERR_BAD_BL;
+
 	if( pucDataBuffer )
 		memcpy( pucDataBuffer, pucSimuNandBuffer+uiPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE),kNAND_PAGE_SIZE);
-	if( pucSpareAreaBuffer )
-		memcpy( pucSpareAreaBuffer, pucSimuNandBuffer+uiPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE)+kNAND_PAGE_SIZE,kNAND_OOB_SIZE);
-	return 0;
+	if( pucUserOobBuffer )
+		memcpy( pucUserOobBuffer, pucSimuNandBuffer+uiPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE)+kNAND_PAGE_SIZE+sizeof(DRV_Nand_OobData),kNAND_UOOB_SIZE);
+	return NAND_OK;
 }
 
 
-int DRV_Nand_PageWrite( uint8_t *pucDataBuffer , uint8_t *pucSpareAreaBuffer , uint32_t uiPageIndex )
+int DRV_Nand_PageWrite( uint8_t *pucDataBuffer , uint8_t *pucUserOobBuffer , uint32_t uiPageIndex )
 {
 	unsigned int uiByteIndex=0;
-	uint8_t *pucNandBuffer=pucSimuNandBuffer+uiPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE);
+	uint8_t *pucNandBuffer=pucSimuNandBuffer+kNANd_FIRST_PAGE(uiPageIndex); /* first page of the block */
 
+	/* Read bad block marker */
+	if( pucNandBuffer[kNAND_PAGE_SIZE] != 0xff  ) 
+		return NAND_ERR_BAD_BL;
+	/* get page offset */
+	pucNandBuffer=pucSimuNandBuffer+uiPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE);
 	for( uiByteIndex=0 ; uiByteIndex<kNAND_PAGE_SIZE ; uiByteIndex++)
 	{
 		if( pucDataBuffer )
 			(*pucNandBuffer) &= pucDataBuffer[uiByteIndex];
 		pucNandBuffer++;
 	}
-	for( uiByteIndex=0 ; uiByteIndex<kNAND_OOB_SIZE ; uiByteIndex++)
+	/* skip drv oob data */
+	pucNandBuffer+=sizeof(DRV_Nand_OobData);
+	/* write user oob */
+	for( uiByteIndex=0 ; uiByteIndex<kNAND_UOOB_SIZE ; uiByteIndex++)
 	{
-		if( pucSpareAreaBuffer )
-			(*pucNandBuffer) &= pucSpareAreaBuffer[uiByteIndex];
+		if( pucUserOobBuffer )
+			(*pucNandBuffer) &= pucUserOobBuffer[uiByteIndex];
 		pucNandBuffer++;
 	}
-	return 0;
+	return NAND_OK;
 }
 
 int DRV_Nand_PageCopy( uint32_t uiSrcPageIndex , uint32_t uiDestPageIndex )
 {
+	uint8_t *pucDestNandBuffer=pucSimuNandBuffer+kNANd_FIRST_PAGE(uiDestPageIndex); /* first page of the block */
+	uint8_t *pucSrcNandBuffer=pucSimuNandBuffer+uiSrcPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE);
+
+	/* Read bad block marker */
+	if( pucDestNandBuffer[kNAND_PAGE_SIZE] != 0xff  ) 
+		return NAND_ERR_BAD_BL;
+
+	pucDestNandBuffer=pucSimuNandBuffer+uiDestPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE);
+
+	memcpy( pucDestNandBuffer , pucSrcNandBuffer ,  kNAND_PAGE_SIZE+kNAND_OOB_SIZE );
+
+	return NAND_OK;
 }
 
 int DRV_Nand_BlockErase( uint32_t uiBlockIndex )
 {
-	memset( pucSimuNandBuffer+ NAND_BLOCK_SIZE*uiBlockIndex,0xff,NAND_BLOCK_SIZE);
+	uint8_t *pucNandBuffer=pucSimuNandBuffer+uiBlockIndex*kNAND_PAGE_COUNT*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE); /* first page of the block */
+	/* Read bad block marker */
+	if( pucNandBuffer[kNAND_PAGE_SIZE] != 0xff  ) 
+		return NAND_ERR_BAD_BL;
+
+	memset( pucSimuNandBuffer+ kNAND_BLOCK_SIZE*uiBlockIndex,0xff,kNAND_BLOCK_SIZE);
+
+	return NAND_OK;
 }
 
-int DRV_Nand_SectorRead( uint8_t *pucDataBuffer , DRV_Nand_OobData *pSpareArea , uint32_t uiSectorIndex )
+
+void  DRV_Nand_BadBlockSet( uint32_t uiBlockIndex )
 {
-   return 0;
+	uint8_t *pucNandBuffer=pucSimuNandBuffer+uiBlockIndex*kNAND_PAGE_COUNT*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE);
 
+	pucNandBuffer[kNAND_PAGE_SIZE] = 0;
 }
-
-int DRV_Nand_sectorWrite( uint8_t *pucDataBuffer , DRV_Nand_OobData *pSpareArea , uint32_t uiSectorIndex )
-{
-	return 0;
-}
-
-
 
