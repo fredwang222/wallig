@@ -111,15 +111,18 @@ int DRV_Nand_InfoRead( DRV_Nand_Id *pId , DRV_Nand_Size_Info *pSizeInfo)
 int DRV_Nand_PageRead( uint8_t *pucDataBuffer , uint8_t *pucUserOobBuffer , uint32_t uiPageIndex )
 {
 	uint8_t *pucNandBuffer=pucSimuNandBuffer+kNANd_FIRST_PAGE(uiPageIndex); /* first page of the block */
-	/* Read bad block marker */
-	if( pucNandBuffer[kNAND_PAGE_SIZE] != 0xff  ) 
-		return NAND_ERR_BAD_BL;
+
 
 	if( pucDataBuffer )
 		memcpy( pucDataBuffer, pucSimuNandBuffer+uiPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE),kNAND_PAGE_SIZE);
 	if( pucUserOobBuffer )
 		memcpy( pucUserOobBuffer, pucSimuNandBuffer+uiPageIndex*(kNAND_PAGE_SIZE+kNAND_OOB_SIZE)+kNAND_PAGE_SIZE+sizeof(DRV_Nand_OobData),kNAND_UOOB_SIZE);
-	return NAND_OK;
+
+	/* Read bad block marker */
+	if( pucNandBuffer[kNAND_PAGE_SIZE] != 0xff  ) 
+		return NAND_ERR_BAD_BL;
+	else
+		return NAND_OK;
 }
 
 
