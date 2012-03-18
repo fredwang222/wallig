@@ -3,11 +3,11 @@ menuconfig LIB_NTL
 
 menu "NTL config"
   depends on LIB_NTL
-config LIB_NTL_BBM_OPR
-   int "Bad Block Management Over Provisionning rate in percent"
+config LIB_NTL_BBL_OPR
+   int "Bad Block Layer Over Provisionning rate in percent"
    default 10
-config LIB_NTL_WL_OPR
-   int "Wear Leveling Over Provisionning rate in percent"
+config LIB_NTL_WLL_OPR
+   int "Wear Leveling Layer Over Provisionning rate in percent"
    default 10
 endmenu  
 

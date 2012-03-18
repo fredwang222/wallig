@@ -35,10 +35,10 @@
 /**************************************************************
 						Macros
 ***************************************************************/
-#define BBL_BlockIndexFromPage( page ) (page/kBBL_PPB())
+#define kBBL_BlockIndexFromPage( page ) (page/kBBL_PPB())
 #define kBBL_PPB() (BBL_InternalData.PhysicalSizeInfo.uiPagePerBlock) /* number of page per block */
 #define kBBL_PBC() (BBL_InternalData.PhysicalSizeInfo.uiBlockCount) /* Physical Block count */
-#define kBBL_LBC() (BBL_InternalData.usLogicalBlockCount )/* Logical  Block count */
+#define kBBL_LBC() (BBL_InternalData.usLogicalBlockCount ) /* Logical  Block count */
 #define kBBL_UOOB_SIZE() (BBL_InternalData.PhysicalSizeInfo.uiOobSize  - sizeof(BBL_OobData) )
 /**************************************************************
 						Typedef
@@ -80,7 +80,7 @@ int BBL_Init( void )
 		return 1; /* Nand info read error */
 	
 	/* Set the logical block count, using the over provisioning rate form the config file */
-	BBL_InternalData.usLogicalBlockCount=(kBBL_LBC()*( 100 - kNTL_BBL_OPR ))/100 + 1;
+	BBL_InternalData.usLogicalBlockCount=(kBBL_PBC()*( 100 - kNTL_BBL_OPR ))/100 + 1;
 	BBL_InternalData.usBadBlockCount=0;
 	/* Allocate structure */	
 	BBL_InternalData.pusBBL_Lut = (uint16_t*) malloc( kBBL_LBC() * sizeof(uint16_t));	
@@ -115,14 +115,18 @@ int BBL_Init( void )
 				break;
 			case NAND_OK: /* This is a good block*/
 				if( BbmOobData.usLogicalBlockIndex == 0xFFFF  )
+				{
+					/* this is a blank block */
 					BBL_InternalData.pusBBL_Lut[usLogicalBlockIndex]=usPhysicalBlockIndex;
+					/* write logical block index */
+					BBLi_UpdateOobBuffer( usLogicalBlockIndex , NULL  );
+					DRV_Nand_PageWrite( NULL , BBL_InternalData.pucOobBuffer, usPhysicalBlockIndex*kBBL_PPB() );
+				}
 				else
 				{
 					if(BbmOobData.usLogicalBlockIndex > kBBL_LBC())
 					{
-						free(BBL_InternalData.pucOobBuffer);
-						free(BBL_InternalData.pusBBL_Lut);
-						free(BBL_InternalData.pucPageBuffer);
+						BBL_Terminate();
 						return 4; /* wrong value */
 					}
 					else 
@@ -131,9 +135,7 @@ int BBL_Init( void )
 							BBL_InternalData.pusBBL_Lut[BbmOobData.usLogicalBlockIndex]=usPhysicalBlockIndex;
 						else
 						{
-							free(BBL_InternalData.pucOobBuffer);
-							free(BBL_InternalData.pusBBL_Lut);
-							free(BBL_InternalData.pucPageBuffer);
+							BBL_Terminate();
 							return 5; /* wrong value */
 						}
 					}
@@ -141,12 +143,15 @@ int BBL_Init( void )
 				usLogicalBlockIndex++;
 				break;
 			default:
-				free(BBL_InternalData.pucOobBuffer);
-				free(BBL_InternalData.pusBBL_Lut);
-				free(BBL_InternalData.pucPageBuffer);
+				BBL_Terminate();
 				return 6;
 
 		}
+	}
+	if( usPhysicalBlockIndex >= kBBL_PBC())
+	{	/* too many bad blocks */
+		BBL_Terminate();
+		return 7;
 	}
 	/* Set spare block index */
 	BBL_InternalData.usFreeSpareBlockIndex=usPhysicalBlockIndex;
@@ -154,9 +159,25 @@ int BBL_Init( void )
 	return 0;
 }
 
+int BBL_Terminate( void )
+{
+	free(BBL_InternalData.pucOobBuffer);
+	free(BBL_InternalData.pusBBL_Lut);
+	free(BBL_InternalData.pucPageBuffer);
+}
+
+int BBL_InfoRead(  DRV_Nand_Size_Info *pSizeInfo , uint16_t *pusBadBlockCount )
+{
+	pSizeInfo->uiPageSize = BBL_InternalData.PhysicalSizeInfo.uiPageSize;
+	pSizeInfo->uiPagePerBlock = BBL_InternalData.PhysicalSizeInfo.uiPagePerBlock;
+	pSizeInfo->uiBlockCount = kBBL_LBC();
+	pSizeInfo->uiOobSize = kBBL_UOOB_SIZE();
+	*pusBadBlockCount = BBL_InternalData.usBadBlockCount;
+}
+
 int BBL_PageRead( uint8_t *pucDataBuffer , uint8_t *pucUserOobBuffer ,   uint16_t usLogicalPageIndex )
 {
-	uint16_t usLogicalBlockIndex = BlockIndexFromPage(usLogicalPageIndex);
+	uint16_t usLogicalBlockIndex = kBBL_BlockIndexFromPage(usLogicalPageIndex);
 	uint16_t usPhysicalBlockIndex;
 	int ErrorCode=0;
 
@@ -177,7 +198,7 @@ int BBL_PageRead( uint8_t *pucDataBuffer , uint8_t *pucUserOobBuffer ,   uint16_
 
 int BBL_PageWrite( uint8_t *pucDataBuffer , uint8_t *pucUserOobBuffer ,uint16_t usLogicalPageIndex )
 {
-	uint16_t usLogicalBlockIndex = BlockIndexFromPage(usLogicalPageIndex);
+	uint16_t usLogicalBlockIndex = kBBL_BlockIndexFromPage(usLogicalPageIndex);
 	uint16_t usPhysicalBlockIndex;
 	uint32_t uiNewBlockIndex;
 	uint32_t uiPageIndex;
@@ -330,4 +351,19 @@ static void BBLi_UpdateOobBuffer( uint16_t usLogicalBlockIndex , uint8_t  *pucUs
 		memcpy( BBL_InternalData.pucOobBuffer + sizeof(BBL_OobData) ,  pucUserOobBuffer ,kBBL_UOOB_SIZE() );
 }
 
+/**************************************************************
+				Debug functions
+***************************************************************/
+void BBL_PrintLut( void )
+{
+	uint16_t usLogicalBlockIndex;
+
+	for( usLogicalBlockIndex=0 ; usLogicalBlockIndex<kBBL_LBC() ; usLogicalBlockIndex++)
+	{
+		printf("%02d ",BBL_InternalData.pusBBL_Lut[ usLogicalBlockIndex ] );		
+		if( !( (usLogicalBlockIndex+1)%8 ) )
+			printf("\n");
+	}
+	printf("\n");
+}
 

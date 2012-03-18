@@ -1,9 +1,9 @@
 ODIR=obj
-OBJ=$(ODIR)/LIB_Ntl_BBM.o
+OBJ=$(ODIR)/LIB_Ntl_BBL.o
 LIB_NTL_OBJ=libntl.a
 all: $(ODIR) $(LIB_NTL_OBJ)
 	
-obj/%.o : Src/LIB_Ntl_BBM.c
+obj/%.o : Src/LIB_Ntl_BBL.c
 	$(CC) -o $@ -c $< $(CFLAGS) -I . $(DRV_INC)  -I$(CONFIG_PATH)
 
 $(LIB_NTL_OBJ) : $(OBJ)

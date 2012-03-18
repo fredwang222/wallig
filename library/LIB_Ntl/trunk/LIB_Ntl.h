@@ -23,7 +23,11 @@
  */
 
 
-void LIB_Ntl_init( void );
-int LIB_Ntl_SectorWrite( uint8_t *pucData , uint32_t uiSectorAddress);
-int LIB_Ntl_SectorRead( uint8_t *pucData , uint32_t uiSectorAddress);
-
+int BBL_Init( void );
+int BBL_Terminate( void );
+int BBL_InfoRead(  DRV_Nand_Size_Info *pSizeInfo , uint16_t *pusBadBlockCount );
+int BBL_PageRead( uint8_t *pucDataBuffer , uint8_t *pucUserOobBuffer ,   uint16_t usLogicalPageIndex );
+int BBL_PageWrite( uint8_t *pucDataBuffer , uint8_t *pucUserOobBuffer ,uint16_t usLogicalPageIndex );
+int BBL_BlockErase( uint16_t usLogicalBlockIndex );
+int BBL_PageCopy( uint16_t usSrcLogicalPageIndex , uint16_t usDestLogicalPageIndex );
+void BBL_PrintLut( void );
