@@ -221,7 +221,7 @@ int BBL_PageWrite( uint8_t *pucDataBuffer , uint8_t *pucUserOobBuffer ,uint16_t 
 	/****************************/
 	/* Get next free spare block */
 	uiNewBlockIndex = BBLi_GetNewBlock() ;
-	if (  uiNewBlockIndex != 0xFFFF )
+	if (  uiNewBlockIndex == 0xFFFF )
 			return -1; /* no more spare block on device*/
 	BBL_InternalData.pusBBL_Lut[ usLogicalBlockIndex ] = uiNewBlockIndex;
 	/* copy data from old to new block*/
@@ -266,7 +266,7 @@ int BBL_BlockErase( uint16_t usLogicalBlockIndex )
 	/****************************/
 	/* Get next free spare block */
 	usNewBlockIndex = BBLi_GetNewBlock() ;
-	if (  usNewBlockIndex != 0xFFFF )
+	if (  usNewBlockIndex == 0xFFFF )
 			return -1; /* no more spare block on device*/
 	BBL_InternalData.pusBBL_Lut[ usLogicalBlockIndex ] = usNewBlockIndex;
 
@@ -308,7 +308,7 @@ int BBL_PageCopy( uint16_t usSrcLogicalPageIndex , uint16_t usDestLogicalPageInd
 	/****************************/
 	/* Get next free spare block */
 	usNewBlockIndex = BBLi_GetNewBlock() ;
-	if (  usNewBlockIndex != 0xFFFF )
+	if (  usNewBlockIndex == 0xFFFF )
 			return -1; /* no more spare block on device*/
 	BBL_InternalData.pusBBL_Lut[ usDestLogicalBlockIndex ] = usNewBlockIndex;
 	/* copy data from old to new block*/
