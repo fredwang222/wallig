@@ -297,7 +297,7 @@ int BBL_PageCopy( uint16_t usSrcLogicalPageIndex , uint16_t usDestLogicalPageInd
 	
 
 	DRV_Nand_PageRead( BBL_InternalData.pucPageBuffer ,BBL_InternalData.pucOobBuffer , usSrcPhysicalBlockIndex*kBBL_PPB() + usSrcLogicalPageIndex%kBBL_PPB() );
-	BBLi_UpdateOobBuffer( usDestLogicalBlockIndex , BBL_InternalData.pucOobBuffer );
+	BBLi_UpdateOobBuffer( usDestLogicalBlockIndex , BBL_InternalData.pucOobBuffer+sizeof(BBL_OobData) );
 	iOperationResult = DRV_Nand_PageWrite( BBL_InternalData.pucPageBuffer , BBL_InternalData.pucOobBuffer , usDestPhysicalBlockIndex*kBBL_PPB() + usDestLogicalPageIndex%kBBL_PPB()  );
 
 	if( !iOperationResult )
@@ -315,7 +315,7 @@ int BBL_PageCopy( uint16_t usSrcLogicalPageIndex , uint16_t usDestLogicalPageInd
 	for( usPageIndex= 0; usPageIndex<kBBL_PPB() ; usPageIndex++)
 	{
 		DRV_Nand_PageRead( BBL_InternalData.pucPageBuffer ,BBL_InternalData.pucOobBuffer , usSrcPhysicalBlockIndex*kBBL_PPB() + usSrcLogicalPageIndex%kBBL_PPB() );
-		BBLi_UpdateOobBuffer( usDestLogicalBlockIndex , BBL_InternalData.pucOobBuffer );
+		BBLi_UpdateOobBuffer( usDestLogicalBlockIndex , BBL_InternalData.pucOobBuffer+sizeof(BBL_OobData) );
 		iOperationResult = DRV_Nand_PageWrite( BBL_InternalData.pucPageBuffer , BBL_InternalData.pucOobBuffer , usNewBlockIndex*kBBL_PPB() + usDestLogicalPageIndex%kBBL_PPB()  );
 	}
 
