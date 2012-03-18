@@ -19,7 +19,7 @@ fi
 #Ntl
 if grep -q "LIB_NTL=y" $PRJ_CONFIG_FILE
 then
-echo "LIB_OBJ += Lib/Mp3/libntl.a" >> Lib.mk
+echo "LIB_OBJ += Lib/Ntl/libntl.a" >> Lib.mk
 echo 'LIB_INC += -I $(PROJECT_PATH)/Lib/Ntl/' >> Lib.mk
 fi
 echo "" >> Makefile
